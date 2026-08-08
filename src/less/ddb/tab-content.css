@@ -40,6 +40,12 @@
  * because the `--ddb-*` tokens are already theme-aware. */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content,
 .tidy5e-sheet.application.ddb.theme-dark .ddb-primary-box-content {
+  /* Inside the scrollable lists every hairline goes NEUTRAL (white in dark
+   * theme) instead of accent-tinted — the accent border stays on the outer
+   * panels only. Everything in this scope that asks for --ddb-panel-border
+   * (row dividers, field borders, pill borders, section underlines) follows. */
+  --ddb-panel-border: var(--ddb-list-border);
+
   /* --- table chrome ------------------------------------------------ */
   /* Kills the accent-purple section header fill at the source: quadrone
    * paints `.tidy-table-header-row` with
@@ -161,7 +167,7 @@
 
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row:hover {
   background: var(--ddb-table-row-alt-bg);
-  border-bottom-color: var(--ddb-accent-transparent);
+  border-bottom-color: var(--ddb-list-border);
 }
 
 /* Group title: 12px condensed caps (--ddb-size-label-md). Overrides quadrone's

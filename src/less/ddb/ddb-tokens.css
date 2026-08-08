@@ -108,6 +108,9 @@
   --ddb-panel-bg: #fefefe;
   --ddb-panel-bg-solid: #fefefe;
   --ddb-panel-border: #eaeaea;
+  /* Neutral hairline for INSIDE the scrollable lists (user choice: accent
+   * lines were "too much" at list density; panels keep the accent border). */
+  --ddb-list-border: #eaeaea;
   --ddb-box-bg: #fefefe;
   --ddb-sidebar-bg: #fff;
   --ddb-table-row-bg: #fdfdfd;
@@ -143,6 +146,7 @@
   --ddb-panel-bg-solid: #10161a;
   /* user choice: 60% accent (was 40%) so outlines read clearly in dark */
   --ddb-panel-border: color-mix(in srgb, var(--ddb-accent) 60%, transparent);
+  --ddb-list-border: rgba(255, 255, 255, 0.16);
   --ddb-box-bg: #10161adb;
   --ddb-sidebar-bg: #10161a;
   --ddb-table-row-bg: rgba(16, 22, 26, 0.859);
