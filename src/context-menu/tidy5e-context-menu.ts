@@ -20,7 +20,8 @@ export function initTidy5eContextMenu(
   html: HTMLElement,
   layout:
     | typeof CONSTANTS.SHEET_LAYOUT_CLASSIC
-    | typeof CONSTANTS.SHEET_LAYOUT_QUADRONE,
+    | typeof CONSTANTS.SHEET_LAYOUT_QUADRONE
+    | typeof CONSTANTS.SHEET_LAYOUT_DDB, // DDB-FORK
   contextMenuSelector: string = '[data-context-menu]'
 ) {
   new FloatingContextMenu(html, contextMenuSelector, [], {

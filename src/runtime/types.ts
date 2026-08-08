@@ -75,7 +75,8 @@ export type RegisteredTab<TContext> = {
 export type SheetLayout =
   | typeof CONSTANTS.SHEET_LAYOUT_ALL
   | typeof CONSTANTS.SHEET_LAYOUT_CLASSIC
-  | typeof CONSTANTS.SHEET_LAYOUT_QUADRONE;
+  | typeof CONSTANTS.SHEET_LAYOUT_QUADRONE
+  | typeof CONSTANTS.SHEET_LAYOUT_DDB; // DDB-FORK
 
 /** A display value which can vary with the item's current state, such as a container's expanded contents. */
 export type ItemSummaryCommandValue<T> =

@@ -98,17 +98,39 @@ export class Tidy5eCharacterSheetQuadrone extends getTidy5eActorSheetQuadroneBas
     },
   };
 
+  // DDB-FORK: overridable seams so subclass layouts (e.g. the DDB layout) can
+  // swap the tab registry, root component, and context-menu layout while
+  // inheriting all character context preparation from this class.
+  protected get tabRuntime(): typeof CharacterSheetQuadroneRuntime {
+    return CharacterSheetQuadroneRuntime;
+  }
+
+  protected get sidebarTabRuntime(): typeof CharacterSheetQuadroneSidebarRuntime {
+    return CharacterSheetQuadroneSidebarRuntime;
+  }
+
+  protected get rootComponent(): any {
+    return CharacterSheet;
+  }
+
+  protected get contextMenuLayout():
+    | typeof CONSTANTS.SHEET_LAYOUT_CLASSIC
+    | typeof CONSTANTS.SHEET_LAYOUT_QUADRONE
+    | typeof CONSTANTS.SHEET_LAYOUT_DDB {
+    return CONSTANTS.SHEET_LAYOUT_QUADRONE;
+  }
+
   _createComponent(node: HTMLElement): Record<string, any> {
     if (this.actor.limited) {
       return this._createLimitedViewComponent(node);
     }
 
-    const component = mount(CharacterSheet, {
+    const component = mount(this.rootComponent, {
       target: node,
       context: new Map<any, any>(this._getActorSvelteContext()),
     });
 
-    initTidy5eContextMenu(this, this.element, CONSTANTS.SHEET_LAYOUT_QUADRONE);
+    initTidy5eContextMenu(this, this.element, this.contextMenuLayout);
 
     return component;
   }
@@ -275,7 +297,7 @@ export class Tidy5eCharacterSheetQuadrone extends getTidy5eActorSheetQuadroneBas
       );
     }
 
-    const tabs = await CharacterSheetQuadroneRuntime.getTabs(context);
+    const tabs = await this.tabRuntime.getTabs(context); // DDB-FORK: seam
 
     const usesSheetTab = tabs.some((t) => t.id === CONSTANTS.TAB_ACTOR_ACTIONS);
 
@@ -295,11 +317,9 @@ export class Tidy5eCharacterSheetQuadrone extends getTidy5eActorSheetQuadroneBas
       this.prepareSheetTabSections(context);
     }
 
-    context.customContent =
-      await CharacterSheetQuadroneRuntime.getContent(context);
+    context.customContent = await this.tabRuntime.getContent(context); // DDB-FORK: seam
 
-    context.sidebarTabs =
-      await CharacterSheetQuadroneSidebarRuntime.getTabs(context);
+    context.sidebarTabs = await this.sidebarTabRuntime.getTabs(context); // DDB-FORK: seam
 
     context.tabs = tabs;
 

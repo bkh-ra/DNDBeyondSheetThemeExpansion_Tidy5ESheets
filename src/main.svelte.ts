@@ -25,6 +25,7 @@ import { debug } from './utils/logging';
 import { Tidy5eItemSheetQuadrone } from './sheets/quadrone/Tidy5eItemSheetQuadrone.svelte';
 import { Tidy5eVehicleSheetQuadrone } from './sheets/quadrone/Tidy5eVehicleSheetQuadrone.svelte';
 import { Tidy5eCharacterSheetQuadrone } from './sheets/quadrone/Tidy5eCharacterSheetQuadrone.svelte';
+import { Tidy5eCharacterSheetDdb } from './sheets/ddb/Tidy5eCharacterSheetDdb.svelte'; // DDB-FORK
 import { Tidy5eNpcSheetQuadrone } from './sheets/quadrone/Tidy5eNpcSheetQuadrone.svelte';
 import { ThemeQuadrone } from './theme/theme-quadrone.svelte';
 import { TidyNotificationsManager } from './features/notifications/TidyNotificationsManager';
@@ -181,6 +182,17 @@ Hooks.once('init', () => {
     {
       types: [CONSTANTS.SHEET_TYPE_CHARACTER],
       label: 'TIDY5E.Tidy5eCharacterSheetQuadrone',
+    },
+  );
+
+  // DDB-FORK: register the D&D Beyond-style character sheet layout.
+  documentSheetConfig.registerSheet(
+    Actor,
+    CONSTANTS.DND5E_SYSTEM_ID,
+    Tidy5eCharacterSheetDdb,
+    {
+      types: [CONSTANTS.SHEET_TYPE_CHARACTER],
+      label: 'TIDY5E.Tidy5eCharacterSheetDdb',
     },
   );
 
