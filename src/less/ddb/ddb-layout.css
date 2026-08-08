@@ -1,0 +1,46 @@
+/* DDB-FORK: root grid for the DDB layout. Column proportions measured from
+ * design/captures (desktop sheet: left boxes ~215px, skills ~205px, primary
+ * box flexible). */
+
+.tidy5e-sheet.ddb .window-content {
+  padding: 0;
+  overflow: hidden auto;
+}
+
+.tidy5e-sheet.ddb .ddb-sheet {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.tidy5e-sheet.ddb .ddb-sheet-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 12px 14px;
+}
+
+.tidy5e-sheet.ddb .ddb-columns {
+  display: grid;
+  grid-template-columns: 215px 210px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.tidy5e-sheet.ddb .ddb-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Narrow windows: stack the two stat columns beside each other above primary */
+@media (max-width: 900px) {
+  .tidy5e-sheet.ddb .ddb-columns {
+    grid-template-columns: 1fr 1fr;
+  }
+  .tidy5e-sheet.ddb .ddb-col-primary {
+    grid-column: 1 / -1;
+  }
+}

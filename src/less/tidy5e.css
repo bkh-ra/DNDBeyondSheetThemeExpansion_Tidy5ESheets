@@ -58,3 +58,10 @@
 @import 'quadrone/sheet-tabs/npc-statblock-tab.css';
 @import 'quadrone/sheet-tabs/vehicle-crew-tab.css';
 @import 'quadrone/sheet-tabs/vehicle-statblock-tab.css';
+/* DDB-FORK: D&D Beyond-style layout */
+@import 'ddb/ddb-tokens.css';
+@import 'ddb/ddb-layout.css';
+@import 'ddb/header.css';
+@import 'ddb/quick-info.css';
+@import 'ddb/left-column.css';
+@import 'ddb/primary-box.css';

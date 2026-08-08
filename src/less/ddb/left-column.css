@@ -1,0 +1,504 @@
+/* DDB-FORK: left column of the DDB (D&D Beyond-style) character sheet.
+ *
+ * Covers the three stacked boxes (SAVING THROWS / SENSES / PROFICIENCIES &
+ * TRAINING) and the tall SKILLS box beside them, plus the shared box frame and
+ * the proficiency pip.
+ *
+ * Rules: every rule is scoped to `.tidy5e-sheet.ddb`, and every colour, font
+ * and radius comes from a `--ddb-*` token in `ddb-tokens.css`. No literals.
+ * Metrics (widths, paddings, gaps) are the harvested DDB values recorded in
+ * design/tokens.raw.json under the `skills` and `senses-proficiencies`
+ * components.
+ *
+ * Phase 1 draws the box frames as 1px rounded rects. Upstream DDB draws them
+ * as inline SVG with notched corners (design/SVG-MOTIFS.md); swapping in that
+ * frame later only touches `.ddb-box`.
+ */
+
+/* ------------------------------------------------------------------ */
+/* Left column container                                              */
+/* ------------------------------------------------------------------ */
+
+.tidy5e-sheet.ddb .ddb-left-column {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.tidy5e-sheet.ddb .ddb-left-column-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Box frame (DdbBox.svelte)                                          */
+/* ------------------------------------------------------------------ */
+
+.tidy5e-sheet.ddb .ddb-box {
+  /* Pip diameter, harvested from `.ct-skills-pane__icon--none`. Declared on the
+   * frame so row grids can reserve the pip column without measuring. */
+  --ddb-pip-size: 10px;
+
+  display: flex;
+  flex-direction: column;
+  padding: 13px 20px 6px;
+  background: var(--ddb-panel-bg);
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border-radius: var(--ddb-radius-input);
+  color: var(--ddb-text);
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  line-height: var(--ddb-lineheight-body);
+  min-width: 0;
+}
+
+.tidy5e-sheet.ddb .ddb-box-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* The DDB signature: the title sits at the BOTTOM of the box, centred, with
+ * the gear pinned to its right so the title stays optically centred. */
+.tidy5e-sheet.ddb .ddb-box-footer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding-top: 4px;
+  min-height: 18px;
+}
+
+.tidy5e-sheet.ddb .ddb-box-title {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-heading-box);
+}
+
+.tidy5e-sheet.ddb .ddb-box-gear {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ------------------------------------------------------------------ */
+/* Shared primitives: gear button, chips, sign, empty state           */
+/* ------------------------------------------------------------------ */
+
+.tidy5e-sheet.ddb .ddb-gear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  color: var(--ddb-text-muted);
+  font-size: var(--ddb-size-label);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.tidy5e-sheet.ddb .ddb-gear:hover {
+  color: var(--ddb-accent);
+  box-shadow: none;
+}
+
+.tidy5e-sheet.ddb .ddb-gear:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* A bordered rounded rect — DDB's ability-abbreviation and value pills. */
+.tidy5e-sheet.ddb .ddb-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 5px;
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border-radius: var(--ddb-radius-input);
+  background: none;
+  color: var(--ddb-text);
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  text-transform: var(--ddb-transform-label);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.tidy5e-sheet.ddb .ddb-chip-value {
+  font-family: var(--ddb-font-body);
+  font-size: 14px;
+  font-weight: var(--ddb-weight-value);
+  text-transform: none;
+}
+
+.tidy5e-sheet.ddb .ddb-sign {
+  color: var(--ddb-text-muted);
+  font-weight: var(--ddb-weight-value);
+}
+
+.tidy5e-sheet.ddb .ddb-empty {
+  color: var(--ddb-condition-muted);
+  font-style: italic;
+}
+
+/* ------------------------------------------------------------------ */
+/* Proficiency pip (DdbProficiencyPip.svelte)                         */
+/* ------------------------------------------------------------------ */
+
+.tidy5e-sheet.ddb .ddb-pip {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-block;
+  width: var(--ddb-pip-size);
+  height: var(--ddb-pip-size);
+  padding: 0;
+  border: var(--ddb-border-width-panel) solid var(--ddb-pip-border);
+  border-radius: var(--ddb-radius-pill);
+  background: var(--ddb-pip-empty);
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.tidy5e-sheet.ddb .ddb-pip:disabled {
+  cursor: default;
+}
+
+.tidy5e-sheet.ddb .ddb-pip:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* Half proficiency — filled on one side only. */
+.tidy5e-sheet.ddb .ddb-pip[data-proficiency='0.5'] {
+  background: linear-gradient(
+    to right,
+    var(--ddb-pip-filled) 0 50%,
+    var(--ddb-pip-empty) 50% 100%
+  );
+  border-color: var(--ddb-pip-filled);
+}
+
+/* Proficient — solid fill. */
+.tidy5e-sheet.ddb .ddb-pip[data-proficiency='1'] {
+  background: var(--ddb-pip-filled);
+  border-color: var(--ddb-pip-filled);
+}
+
+/* Expertise — solid fill plus an outer ring. */
+.tidy5e-sheet.ddb .ddb-pip[data-proficiency='2'] {
+  background: var(--ddb-pip-filled);
+  border-color: var(--ddb-pip-empty);
+  box-shadow: 0 0 0 var(--ddb-border-width-panel) var(--ddb-pip-filled);
+}
+
+.tidy5e-sheet.ddb .ddb-pip[data-proficiency='2']:focus-visible {
+  box-shadow:
+    0 0 0 var(--ddb-border-width-panel) var(--ddb-pip-filled),
+    var(--ddb-focus-ring);
+}
+
+/* ------------------------------------------------------------------ */
+/* SAVING THROWS box                                                  */
+/* ------------------------------------------------------------------ */
+
+/* Column-major fill so the reading order matches DDB:
+ * STR / DEX / CON down the left, INT / WIS / CHA down the right. */
+.tidy5e-sheet.ddb .ddb-saves-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(3, auto);
+  grid-auto-flow: column;
+  gap: 6px 10px;
+}
+
+.tidy5e-sheet.ddb .ddb-save-entry {
+  display: grid;
+  grid-template-columns: var(--ddb-pip-size) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 5px;
+}
+
+.tidy5e-sheet.ddb .ddb-save-abbr {
+  justify-content: center;
+  cursor: pointer;
+}
+
+.tidy5e-sheet.ddb .ddb-save-abbr:hover:not(:disabled) {
+  border-color: var(--ddb-dice-roll-border);
+  color: var(--ddb-link);
+}
+
+.tidy5e-sheet.ddb .ddb-save-abbr:disabled {
+  cursor: default;
+  color: var(--ddb-text-disabled);
+}
+
+.tidy5e-sheet.ddb .ddb-save-abbr:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+.tidy5e-sheet.ddb .ddb-save-modifier {
+  min-width: 34px;
+}
+
+.tidy5e-sheet.ddb .ddb-saves-note {
+  display: flex;
+  gap: 5px;
+  padding-top: 8px;
+  border-top: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  font-family: var(--ddb-font-condensed);
+  font-size: 12px;
+  color: var(--ddb-text-prose);
+}
+
+.tidy5e-sheet.ddb .ddb-saves-note-label {
+  flex: 0 0 auto;
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-label);
+}
+
+/* ------------------------------------------------------------------ */
+/* SENSES box                                                         */
+/* ------------------------------------------------------------------ */
+
+.tidy5e-sheet.ddb .ddb-senses-passives {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tidy5e-sheet.ddb .ddb-sense-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  padding: 2px 4px;
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border-radius: var(--ddb-radius-input);
+}
+
+.tidy5e-sheet.ddb .ddb-sense-value {
+  min-width: 28px;
+}
+
+.tidy5e-sheet.ddb .ddb-sense-label {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.ddb .ddb-senses-special {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: center;
+  font-family: var(--ddb-font-condensed);
+  font-size: 12px;
+  color: var(--ddb-text-prose);
+}
+
+.tidy5e-sheet.ddb .ddb-sense-special-row {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+
+.tidy5e-sheet.ddb .ddb-sense-special-value {
+  font-weight: var(--ddb-weight-value);
+}
+
+/* ------------------------------------------------------------------ */
+/* PROFICIENCIES & TRAINING box                                       */
+/* ------------------------------------------------------------------ */
+
+.tidy5e-sheet.ddb .ddb-prof-groups {
+  display: flex;
+  flex-direction: column;
+  font-family: var(--ddb-font-condensed);
+}
+
+.tidy5e-sheet.ddb .ddb-prof-group + .ddb-prof-group {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+}
+
+.tidy5e-sheet.ddb .ddb-prof-group-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tidy5e-sheet.ddb .ddb-prof-group-label {
+  font-size: 14px;
+  font-weight: var(--ddb-weight-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.ddb .ddb-prof-group-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 4px;
+  margin-top: 2px;
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.ddb .ddb-prof-item {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-body);
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.ddb .ddb-prof-sep {
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.ddb button.ddb-prof-item-rollable {
+  padding: 0;
+  border: 0;
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  line-height: inherit;
+  cursor: pointer;
+}
+
+.tidy5e-sheet.ddb button.ddb-prof-item-rollable:hover:not(:disabled) {
+  color: var(--ddb-link);
+  box-shadow: none;
+}
+
+.tidy5e-sheet.ddb button.ddb-prof-item-rollable:disabled {
+  cursor: default;
+}
+
+.tidy5e-sheet.ddb button.ddb-prof-item-rollable:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* ------------------------------------------------------------------ */
+/* SKILLS box                                                         */
+/* ------------------------------------------------------------------ */
+
+.tidy5e-sheet.ddb .ddb-skills-box .ddb-box-body {
+  gap: 5px;
+}
+
+/* Shared grid template for the header and every row: PROF | MOD | SKILL | BONUS */
+.tidy5e-sheet.ddb .ddb-skills-header,
+.tidy5e-sheet.ddb .ddb-skill-row {
+  display: grid;
+  grid-template-columns: 30px 40px minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.tidy5e-sheet.ddb .ddb-skills-header {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-heading);
+  margin-bottom: 5px;
+}
+
+.tidy5e-sheet.ddb .ddb-skills-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.tidy5e-sheet.ddb .ddb-skill-row {
+  margin-bottom: 5px;
+}
+
+.tidy5e-sheet.ddb .ddb-skills-col-prof {
+  display: flex;
+  align-items: center;
+  padding-left: 3px;
+}
+
+.tidy5e-sheet.ddb .ddb-skills-col-mod {
+  display: flex;
+  align-items: center;
+  padding: 0 5px;
+}
+
+.tidy5e-sheet.ddb .ddb-skills-col-bonus {
+  display: flex;
+  justify-content: flex-end;
+  padding-left: 5px;
+}
+
+.tidy5e-sheet.ddb .ddb-skill-ability {
+  font-family: var(--ddb-font-condensed);
+  font-size: 12px;
+  font-weight: var(--ddb-weight-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.ddb .ddb-skill-ability-select {
+  width: 100%;
+  font-family: var(--ddb-font-condensed);
+  font-size: 12px;
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.ddb button.ddb-skill-name {
+  justify-self: stretch;
+  padding: 5px 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  text-align: left;
+  font-family: var(--ddb-font-condensed);
+  font-size: 14px;
+  line-height: 1.2;
+  color: var(--ddb-text);
+  cursor: pointer;
+}
+
+.tidy5e-sheet.ddb button.ddb-skill-name:hover:not(:disabled) {
+  color: var(--ddb-link);
+  box-shadow: none;
+}
+
+.tidy5e-sheet.ddb button.ddb-skill-name:disabled {
+  cursor: default;
+  color: var(--ddb-text-disabled);
+}
+
+.tidy5e-sheet.ddb button.ddb-skill-name:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+.tidy5e-sheet.ddb .ddb-skill-bonus {
+  min-width: 34px;
+  padding: 2px 5px;
+}

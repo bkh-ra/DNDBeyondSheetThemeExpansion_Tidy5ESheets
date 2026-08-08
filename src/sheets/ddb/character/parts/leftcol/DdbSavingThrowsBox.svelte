@@ -1,0 +1,85 @@
+<!--
+  DDB-FORK: SAVING THROWS box (left column, top).
+
+  Two-column, three-row grid of the six abilities laid out column-major so the
+  reading order matches DDB: STR/DEX/CON down the left, INT/WIS/CHA down the
+  right. Roll + proficiency behaviour is lifted from
+  `src/sheets/quadrone/actor/character-parts/SavingThrowsCard.svelte`.
+-->
+<script lang="ts">
+  import { FoundryAdapter } from 'src/foundry/foundry-adapter';
+  import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
+  import type { ActorAbilityContextEntry } from 'src/types/types';
+  import { CONSTANTS } from 'src/constants';
+  import { getModifierData } from 'src/utils/formatting';
+  import { isNil } from 'src/utils/data';
+  import DdbBox from './DdbBox.svelte';
+  import DdbProficiencyPip from './DdbProficiencyPip.svelte';
+
+  let context = $derived(getCharacterSheetQuadroneContext());
+
+  const localize = FoundryAdapter.localize;
+
+  /**
+   * DDB shows free-text "saving throw modifiers" harvested from its modifier
+   * engine. Tidy has no equivalent context field; the global save bonus is the
+   * closest true analogue we can render without inventing actor API calls.
+   */
+  let saveBonus = $derived(context.system?.bonuses?.abilities?.save ?? '');
+</script>
+
+<DdbBox class="ddb-saving-throws-box" title={localize('DND5E.ClassSaves')}>
+  <div class="ddb-saves-grid">
+    {#each context.abilities as ability (ability.key)}
+      {@const modifier = getModifierData(ability.save.value)}
+      <div class="ddb-save-entry" data-ability={ability.key}>
+        <DdbProficiencyPip
+          actor={context.actor}
+          aria-label={localize(ability.hover)}
+          data-tooltip=""
+          disabled={!context.unlocked}
+          path="system.abilities.{ability.key}.proficient"
+          type="ability"
+          value={context.unlocked
+            ? (ability.source?.proficient ?? 0)
+            : ability.proficient}
+        />
+        <button
+          type="button"
+          class="ddb-save-abbr ddb-chip"
+          onclick={(event) =>
+            context.actor.rollSavingThrow({ ability: ability.key, event })}
+          data-tidy-sheet-part={CONSTANTS.SHEET_PARTS.ABILITY_SAVE_ROLLER}
+          data-has-roll-modes
+          disabled={!context.owner}
+        >
+          {ability.abbr}
+        </button>
+        <span class="ddb-save-modifier ddb-chip ddb-chip-value">
+          <span class="ddb-sign">{modifier.sign}</span>{modifier.value}
+        </span>
+      </div>
+    {/each}
+  </div>
+
+  {#if !isNil(saveBonus, '')}
+    <div class="ddb-saves-note">
+      <span class="ddb-saves-note-label">{localize('DND5E.Bonus')}</span>
+      <span class="ddb-saves-note-text">{saveBonus}</span>
+    </div>
+  {/if}
+
+  {#snippet gear()}
+    {#if context.unlocked}
+      <button
+        type="button"
+        class="ddb-gear"
+        aria-label={localize('DND5E.ClassSaves')}
+        data-action="showConfiguration"
+        data-config="ability"
+      >
+        <i class="fa-solid fa-cog"></i>
+      </button>
+    {/if}
+  {/snippet}
+</DdbBox>

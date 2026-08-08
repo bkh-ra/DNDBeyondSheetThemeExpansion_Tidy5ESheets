@@ -1,0 +1,125 @@
+/* DDB-FORK: semantic design tokens for the DDB (D&D Beyond-style) layout.
+ * Values harvested from real DDB character sheets (design/tokens.json,
+ * 3 characters x 2 themes, 2026-08). Do not invent values here — change
+ * design/tokens.json first, then mirror.
+ *
+ * Accent: DDB's per-character theme color maps onto Tidy's per-sheet accent
+ * (--t5e-theme-color-default), so Tidy's theme settings UI drives the DDB
+ * accent with zero extra code. DDB's default red is the fallback.
+ * Derived accent variants use color-mix() rather than harvested literals,
+ * because the harvest baked one character's accent into computed values.
+ */
+
+.tidy5e-sheet.ddb {
+  /* ---- accent (character-scoped, theme-invariant) ---- */
+  --ddb-accent: var(--t5e-theme-color-default, #c53131);
+  --ddb-accent-hover: color-mix(in srgb, var(--ddb-accent) 88%, #000);
+  --ddb-accent-active: color-mix(in srgb, var(--ddb-accent) 78%, #000);
+  --ddb-accent-transparent: color-mix(in srgb, var(--ddb-accent) 40%, transparent);
+  --ddb-accent-subtle-bg: color-mix(in srgb, var(--ddb-accent) 20%, transparent);
+  --ddb-accent-chip-contrast: #fff;
+  --ddb-focus-ring: 0 0 3px 1px color-mix(in srgb, var(--ddb-accent) 20%, transparent);
+  --ddb-link: var(--ddb-accent);
+  --ddb-tab-active-indicator: var(--ddb-accent);
+  --ddb-pip-filled: var(--ddb-accent);
+  --ddb-dice-roll-border: var(--ddb-accent);
+  --ddb-stat-modified: var(--ddb-accent);
+
+  /* ---- typography (theme-invariant) ---- */
+  --ddb-font-body: 'Roboto', Helvetica, sans-serif;
+  --ddb-font-condensed: 'Roboto Condensed', Roboto, Helvetica, sans-serif;
+  --ddb-size-label: 10px;
+  --ddb-size-value-lg: 26px;
+  --ddb-size-value-md: 16px;
+  --ddb-size-body: 13px;
+  --ddb-lineheight-body: 1.4;
+  --ddb-letterspacing-value-lg: -1px;
+  --ddb-weight-label: 700;
+  --ddb-weight-value: 700;
+  --ddb-transform-label: uppercase;
+  --ddb-tab-font-size: 0.75rem;
+  --ddb-tab-indicator-width: 0.125rem;
+
+  /* ---- shape (theme-invariant; panel frames are SVG-drawn, see svg/) ---- */
+  --ddb-radius-pill: 50%;
+  --ddb-radius-control: 3px;
+  --ddb-radius-input: 4px;
+  --ddb-border-width-panel: 1px;
+  --ddb-shadow-elevated: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+
+  /* ---- light theme (DDB default) ---- */
+  /* DDB renders the header strip dark in BOTH themes (see captures) */
+  --ddb-header-bg: #10161a;
+  --ddb-header-text: #fff;
+  --ddb-page-bg: #f9f9f9;
+  --ddb-panel-bg: #fefefe;
+  --ddb-panel-bg-solid: #fefefe;
+  --ddb-panel-border: #eaeaea;
+  --ddb-box-bg: #fefefe;
+  --ddb-sidebar-bg: #fff;
+  --ddb-table-row-bg: #fdfdfd;
+  --ddb-table-row-alt-bg: #faf8f7;
+  --ddb-table-row-hover-bg: #e3f4eb;
+  --ddb-text: #242528;
+  --ddb-text-prose: #242528;
+  --ddb-text-muted: #75838b;
+  --ddb-text-disabled: #aaa;
+  --ddb-label: #75838b;
+  --ddb-heading: #75838b;
+  --ddb-heading-box: #000;
+  --ddb-positive: #40d250;
+  --ddb-positive-bg: #40d250;
+  --ddb-positive-bg-hover: #2bb43a;
+  --ddb-negative: #d24040;
+  --ddb-negative-bg: #d24040;
+  --ddb-negative-bg-hover: #b42b2b;
+  --ddb-crit-highlight: #abdaf9;
+  --ddb-pip-empty: #fff;
+  --ddb-pip-border: #d8d8d8;
+  --ddb-shadow-hairline: 0 0 0 1px #e0e0e0;
+  --ddb-tab-active-color: #12181c;
+  --ddb-tab-inactive-color: #75838b;
+  --ddb-condition-muted: #75838b;
+  --ddb-defense-active: #242528;
+}
+
+/* ---- dark theme (DDB "Underdark Mode") ---- */
+.tidy5e-sheet.ddb.theme-dark {
+  --ddb-page-bg: #10161a;
+  --ddb-panel-bg: #10161adb;
+  --ddb-panel-bg-solid: #10161a;
+  --ddb-panel-border: var(--ddb-accent-transparent);
+  --ddb-box-bg: #10161adb;
+  --ddb-sidebar-bg: #10161a;
+  --ddb-table-row-bg: rgba(16, 22, 26, 0.859);
+  --ddb-table-row-alt-bg: rgba(26, 35, 42, 0.859);
+  --ddb-table-row-hover-bg: #1b2b23;
+  --ddb-text: #fff;
+  --ddb-text-prose: hsla(0, 0%, 100%, 0.87);
+  --ddb-text-muted: #a2acb2;
+  --ddb-text-disabled: #616f7a;
+  --ddb-text-placeholder: #6c7a82;
+  --ddb-label: #a2acb2;
+  --ddb-heading: #a2acb2;
+  --ddb-heading-box: #fff;
+  --ddb-positive-bg: #00c797;
+  --ddb-positive-bg-hover: #009470;
+  --ddb-negative-bg: #c53131;
+  --ddb-negative-bg-hover: #9c2727;
+  --ddb-pip-empty: rgb(16, 22, 26);
+  --ddb-pip-border: #a2acb2;
+  --ddb-shadow-hairline: none;
+  --ddb-tab-active-color: #f9fafa;
+  --ddb-tab-inactive-color: #a2acb2;
+  --ddb-condition-muted: #a2acb2;
+  --ddb-defense-active: #fff;
+}
+
+/* Base type inside the DDB layout */
+.tidy5e-sheet.ddb .window-content {
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  line-height: var(--ddb-lineheight-body);
+  color: var(--ddb-text);
+  background: var(--ddb-page-bg);
+}

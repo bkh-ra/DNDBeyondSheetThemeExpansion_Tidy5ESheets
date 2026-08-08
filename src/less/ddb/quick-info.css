@@ -1,0 +1,611 @@
+/* DDB-FORK: quick-info band (abilities, proficiency, speed, inspiration,
+ * hit points, initiative, armor class).
+ *
+ * Every rule is scoped to `.tidy5e-sheet.ddb` so the classic and quadrone
+ * layouts are untouched. Colours, fonts and shape values come only from the
+ * `--ddb-*` tokens in ddb-tokens.css — no literals, no Tidy `--t5e-*` reads.
+ *
+ * Panel surfaces are SVG (see src/sheets/ddb/svg/), so there are no CSS
+ * borders or radii on the boxes: `.ddb-box-background__path` carries both the
+ * fill and the frame outline. See design/DESIGN-TOKENS.md "Gaps".
+ *
+ * NOTE: this file is not imported anywhere yet. Add
+ *   @import 'ddb/quick-info.css';
+ * to src/less/tidy5e.css (next to the existing ddb imports) to activate it.
+ */
+
+/* ------------------------------------------------------------------ *
+ * Shared box scaffolding
+ * ------------------------------------------------------------------ */
+
+.tidy5e-sheet.ddb .ddb-box-background {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.tidy5e-sheet.ddb .ddb-box-background__path {
+  fill: var(--ddb-box-bg);
+  stroke: var(--ddb-panel-border);
+  stroke-width: var(--ddb-border-width-panel);
+}
+
+/* ------------------------------------------------------------------ *
+ * Band layout
+ * ------------------------------------------------------------------ */
+
+.tidy5e-sheet.ddb .ddb-quick-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--ddb-font-condensed);
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.ddb .ddb-quick-info__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.tidy5e-sheet.ddb .ddb-quick-info__abilities {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+}
+
+.tidy5e-sheet.ddb .ddb-quick-info__health {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: flex-start;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+/* Shared text roles inside every quick-info box. */
+.tidy5e-sheet.ddb .ddb-quick-info .ddb-stat-box__heading,
+.tidy5e-sheet.ddb .ddb-quick-info .ddb-stat-box__label,
+.tidy5e-sheet.ddb .ddb-quick-info .ddb-ability-box__label,
+.tidy5e-sheet.ddb .ddb-quick-info .ddb-ac-shield__label,
+.tidy5e-sheet.ddb .ddb-quick-info .ddb-inspiration-box__label,
+.tidy5e-sheet.ddb .ddb-quick-info .ddb-hp-block__label,
+.tidy5e-sheet.ddb .ddb-quick-info .ddb-death-saves__label {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  text-transform: var(--ddb-transform-label);
+  line-height: 1.1;
+  color: var(--ddb-label);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ *
+ * Ability box
+ * ------------------------------------------------------------------ */
+
+.tidy5e-sheet.ddb .ddb-ability-box {
+  position: relative;
+  flex: 0 0 auto;
+  width: 5.0625rem; /* 81px, per design/tokens.json ability box footprint */
+  height: 5.9375rem; /* 95px */
+}
+
+.tidy5e-sheet.ddb .ddb-ability-box__roller {
+  position: absolute;
+  inset: 0 0 25% 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  width: 100%;
+  padding: 0.25rem 0.125rem 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.tidy5e-sheet.ddb .ddb-ability-box__roller:disabled {
+  cursor: default;
+  color: var(--ddb-text-disabled);
+}
+
+.tidy5e-sheet.ddb .ddb-ability-box__roller:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+.tidy5e-sheet.ddb .ddb-ability-box__modifier {
+  display: flex;
+  align-items: baseline;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-value-lg);
+  font-weight: var(--ddb-weight-value);
+  letter-spacing: var(--ddb-letterspacing-value-lg);
+  line-height: 1;
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.ddb .ddb-ability-box__roller:hover .ddb-ability-box__modifier {
+  color: var(--ddb-accent);
+}
+
+.tidy5e-sheet.ddb .ddb-ability-box__score {
+  position: absolute;
+  left: 50%;
+  bottom: 0.0625rem;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9375rem; /* matches the badge tab drawn in DdbAbilityBoxShape */
+  height: 1.0625rem;
+}
+
+.tidy5e-sheet.ddb .ddb-ability-box__score-value {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-body);
+  font-weight: var(--ddb-weight-value);
+  line-height: 1;
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.ddb .ddb-ability-box .ddb-ability-box__score-input {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: var(--ddb-radius-input);
+  background: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-body);
+  font-weight: var(--ddb-weight-value);
+  text-align: center;
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.ddb .ddb-ability-box .ddb-ability-box__score-input:focus {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* Proficiency in a save is signalled on the frame, as DDB does. */
+.tidy5e-sheet.ddb .ddb-ability-box.has-proficiency .ddb-box-background__path {
+  stroke: var(--ddb-accent);
+}
+
+/* ------------------------------------------------------------------ *
+ * Generic stat box (proficiency bonus, speed, initiative)
+ * ------------------------------------------------------------------ */
+
+.tidy5e-sheet.ddb .ddb-stat-box {
+  position: relative;
+  flex: 0 0 auto;
+  width: 4.375rem; /* 70px */
+  height: 3.875rem; /* 62px */
+}
+
+.tidy5e-sheet.ddb .ddb-stat-box__content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.0625rem;
+  width: 100%;
+  padding: 0.1875rem 0.25rem 0.375rem;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: inherit;
+  text-align: center;
+}
+
+.tidy5e-sheet.ddb button.ddb-stat-box__content {
+  cursor: pointer;
+}
+
+.tidy5e-sheet.ddb button.ddb-stat-box__content:disabled {
+  cursor: default;
+  color: var(--ddb-text-disabled);
+}
+
+.tidy5e-sheet.ddb button.ddb-stat-box__content:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+.tidy5e-sheet.ddb .ddb-stat-box__heading {
+  color: var(--ddb-heading-box);
+}
+
+.tidy5e-sheet.ddb .ddb-stat-box__value {
+  display: flex;
+  align-items: baseline;
+  gap: 0.0625rem;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-value-lg);
+  font-weight: var(--ddb-weight-value);
+  letter-spacing: var(--ddb-letterspacing-value-lg);
+  line-height: 1;
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.ddb button.ddb-stat-box__content:hover .ddb-stat-box__value {
+  color: var(--ddb-accent);
+}
+
+.tidy5e-sheet.ddb .ddb-stat-box__unit {
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: normal;
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.ddb .ddb-stat-box__label {
+  max-width: 100%;
+  white-space: normal;
+  text-wrap: balance;
+}
+
+/* The proficiency-bonus figure is the one documented exception to
+ * --ddb-weight-value (DESIGN-TOKENS.md "Uncertain / caveats"). */
+.tidy5e-sheet.ddb .ddb-quick-info__box--proficiency .ddb-stat-box__value {
+  font-weight: 500;
+}
+
+.tidy5e-sheet.ddb .ddb-quick-info__box--initiative {
+  height: 2.8125rem; /* 45px, per the measured initiative box */
+}
+
+.tidy5e-sheet.ddb .ddb-quick-info__box--initiative .ddb-stat-box__label {
+  color: var(--ddb-heading-box);
+}
+
+.tidy5e-sheet.ddb .ddb-quick-info__initiative-config,
+.tidy5e-sheet.ddb .ddb-ac-shield__config,
+.tidy5e-sheet.ddb .ddb-hp-block__config {
+  align-self: flex-start;
+  padding: 0.125rem 0.25rem;
+  border: none;
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  color: var(--ddb-label);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.tidy5e-sheet.ddb .ddb-quick-info__initiative-config:hover,
+.tidy5e-sheet.ddb .ddb-ac-shield__config:hover,
+.tidy5e-sheet.ddb .ddb-hp-block__config:hover {
+  color: var(--ddb-accent);
+}
+
+/* ------------------------------------------------------------------ *
+ * Inspiration
+ * ------------------------------------------------------------------ */
+
+.tidy5e-sheet.ddb .ddb-inspiration-box {
+  position: relative;
+  flex: 0 0 auto;
+  width: 4.5rem; /* 72px */
+  height: 3.875rem;
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.ddb .ddb-inspiration-box__content {
+  position: absolute;
+  inset: 0 0 1.125rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+  width: 100%;
+  padding: 0.25rem;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: inherit;
+}
+
+.tidy5e-sheet.ddb button.ddb-inspiration-box__content {
+  cursor: pointer;
+}
+
+.tidy5e-sheet.ddb button.ddb-inspiration-box__content:disabled {
+  cursor: default;
+  color: var(--ddb-text-disabled);
+}
+
+.tidy5e-sheet.ddb .ddb-inspiration-box__content:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+.tidy5e-sheet.ddb .ddb-inspiration-box__token {
+  width: 2.1875rem;
+  height: 1.3125rem;
+  overflow: visible;
+}
+
+.tidy5e-sheet.ddb .ddb-inspiration-box__token-star {
+  fill: currentColor;
+}
+
+.tidy5e-sheet.ddb .ddb-inspiration-box__token-arc {
+  stroke: currentColor;
+  stroke-width: var(--ddb-border-width-panel);
+  stroke-linecap: round;
+}
+
+.tidy5e-sheet.ddb .ddb-inspiration-box.inspired {
+  color: var(--ddb-accent);
+}
+
+.tidy5e-sheet.ddb .ddb-inspiration-box.inspired .ddb-box-background__path {
+  stroke: var(--ddb-accent);
+  fill: var(--ddb-accent-subtle-bg);
+}
+
+.tidy5e-sheet.ddb .ddb-inspiration-box__level {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-value-md);
+  font-weight: var(--ddb-weight-value);
+  line-height: 1;
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.ddb .ddb-inspiration-box__token-button,
+.tidy5e-sheet.ddb .ddb-inspiration-box__step {
+  display: flex;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.tidy5e-sheet.ddb .ddb-inspiration-box__step:disabled {
+  color: var(--ddb-text-disabled);
+  cursor: default;
+}
+
+.tidy5e-sheet.ddb .ddb-inspiration-box__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  font-size: var(--ddb-size-label);
+}
+
+.tidy5e-sheet.ddb .ddb-inspiration-box__label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.1875rem;
+  padding: 0 0.125rem;
+  text-align: center;
+  white-space: normal;
+  text-wrap: balance;
+}
+
+/* ------------------------------------------------------------------ *
+ * Armor class shield
+ * ------------------------------------------------------------------ */
+
+.tidy5e-sheet.ddb .ddb-ac-shield {
+  position: relative;
+  flex: 0 0 auto;
+  width: 4.9375rem; /* 79px */
+  height: 5.625rem; /* 90px */
+}
+
+.tidy5e-sheet.ddb .ddb-ac-shield__content {
+  position: absolute;
+  inset: 0 0 22% 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.0625rem;
+  padding: 0 0.5rem;
+  text-align: center;
+}
+
+.tidy5e-sheet.ddb .ddb-ac-shield__value {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-value-lg);
+  font-weight: var(--ddb-weight-value);
+  letter-spacing: var(--ddb-letterspacing-value-lg);
+  line-height: 1;
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.ddb .ddb-ac-shield__label {
+  white-space: normal;
+  text-wrap: balance;
+}
+
+.tidy5e-sheet.ddb .ddb-ac-shield__config {
+  position: absolute;
+  top: 0.125rem;
+  right: 0.125rem;
+}
+
+/* ------------------------------------------------------------------ *
+ * Hit points
+ * ------------------------------------------------------------------ */
+
+.tidy5e-sheet.ddb .ddb-hp-block {
+  position: relative;
+  flex: 1 1 19.8125rem; /* 317px measured footprint, allowed to grow */
+  min-width: 15rem;
+  height: 5.5625rem; /* 89px */
+}
+
+.tidy5e-sheet.ddb .ddb-hp-block__title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0.25rem;
+  margin: 0;
+  border: none;
+  padding: 0;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  text-transform: var(--ddb-transform-label);
+  text-align: center;
+  line-height: 1.1;
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.ddb .ddb-hp-block__fields {
+  position: absolute;
+  inset: 0 0 1.25rem 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.375rem 0.75rem 0;
+}
+
+.tidy5e-sheet.ddb .ddb-hp-block__field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  min-width: 3rem;
+}
+
+.tidy5e-sheet.ddb .ddb-hp-block__value {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-value-lg);
+  font-weight: var(--ddb-weight-value);
+  letter-spacing: var(--ddb-letterspacing-value-lg);
+  line-height: 1;
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.ddb .ddb-hp-block .ddb-hp-block__input {
+  width: 100%;
+  padding: 0;
+  border: none;
+  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border-radius: 0;
+  background: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-value-lg);
+  font-weight: var(--ddb-weight-value);
+  letter-spacing: var(--ddb-letterspacing-value-lg);
+  text-align: center;
+  line-height: 1;
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.ddb .ddb-hp-block .ddb-hp-block__input:focus {
+  outline: none;
+  border-bottom-color: var(--ddb-accent);
+  box-shadow: var(--ddb-focus-ring);
+}
+
+.tidy5e-sheet.ddb .ddb-hp-block__separator {
+  align-self: center;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-value-lg);
+  font-weight: var(--ddb-weight-value);
+  line-height: 1;
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.ddb .ddb-hp-block__field--temp .ddb-hp-block__value,
+.tidy5e-sheet.ddb .ddb-hp-block__field--temp .ddb-hp-block__input {
+  color: var(--ddb-positive);
+}
+
+/* ------------------------------------------------------------------ *
+ * Death saves
+ * ------------------------------------------------------------------ */
+
+.tidy5e-sheet.ddb .ddb-death-saves {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.5rem;
+  align-self: center;
+}
+
+.tidy5e-sheet.ddb .ddb-death-saves__group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1875rem;
+}
+
+.tidy5e-sheet.ddb .ddb-death-saves__pips {
+  display: flex;
+  gap: 0.1875rem;
+}
+
+.tidy5e-sheet.ddb .ddb-death-saves__pip {
+  width: 0.75rem;
+  height: 0.75rem;
+  padding: 0;
+  border: var(--ddb-border-width-panel) solid var(--ddb-pip-border);
+  border-radius: var(--ddb-radius-pill);
+  background: var(--ddb-pip-empty);
+  cursor: pointer;
+}
+
+.tidy5e-sheet.ddb .ddb-death-saves__pip:disabled {
+  cursor: default;
+}
+
+.tidy5e-sheet.ddb
+  .ddb-death-saves__group--failures
+  .ddb-death-saves__pip.checked {
+  background: var(--ddb-negative);
+  border-color: var(--ddb-negative);
+}
+
+.tidy5e-sheet.ddb
+  .ddb-death-saves__group--successes
+  .ddb-death-saves__pip.checked {
+  background: var(--ddb-positive);
+  border-color: var(--ddb-positive);
+}
+
+.tidy5e-sheet.ddb .ddb-death-saves__roll {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: var(--ddb-border-width-panel) solid var(--ddb-dice-roll-border);
+  border-radius: var(--ddb-radius-input);
+  background: none;
+  color: var(--ddb-accent);
+  cursor: pointer;
+}
+
+.tidy5e-sheet.ddb .ddb-death-saves__roll:hover {
+  background: var(--ddb-accent-subtle-bg);
+}
+
+.tidy5e-sheet.ddb .ddb-death-saves__roll:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
