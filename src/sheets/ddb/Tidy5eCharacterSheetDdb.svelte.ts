@@ -16,8 +16,8 @@ export class Tidy5eCharacterSheetDdb extends Tidy5eCharacterSheetQuadrone {
   static DEFAULT_OPTIONS: Partial<ApplicationConfiguration> = {
     classes: [CONSTANTS.SHEET_LAYOUT_DDB],
     position: {
-      width: 1024,
-      height: 880,
+      width: 1150,
+      height: 950,
     },
   };
 

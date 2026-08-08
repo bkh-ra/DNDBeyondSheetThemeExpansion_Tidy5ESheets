@@ -57,43 +57,59 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 8px 10px 10px;
+  gap: 6px;
+  padding: 6px 8px 8px;
 }
 
 .tidy5e-sheet.ddb .ddb-sheet-body > :not(.ddb-columns) {
   flex: 0 0 auto;
 }
 
-/* --- three columns, each its own scroll region --- */
+/* --- three FIXED columns (DDB parity: panes are fixed size and position;
+ * only the tabbed list content scrolls) --- */
 .tidy5e-sheet.ddb .ddb-columns {
   flex: 1;
   min-height: 0;
   display: grid;
   grid-template-columns: 215px 210px minmax(0, 1fr);
-  gap: 8px;
+  gap: 6px;
   align-items: stretch;
 }
 
 .tidy5e-sheet.ddb .ddb-col {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
   min-height: 0;
 }
 
-.tidy5e-sheet.ddb .ddb-col-left,
-.tidy5e-sheet.ddb .ddb-col-skills {
-  overflow: hidden auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--ddb-accent-transparent) transparent;
-  padding-right: 2px;
-}
-
-/* Primary column: strip + tab bar fixed, tab CONTENT scrolls */
+/* Primary column: combat row + tab bar fixed, tab CONTENT scrolls */
 .tidy5e-sheet.ddb .ddb-col-primary {
   overflow: hidden;
+}
+
+/* Initiative + AC + Defenses/Conditions row atop the primary column */
+.tidy5e-sheet.ddb .ddb-combat-strip-row {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.tidy5e-sheet.ddb .ddb-combat-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+/* The defenses/conditions box fills the rest of the row, like DDB */
+.tidy5e-sheet.ddb .ddb-combat-strip-row .ddb-conditions-defenses {
+  flex: 1 1 auto;
+  width: auto;
+  max-width: none;
+  margin-right: 0;
 }
 
 .tidy5e-sheet.ddb .ddb-col-primary .ddb-primary-box {
@@ -115,18 +131,26 @@
   scrollbar-color: var(--ddb-accent-transparent) transparent;
 }
 
-/* Narrow windows: stack the two stat columns beside each other above primary;
- * the sheet body itself becomes the scroll region in this fallback. */
+/* Keep the fixed layout intact: the window cannot shrink below the size the
+ * fixed panes need (Foundry resize is clamped by these). */
+.tidy5e-sheet.application.ddb {
+  min-width: 1080px;
+  min-height: 860px;
+}
+
+/* Narrow-window fallback (e.g. popped out on a small screen): stack the two
+ * stat columns beside each other above primary; the sheet body becomes the
+ * scroll region. */
 @media (max-width: 900px) {
+  .tidy5e-sheet.application.ddb {
+    min-width: 0;
+    min-height: 0;
+  }
   .tidy5e-sheet.ddb .ddb-sheet-body {
     overflow: hidden auto;
   }
   .tidy5e-sheet.ddb .ddb-columns {
     grid-template-columns: 1fr 1fr;
-  }
-  .tidy5e-sheet.ddb .ddb-col-left,
-  .tidy5e-sheet.ddb .ddb-col-skills {
-    overflow: visible;
   }
   .tidy5e-sheet.ddb .ddb-col-primary {
     grid-column: 1 / -1;

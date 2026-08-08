@@ -9,10 +9,12 @@
 <script lang="ts">
   import DdbHeaderBanner from './parts/header/DdbHeaderBanner.svelte';
   import DdbQuickInfoBand from './parts/quickinfo/DdbQuickInfoBand.svelte';
+  import DdbCombatRow from './parts/quickinfo/DdbCombatRow.svelte';
   import DdbSavingThrowsBox from './parts/leftcol/DdbSavingThrowsBox.svelte';
   import DdbSkillsBox from './parts/leftcol/DdbSkillsBox.svelte';
   import DdbSensesBox from './parts/leftcol/DdbSensesBox.svelte';
   import DdbProficienciesBox from './parts/leftcol/DdbProficienciesBox.svelte';
+  import DdbConditionsDefensesStrip from './parts/primary/DdbConditionsDefensesStrip.svelte';
   import DdbPrimaryBox from './parts/primary/DdbPrimaryBox.svelte';
 </script>
 
@@ -34,7 +36,11 @@
       </aside>
 
       <main class="ddb-col ddb-col-primary">
-        <DdbPrimaryBox />
+        <div class="ddb-combat-strip-row">
+          <DdbCombatRow />
+          <DdbConditionsDefensesStrip />
+        </div>
+        <DdbPrimaryBox showConditionsDefenses={false} />
       </main>
     </div>
   </div>

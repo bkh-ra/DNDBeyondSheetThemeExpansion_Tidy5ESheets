@@ -4,9 +4,11 @@
   Composition and label order come from design/GROUPINGS.md
   (`div.ct-quick-info`) and the athelstan captures:
 
-    row 1  six ability boxes | PROFICIENCY BONUS | WALKING SPEED |
-           HEROIC INSPIRATION | HIT POINTS
-    row 2  INITIATIVE | ARMOR CLASS
+    single row: six ability boxes | PROFICIENCY BONUS | WALKING SPEED |
+                HEROIC INSPIRATION | HIT POINTS
+
+  (INITIATIVE + ARMOR CLASS live in DdbCombatRow at the top of the primary
+  column, matching DDB's grid.)
 
   All sheet data comes from the quadrone character context, so the band works
   unchanged on top of the existing Tidy character sheet data pipeline.
@@ -16,8 +18,6 @@
   import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
   import { getModifierData } from 'src/utils/formatting';
   import DdbAbilityBox from './DdbAbilityBox.svelte';
-  import DdbAcShield from './DdbAcShield.svelte';
-  import DdbDeathSaves from './DdbDeathSaves.svelte';
   import DdbHpBlock from './DdbHpBlock.svelte';
   import DdbInspirationBox from './DdbInspirationBox.svelte';
   import DdbStatBox from './DdbStatBox.svelte';
@@ -27,8 +27,6 @@
   const localize = FoundryAdapter.localize;
 
   let pb = $derived(getModifierData(context.system.attributes.prof ?? 0));
-
-  let ini = $derived(getModifierData(context.system.attributes.init.total));
 
   /** DDB shows the walking speed here; `speeds.main` is ordered walk-first. */
   let walkSpeed = $derived(context.speeds.main[0]);
@@ -80,41 +78,10 @@
 
     <DdbInspirationBox />
 
-    <section class="ddb-quick-info__health">
-      <DdbHpBlock />
-      {#if context.showDeathSaves}
-        <DdbDeathSaves />
-      {/if}
-    </section>
-  </div>
-
-  <div class="ddb-quick-info__row ddb-quick-info__row--secondary">
-    <DdbStatBox
-      class="ddb-quick-info__box--initiative"
-      value="{ini.sign}{ini.value}"
-      label={localize('DND5E.Initiative')}
-      width={60}
-      height={48}
-      data-action="roll"
-      data-type="initiative"
-      data-has-roll-modes
-      data-tooltip="DND5E.Initiative"
-      aria-label={localize('DND5E.Initiative')}
-      disabled={!context.owner}
-    />
-    {#if context.unlocked}
-      <button
-        type="button"
-        class="ddb-quick-info__initiative-config"
-        aria-label={localize('DND5E.InitiativeConfig')}
-        data-tooltip="DND5E.InitiativeConfig"
-        data-action="showConfiguration"
-        data-config="initiative"
-      >
-        <i class="fas fa-cog"></i>
-      </button>
-    {/if}
-
-    <DdbAcShield />
+    <!--
+      Fixed-width health panel. It swaps its own interior between the HP
+      figures and the death-save pips, so the band never changes size.
+    -->
+    <DdbHpBlock />
   </div>
 </div>

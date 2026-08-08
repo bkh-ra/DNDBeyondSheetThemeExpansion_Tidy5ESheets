@@ -7,9 +7,10 @@
   a d20 roll button using the sheet's `roll` action with data-type="deathSave",
   and right-click on the roller to reset both tallies.
 
-  The caller is responsible for the visibility condition; the band renders this
-  only when `context.showDeathSaves` is true, which is the same condition
-  quadrone's ActorPortrait uses to show DeathSavesOverlay.
+  The caller is responsible for the visibility condition; DdbHpBlock swaps this
+  in for the CURRENT / MAX / TEMP figures when `context.showDeathSaves` is true
+  (the same condition quadrone's ActorPortrait uses to show DeathSavesOverlay),
+  keeping the health panel at exactly the same size in both modes.
 -->
 <script lang="ts">
   import { CONSTANTS } from 'src/constants';
@@ -47,8 +48,9 @@
     class="ddb-death-saves__group ddb-death-saves__group--failures"
     data-tidy-sheet-part={CONSTANTS.SHEET_PARTS.DEATH_SAVE_FAILURES}
   >
+    <!-- Short label for the pips; the long one stays on the aria/tooltip. -->
     <span class="ddb-death-saves__label">
-      {localize('DND5E.DeathSaveFailureLabel')}
+      {localize('DND5E.DeathSaveFailures')}
     </span>
     <div class="ddb-death-saves__pips">
       {#each Array(halfSaves) as _, i}
@@ -96,7 +98,7 @@
     data-tidy-sheet-part={CONSTANTS.SHEET_PARTS.DEATH_SAVE_SUCCESSES}
   >
     <span class="ddb-death-saves__label">
-      {localize('DND5E.DeathSaveSuccessLabel')}
+      {localize('DND5E.DeathSaveSuccesses')}
     </span>
     <div class="ddb-death-saves__pips">
       {#each Array(halfSaves) as _, i}

@@ -24,6 +24,7 @@
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
   import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
   import DdbStatBoxShape from 'src/sheets/ddb/svg/DdbStatBoxShape.svelte';
+  import DdbDeathSaves from './DdbDeathSaves.svelte';
 
   let context = $derived(getCharacterSheetQuadroneContext());
 
@@ -99,68 +100,77 @@
   {/if}
 
   <div class="ddb-hp-block__readout">
-    <div class="ddb-hp-block__fields">
-      <div class="ddb-hp-block__field ddb-hp-block__field--current">
-        <span class="ddb-hp-block__label">{localize('DND5E.Current')}</span>
-        {#if context.editable}
-          <TextInputQuadrone
-            id="{appId}-ddb-hp-value"
-            document={context.actor}
-            field="system.attributes.hp.value"
-            class="ddb-hp-block__input"
-            value={hpValue}
-            selectOnFocus={true}
-            enableDeltaChanges={true}
-            blurAfterChange={true}
-            aria-label={localize('DND5E.HitPointsCurrent')}
-          />
-        {:else}
-          <span class="ddb-hp-block__value">{hpValue}</span>
-        {/if}
+    {#if context.showDeathSaves}
+      <!-- Same panel, same footprint — DDB swaps the interior, not the box. -->
+      <DdbDeathSaves />
+    {:else}
+      <div class="ddb-hp-block__fields">
+        <div class="ddb-hp-block__field ddb-hp-block__field--current">
+          <span class="ddb-hp-block__label">{localize('DND5E.Current')}</span>
+          {#if context.editable}
+            <TextInputQuadrone
+              id="{appId}-ddb-hp-value"
+              document={context.actor}
+              field="system.attributes.hp.value"
+              class="ddb-hp-block__input"
+              value={hpValue}
+              selectOnFocus={true}
+              enableDeltaChanges={true}
+              blurAfterChange={true}
+              aria-label={localize('DND5E.HitPointsCurrent')}
+            />
+          {:else}
+            <span class="ddb-hp-block__value">{hpValue}</span>
+          {/if}
+        </div>
+
+        <span class="ddb-hp-block__separator" aria-hidden="true">/</span>
+
+        <div class="ddb-hp-block__field ddb-hp-block__field--max">
+          <span class="ddb-hp-block__label">{localize('DND5E.Max')}</span>
+          {#if context.editable && context.unlocked}
+            <TextInputQuadrone
+              id="{appId}-ddb-hp-max"
+              document={context.actor}
+              field="system.attributes.hp.max"
+              class="ddb-hp-block__input"
+              value={hpMax}
+              selectOnFocus={true}
+              saveEmptyAsNull={true}
+              blurAfterChange={true}
+              aria-label={localize('DND5E.HitPointsMax')}
+            />
+          {:else}
+            <span class="ddb-hp-block__value">{effectiveMaxHp}</span>
+          {/if}
+        </div>
+
+        <div class="ddb-hp-block__field ddb-hp-block__field--temp">
+          <span class="ddb-hp-block__label">{localize('DND5E.Temp')}</span>
+          {#if context.editable}
+            <TextInputQuadrone
+              id="{appId}-ddb-hp-temp"
+              document={context.actor}
+              field="system.attributes.hp.temp"
+              class="ddb-hp-block__input"
+              value={hpTemp}
+              selectOnFocus={true}
+              enableDeltaChanges={true}
+              blurAfterChange={true}
+              aria-label={localize('DND5E.HitPointsTemp')}
+            />
+          {:else}
+            <span class="ddb-hp-block__value">{hpTemp}</span>
+          {/if}
+        </div>
       </div>
+    {/if}
 
-      <span class="ddb-hp-block__separator" aria-hidden="true">/</span>
-
-      <div class="ddb-hp-block__field ddb-hp-block__field--max">
-        <span class="ddb-hp-block__label">{localize('DND5E.Max')}</span>
-        {#if context.editable && context.unlocked}
-          <TextInputQuadrone
-            id="{appId}-ddb-hp-max"
-            document={context.actor}
-            field="system.attributes.hp.max"
-            class="ddb-hp-block__input"
-            value={hpMax}
-            selectOnFocus={true}
-            saveEmptyAsNull={true}
-            blurAfterChange={true}
-            aria-label={localize('DND5E.HitPointsMax')}
-          />
-        {:else}
-          <span class="ddb-hp-block__value">{effectiveMaxHp}</span>
-        {/if}
-      </div>
-
-      <div class="ddb-hp-block__field ddb-hp-block__field--temp">
-        <span class="ddb-hp-block__label">{localize('DND5E.Temp')}</span>
-        {#if context.editable}
-          <TextInputQuadrone
-            id="{appId}-ddb-hp-temp"
-            document={context.actor}
-            field="system.attributes.hp.temp"
-            class="ddb-hp-block__input"
-            value={hpTemp}
-            selectOnFocus={true}
-            enableDeltaChanges={true}
-            blurAfterChange={true}
-            aria-label={localize('DND5E.HitPointsTemp')}
-          />
-        {:else}
-          <span class="ddb-hp-block__value">{hpTemp}</span>
-        {/if}
-      </div>
-    </div>
-
-    <h2 class="ddb-hp-block__title">{localize('DND5E.HitPoints')}</h2>
+    <h2 class="ddb-hp-block__title">
+      {localize(
+        context.showDeathSaves ? 'DND5E.DeathSave' : 'DND5E.HitPoints',
+      )}
+    </h2>
   </div>
 
   {#if context.unlocked}
