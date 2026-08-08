@@ -40,8 +40,8 @@
   /* full-sheet backdrop: page tint over the character's theme image */
   background:
     linear-gradient(
-      color-mix(in srgb, var(--ddb-page-bg) 68%, transparent),
-      color-mix(in srgb, var(--ddb-page-bg) 88%, transparent)
+      color-mix(in srgb, var(--ddb-page-bg) 34%, transparent),
+      color-mix(in srgb, var(--ddb-page-bg) 44%, transparent)
     ),
     var(--t5e-sheet-header-bg, var(--t5e-background-image, none)) top center /
       cover no-repeat,
