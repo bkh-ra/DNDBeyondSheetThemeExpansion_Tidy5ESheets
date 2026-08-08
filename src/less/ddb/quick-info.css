@@ -46,24 +46,36 @@
   color: var(--ddb-text);
 }
 
+/* Both rows stay on one line: DDB never reflows the band, and wrapping it
+ * strands INITIATIVE / ARMOR CLASS on a sparse row of their own. Everything in
+ * row 1 is a fixed footprint except the hit-points panel, which is the only
+ * item allowed to give ground when the sheet is narrow. */
 .tidy5e-sheet.ddb .ddb-quick-info__row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: flex-start;
+  gap: 0.375rem;
+}
+
+.tidy5e-sheet.ddb .ddb-quick-info__row--secondary {
+  justify-content: flex-start;
   gap: 0.5rem;
 }
 
 .tidy5e-sheet.ddb .ddb-quick-info__abilities {
   display: flex;
+  flex: 0 0 auto;
   align-items: flex-start;
-  gap: 0.375rem;
+  gap: 0.3125rem;
 }
 
+/* Right-aligned and bounded — the panel must never stretch to eat the row. */
 .tidy5e-sheet.ddb .ddb-quick-info__health {
   display: flex;
-  flex: 1 1 auto;
+  flex: 0 1 27.5rem; /* 440px cap, per the measured DDB panel */
   align-items: flex-start;
   gap: 0.5rem;
+  margin-left: auto;
   min-width: 0;
 }
 
@@ -95,16 +107,27 @@
   height: 5.9375rem; /* 95px */
 }
 
+/* The inner "well" is an outline only, and the score badge is painted opaque so
+ * it occludes the frame's bottom edge and reads as one silhouette with it. */
+.tidy5e-sheet.ddb .ddb-ability-box-shape__well {
+  fill: none;
+}
+
+.tidy5e-sheet.ddb .ddb-ability-box-shape__badge {
+  fill: var(--ddb-panel-bg-solid);
+}
+
+/* Runs to the frame's bottom edge (82 of the 95px footprint), not the badge. */
 .tidy5e-sheet.ddb .ddb-ability-box__roller {
   position: absolute;
-  inset: 0 0 25% 0;
+  inset: 0 0 0.8125rem 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 0.125rem;
+  justify-content: flex-start;
+  gap: 0.5rem;
   width: 100%;
-  padding: 0.25rem 0.125rem 0;
+  padding: 0.375rem 0.125rem 0;
   border: none;
   border-radius: 0;
   background: none;
@@ -123,9 +146,12 @@
   box-shadow: var(--ddb-focus-ring);
 }
 
+/* Sits inside the drawn well (y 25..59 of the 95px footprint). */
 .tidy5e-sheet.ddb .ddb-ability-box__modifier {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  justify-content: center;
+  height: 2.125rem;
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-value-lg);
   font-weight: var(--ddb-weight-value);
@@ -138,16 +164,18 @@
   color: var(--ddb-accent);
 }
 
+/* Centred on the badge pill drawn by DdbAbilityBoxShape: 34 x 22 centred on
+ * (40.5, 82) of the 81 x 95 footprint. */
 .tidy5e-sheet.ddb .ddb-ability-box__score {
   position: absolute;
   left: 50%;
-  bottom: 0.0625rem;
-  transform: translateX(-50%);
+  top: 5.125rem;
+  transform: translate(-50%, -50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.9375rem; /* matches the badge tab drawn in DdbAbilityBoxShape */
-  height: 1.0625rem;
+  width: 2.125rem;
+  height: 1.375rem;
 }
 
 .tidy5e-sheet.ddb .ddb-ability-box__score-value {
@@ -186,11 +214,13 @@
  * Generic stat box (proficiency bonus, speed, initiative)
  * ------------------------------------------------------------------ */
 
+/* Wide enough that PROFICIENCY / WALKING never clip out of the frame, and short
+ * enough that the bottom edge lines up with the ability frame's (82px). */
 .tidy5e-sheet.ddb .ddb-stat-box {
   position: relative;
   flex: 0 0 auto;
-  width: 4.375rem; /* 70px */
-  height: 3.875rem; /* 62px */
+  width: 4.875rem; /* 78px */
+  height: 4.875rem; /* 78px */
 }
 
 .tidy5e-sheet.ddb .ddb-stat-box__content {
@@ -200,9 +230,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.0625rem;
+  gap: 0.1875rem;
   width: 100%;
-  padding: 0.1875rem 0.25rem 0.375rem;
+  padding: 0.25rem 0.1875rem 0.4375rem;
   border: none;
   border-radius: 0;
   background: none;
@@ -252,9 +282,12 @@
   color: var(--ddb-label);
 }
 
+/* Multi-word labels ("Proficiency Bonus") wrap to two centred lines inside the
+ * frame instead of running past its edge into the neighbouring box. */
 .tidy5e-sheet.ddb .ddb-stat-box__label {
   max-width: 100%;
   white-space: normal;
+  text-align: center;
   text-wrap: balance;
 }
 
@@ -264,11 +297,29 @@
   font-weight: 500;
 }
 
+/* Row 2 is compact: a 60 x 48 frame with the caps label riding above it,
+ * as DDB draws it. */
 .tidy5e-sheet.ddb .ddb-quick-info__box--initiative {
-  height: 2.8125rem; /* 45px, per the measured initiative box */
+  width: 3.75rem; /* 60px */
+  height: 3.875rem; /* 62px = 14px label + 48px frame */
+}
+
+.tidy5e-sheet.ddb .ddb-quick-info__box--initiative .ddb-box-background {
+  inset: 0.875rem 0 0 0;
+  width: auto;
+  height: auto;
+}
+
+.tidy5e-sheet.ddb .ddb-quick-info__box--initiative .ddb-stat-box__content {
+  inset: 0.875rem 0 0 0;
+  padding: 0 0.125rem;
 }
 
 .tidy5e-sheet.ddb .ddb-quick-info__box--initiative .ddb-stat-box__label {
+  position: absolute;
+  top: -0.875rem;
+  left: 0;
+  right: 0;
   color: var(--ddb-heading-box);
 }
 
@@ -295,17 +346,25 @@
  * Inspiration
  * ------------------------------------------------------------------ */
 
+/* 72 x 50 frame holding just the token, with the two-line caps label beneath
+ * it — the label is wider than the frame, exactly as DDB draws it. */
 .tidy5e-sheet.ddb .ddb-inspiration-box {
   position: relative;
   flex: 0 0 auto;
   width: 4.5rem; /* 72px */
-  height: 3.875rem;
+  height: 4.875rem; /* 78px */
   color: var(--ddb-label);
+}
+
+.tidy5e-sheet.ddb .ddb-inspiration-box .ddb-box-background {
+  inset: 0 0 1.75rem 0;
+  width: auto;
+  height: auto;
 }
 
 .tidy5e-sheet.ddb .ddb-inspiration-box__content {
   position: absolute;
-  inset: 0 0 1.125rem 0;
+  inset: 0 0 1.75rem 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -393,13 +452,15 @@
 
 .tidy5e-sheet.ddb .ddb-inspiration-box__label {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0.1875rem;
-  padding: 0 0.125rem;
+  left: -0.75rem;
+  right: -0.75rem;
+  bottom: 0;
+  display: block;
   text-align: center;
+  line-height: 1.05;
   white-space: normal;
   text-wrap: balance;
+  color: var(--ddb-heading-box);
 }
 
 /* ------------------------------------------------------------------ *
@@ -409,13 +470,21 @@
 .tidy5e-sheet.ddb .ddb-ac-shield {
   position: relative;
   flex: 0 0 auto;
-  width: 4.9375rem; /* 79px */
-  height: 5.625rem; /* 90px */
+  width: 4.25rem; /* 68px */
+  height: 5rem; /* 80px */
 }
 
+/* The echo outline is a hairline only — it must not double the fill. */
+.tidy5e-sheet.ddb .ddb-shield-shape__inner {
+  fill: none;
+  opacity: 0.6;
+}
+
+/* ARMOR / value / CLASS all sit inside the inner shield outline, so the stack
+ * is centred on the shield's body rather than on its full bounding box. */
 .tidy5e-sheet.ddb .ddb-ac-shield__content {
   position: absolute;
-  inset: 0 0 22% 0;
+  inset: 0 0 0.875rem 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -435,32 +504,37 @@
 }
 
 .tidy5e-sheet.ddb .ddb-ac-shield__label {
+  font-size: 9px;
+  line-height: 1.05;
   white-space: normal;
   text-wrap: balance;
 }
 
 .tidy5e-sheet.ddb .ddb-ac-shield__config {
   position: absolute;
-  top: 0.125rem;
-  right: 0.125rem;
+  top: 0;
+  right: 0;
+  font-size: 0.5625rem;
 }
 
 /* ------------------------------------------------------------------ *
  * Hit points
  * ------------------------------------------------------------------ */
 
+/* Bounded, never flex-grow: the panel shrinks on a narrow sheet but stops at
+ * the measured DDB footprint instead of stretching across the row. */
 .tidy5e-sheet.ddb .ddb-hp-block {
   position: relative;
-  flex: 1 1 19.8125rem; /* 317px measured footprint, allowed to grow */
-  min-width: 15rem;
-  height: 5.5625rem; /* 89px */
+  flex: 0 1 27.5rem; /* 440px cap */
+  min-width: 13rem; /* the three figures + separator, at the 1024px sheet width */
+  height: 4.875rem; /* 78px, level with the stat boxes */
 }
 
 .tidy5e-sheet.ddb .ddb-hp-block__title {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0.25rem;
+  bottom: 0.1875rem;
   margin: 0;
   border: none;
   padding: 0;
@@ -473,22 +547,30 @@
   color: var(--ddb-label);
 }
 
+/* Label above value, three groups on one baseline: CURRENT / MAX   TEMP. */
 .tidy5e-sheet.ddb .ddb-hp-block__fields {
   position: absolute;
-  inset: 0 0 1.25rem 0;
+  inset: 0 0 1.125rem 0;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  gap: 0.75rem;
-  padding: 0.375rem 0.75rem 0;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem 0;
 }
 
 .tidy5e-sheet.ddb .ddb-hp-block__field {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.125rem;
-  min-width: 3rem;
+  gap: 0.0625rem;
+  flex: 0 0 auto;
+  width: 3rem;
+  min-width: 0;
+}
+
+/* Temp hit points read as a separate figure, set apart from CURRENT / MAX. */
+.tidy5e-sheet.ddb .ddb-hp-block__field--temp {
+  margin-left: 0.875rem;
 }
 
 .tidy5e-sheet.ddb .ddb-hp-block__value {
@@ -500,8 +582,11 @@
   color: var(--ddb-text);
 }
 
+/* Transparent field, and the only rule is a hairline under the figure itself —
+ * never a full-width bar across the panel. */
 .tidy5e-sheet.ddb .ddb-hp-block .ddb-hp-block__input {
-  width: 100%;
+  width: 2.5rem;
+  max-width: 100%;
   padding: 0;
   border: none;
   border-bottom: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
@@ -523,12 +608,19 @@
 }
 
 .tidy5e-sheet.ddb .ddb-hp-block__separator {
-  align-self: center;
+  align-self: flex-end;
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-value-lg);
   font-weight: var(--ddb-weight-value);
   line-height: 1;
   color: var(--ddb-label);
+}
+
+.tidy5e-sheet.ddb .ddb-hp-block__config {
+  position: absolute;
+  top: 0;
+  right: 0.25rem;
+  font-size: 0.5625rem;
 }
 
 .tidy5e-sheet.ddb .ddb-hp-block__field--temp .ddb-hp-block__value,

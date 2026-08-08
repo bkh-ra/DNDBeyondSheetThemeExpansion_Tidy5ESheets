@@ -32,6 +32,19 @@
 
   /** DDB shows the walking speed here; `speeds.main` is ordered walk-first. */
   let walkSpeed = $derived(context.speeds.main[0]);
+
+  let speedLabel = $derived(localize('DND5E.Speed'));
+
+  /**
+   * DDB stacks "WALKING" over the value and "SPEED" under it. Some systems
+   * localize the walk movement type as "Speed" itself, which would stack the
+   * same word twice — in that case the heading is dropped and only the bottom
+   * label is kept.
+   */
+  let speedHeadingIsDuplicate = $derived(
+    (walkSpeed?.label ?? '').trim().toLocaleLowerCase() ===
+      speedLabel.trim().toLocaleLowerCase(),
+  );
 </script>
 
 <div class="ddb-quick-info" data-tidy-sheet-part="ddb-quick-info-band">
@@ -57,10 +70,10 @@
     {#if walkSpeed}
       <DdbStatBox
         class="ddb-quick-info__box--speed"
-        heading={walkSpeed.label}
+        heading={speedHeadingIsDuplicate ? undefined : walkSpeed.label}
         value={walkSpeed.value}
         unit={walkSpeed.units}
-        label={localize('DND5E.Speed')}
+        label={speedLabel}
         tooltip="DND5E.Speed"
       />
     {/if}
@@ -80,8 +93,8 @@
       class="ddb-quick-info__box--initiative"
       value="{ini.sign}{ini.value}"
       label={localize('DND5E.Initiative')}
-      width={70}
-      height={45}
+      width={60}
+      height={48}
       data-action="roll"
       data-type="initiative"
       data-has-roll-modes

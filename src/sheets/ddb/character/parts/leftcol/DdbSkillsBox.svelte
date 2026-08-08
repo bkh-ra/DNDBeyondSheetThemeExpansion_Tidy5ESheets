@@ -39,7 +39,9 @@
 <DdbBox class="ddb-skills-box" title={localize('DND5E.Skills')}>
   <div class="ddb-skills-header">
     <span class="ddb-skills-col-prof">{localize('TIDY5E.AbbrProficiency')}</span>
-    <span class="ddb-skills-col-mod">{localize('DND5E.Ability')}</span>
+    <!-- Abbreviated, like DDB's own "MOD": the ability column is only wide
+         enough for the three-letter abbreviations it holds. -->
+    <span class="ddb-skills-col-mod">{localize('TIDY5E.AbbrMod')}</span>
     <span class="ddb-skills-col-skill">{localize('DND5E.Skill')}</span>
     <span class="ddb-skills-col-bonus">{localize('DND5E.Bonus')}</span>
   </div>

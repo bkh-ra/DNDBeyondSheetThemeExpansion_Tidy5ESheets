@@ -43,7 +43,7 @@
 
   display: flex;
   flex-direction: column;
-  padding: 13px 20px 6px;
+  padding: 13px 16px 8px;
   background: var(--ddb-panel-bg);
   border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
   border-radius: var(--ddb-radius-input);
@@ -92,16 +92,25 @@
 /* Shared primitives: gear button, chips, sign, empty state           */
 /* ------------------------------------------------------------------ */
 
-.tidy5e-sheet.ddb .ddb-gear {
+/* `min-*`/`box-shadow` are reset on every control in this file: Quadrone's
+ * global `:is(button, .button)` rule sets `min-height: var(--t5e-field-size-default)`
+ * (28px) and a drop shadow, which otherwise stretches these small DDB controls
+ * — the pips in particular render as tall ovals instead of circles. */
+.tidy5e-sheet.ddb button.ddb-gear {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
+  box-sizing: border-box;
   width: 14px;
   height: 14px;
+  min-width: 0;
+  min-height: 0;
   padding: 0;
   border: 0;
   border-radius: var(--ddb-radius-control);
   background: none;
+  box-shadow: none;
   color: var(--ddb-text-muted);
   font-size: var(--ddb-size-label);
   line-height: 1;
@@ -118,15 +127,20 @@
   box-shadow: var(--ddb-focus-ring);
 }
 
-/* A bordered rounded rect — DDB's ability-abbreviation and value pills. */
+/* A bordered rounded rect — DDB's ability-abbreviation and value pills.
+ * Applied to both spans and buttons, hence the explicit `min-height`/`box-shadow`
+ * that neutralise the Quadrone button defaults (see `.ddb-gear` above). */
 .tidy5e-sheet.ddb .ddb-chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  box-sizing: border-box;
+  min-height: 20px;
   padding: 2px 5px;
   border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
-  border-radius: var(--ddb-radius-input);
+  border-radius: var(--ddb-radius-control);
   background: none;
+  box-shadow: none;
   color: var(--ddb-text);
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-label);
@@ -157,13 +171,32 @@
 /* Proficiency pip (DdbProficiencyPip.svelte)                         */
 /* ------------------------------------------------------------------ */
 
-.tidy5e-sheet.ddb .ddb-pip {
+/* A true circle, always. The size is pinned on all four axes (`width`, `height`,
+ * `min-*`, `max-*`) plus `aspect-ratio`, and stretching is disabled in every
+ * layout context the pip appears in — flex item (`flex: 0 0 auto` /
+ * `align-self`), grid item (`justify-self`/`align-self`).
+ *
+ * `min-height` is the load-bearing one: Quadrone's global
+ * `:is(button, .button)` rule sets `min-height: var(--t5e-field-size-default)`
+ * (28px), and a `min-height` always beats a `height` no matter which rule wins
+ * the cascade — that is what rendered these as tall ovals. The `button.`
+ * qualifier also lifts specificity above that rule so `display`/`padding` land. */
+.tidy5e-sheet.ddb button.ddb-pip {
   position: relative;
-  flex: 0 0 auto;
   display: inline-block;
-  width: var(--ddb-pip-size);
-  height: var(--ddb-pip-size);
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  align-self: center;
+  justify-self: center;
+  width: var(--ddb-pip-size, 10px);
+  height: var(--ddb-pip-size, 10px);
+  min-width: var(--ddb-pip-size, 10px);
+  min-height: var(--ddb-pip-size, 10px);
+  max-width: var(--ddb-pip-size, 10px);
+  max-height: var(--ddb-pip-size, 10px);
+  aspect-ratio: 1;
   padding: 0;
+  line-height: 1;
   border: var(--ddb-border-width-panel) solid var(--ddb-pip-border);
   border-radius: var(--ddb-radius-pill);
   background: var(--ddb-pip-empty);
@@ -220,18 +253,29 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-rows: repeat(3, auto);
   grid-auto-flow: column;
-  gap: 6px 10px;
+  /* 8px row / 10px column: the captures run the two save columns further apart
+   * than the rows, so the pair of entries never reads as one wide row. */
+  gap: 8px 10px;
 }
 
+/* One cell per ability: pip | abbreviation chip | signed modifier chip.
+ * The 22px chips plus the 8px row gap give the 30px row pitch of the capture. */
 .tidy5e-sheet.ddb .ddb-save-entry {
   display: grid;
-  grid-template-columns: var(--ddb-pip-size) minmax(0, 1fr) auto;
+  grid-template-columns: var(--ddb-pip-size, 10px) minmax(0, 1fr) auto;
   align-items: center;
   gap: 5px;
+  min-height: 22px;
 }
 
 .tidy5e-sheet.ddb .ddb-save-abbr {
   justify-content: center;
+  min-width: 0;
+  min-height: 22px;
+  padding: 2px 3px;
+  /* Muted like every other caps label on this column; only the value chip
+   * beside it carries full-strength text. */
+  color: var(--ddb-label);
   cursor: pointer;
 }
 
@@ -251,16 +295,20 @@
 }
 
 .tidy5e-sheet.ddb .ddb-save-modifier {
-  min-width: 34px;
+  min-width: 28px;
+  min-height: 22px;
+  padding: 2px 4px;
 }
 
+/* Rendered only when the actor has a save bonus (see DdbSavingThrowsBox), so
+ * the box collapses to a clean 2x3 grid when there is nothing to say. */
 .tidy5e-sheet.ddb .ddb-saves-note {
   display: flex;
   gap: 5px;
-  padding-top: 8px;
-  border-top: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  margin-top: 2px;
   font-family: var(--ddb-font-condensed);
   font-size: 12px;
+  line-height: 1.3;
   color: var(--ddb-text-prose);
 }
 
@@ -279,24 +327,33 @@
 .tidy5e-sheet.ddb .ddb-senses-passives {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  /* 26px row + 5px gap = the 31px pitch measured off the passive stack in
+   * the athelstan 01-actions captures. */
+  gap: 5px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+/* Value chip nested at the left end of a full-width bordered row, the way DDB
+ * draws its passive-score rows (see the athelstan 01-actions captures).
+ * NB: never write a capture path with a wildcard segment inside a CSS comment.
+ * A star followed by a slash closes the comment early and spills the rest of
+ * the line into the stylesheet, which silently ate this very rule. */
 .tidy5e-sheet.ddb .ddb-sense-row {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 8px;
-  padding: 2px 4px;
+  min-height: 26px;
+  padding: 2px 6px 2px 2px;
   border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
   border-radius: var(--ddb-radius-input);
 }
 
 .tidy5e-sheet.ddb .ddb-sense-value {
-  min-width: 28px;
+  min-width: 30px;
+  min-height: 22px;
 }
 
 .tidy5e-sheet.ddb .ddb-sense-label {
@@ -304,6 +361,7 @@
   font-size: var(--ddb-size-label);
   font-weight: var(--ddb-weight-label);
   text-transform: var(--ddb-transform-label);
+  letter-spacing: 0.02em;
   color: var(--ddb-label);
 }
 
@@ -311,6 +369,7 @@
   display: flex;
   flex-direction: column;
   gap: 3px;
+  margin-top: 4px;
   text-align: center;
   font-family: var(--ddb-font-condensed);
   font-size: 12px;
@@ -347,12 +406,15 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  min-height: 12px;
 }
 
 .tidy5e-sheet.ddb .ddb-prof-group-label {
-  font-size: 14px;
+  font-size: var(--ddb-size-label);
   font-weight: var(--ddb-weight-label);
   text-transform: var(--ddb-transform-label);
+  letter-spacing: 0.02em;
+  line-height: 1.2;
   color: var(--ddb-label);
 }
 
@@ -360,7 +422,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0 4px;
-  margin-top: 2px;
+  margin-top: 4px;
+  line-height: var(--ddb-lineheight-body);
   color: var(--ddb-text);
 }
 
@@ -375,10 +438,13 @@
 }
 
 .tidy5e-sheet.ddb button.ddb-prof-item-rollable {
+  display: inline;
+  min-height: 0;
   padding: 0;
   border: 0;
   border-radius: var(--ddb-radius-control);
   background: none;
+  box-shadow: none;
   line-height: inherit;
   cursor: pointer;
 }
@@ -401,56 +467,78 @@
 /* SKILLS box                                                         */
 /* ------------------------------------------------------------------ */
 
+/* DDB's skills box runs its columns much closer to the frame than the stacked
+ * boxes do (measured off the captures: ~6px of inset against ~13px elsewhere),
+ * which is what buys the skill-name column enough room for "Animal Handling"
+ * at this width. The frame, vertical padding and bottom title stay uniform. */
+.tidy5e-sheet.ddb .ddb-skills-box {
+  padding-inline: 8px;
+}
+
 .tidy5e-sheet.ddb .ddb-skills-box .ddb-box-body {
   gap: 5px;
 }
 
-/* Shared grid template for the header and every row: PROF | MOD | SKILL | BONUS */
+/* THE shared grid template: the header labels and every skill row are laid out
+ * by this one declaration, so PROF / ABILITY / SKILL / BONUS always line up.
+ * Columns are gapless — each cell pads itself — so the name column keeps the
+ * full remainder. */
 .tidy5e-sheet.ddb .ddb-skills-header,
 .tidy5e-sheet.ddb .ddb-skill-row {
   display: grid;
-  grid-template-columns: 30px 40px minmax(0, 1fr) auto;
-  align-items: center;
+  grid-template-columns: 26px 28px minmax(0, 1fr) 38px;
 }
 
 .tidy5e-sheet.ddb .ddb-skills-header {
+  align-items: center;
+  margin-bottom: 4px;
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-label);
   font-weight: var(--ddb-weight-label);
   text-transform: var(--ddb-transform-label);
-  color: var(--ddb-heading);
-  margin-bottom: 5px;
+  letter-spacing: 0.02em;
+  color: var(--ddb-label);
 }
 
 .tidy5e-sheet.ddb .ddb-skills-list {
   display: flex;
   flex-direction: column;
+  gap: 4px;
   margin: 0;
   padding: 0;
   list-style: none;
   overflow-y: auto;
 }
 
+/* `stretch` (not `center`) so the name and bonus cells fill the row height and
+ * their bottom hairlines meet as one continuous rule, as in the captures.
+ * 25px + the list's 4px gap = the ~29px row pitch measured off the capture. */
 .tidy5e-sheet.ddb .ddb-skill-row {
-  margin-bottom: 5px;
+  align-items: stretch;
+  min-height: 25px;
 }
 
-.tidy5e-sheet.ddb .ddb-skills-col-prof {
-  display: flex;
-  align-items: center;
-  padding-left: 3px;
-}
-
+.tidy5e-sheet.ddb .ddb-skills-col-prof,
 .tidy5e-sheet.ddb .ddb-skills-col-mod {
   display: flex;
   align-items: center;
-  padding: 0 5px;
+  justify-content: center;
+  min-width: 0;
 }
 
 .tidy5e-sheet.ddb .ddb-skills-col-bonus {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
-  padding-left: 5px;
+  min-width: 0;
+  padding-left: 4px;
+}
+
+/* The hairline under a skill row runs from the name to the right edge only —
+ * it never crosses the pip or ability columns. Paired with the matching
+ * `border-bottom` on `.ddb-skill-name` below, it reads as one rule. */
+.tidy5e-sheet.ddb .ddb-skill-row .ddb-skills-col-bonus {
+  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
 }
 
 .tidy5e-sheet.ddb .ddb-skill-ability {
@@ -463,22 +551,36 @@
 
 .tidy5e-sheet.ddb .ddb-skill-ability-select {
   width: 100%;
+  min-height: 0;
+  height: 20px;
+  padding: 0 2px;
   font-family: var(--ddb-font-condensed);
   font-size: 12px;
   text-transform: var(--ddb-transform-label);
   color: var(--ddb-label);
 }
 
+/* `display: block` (not the inherited inline-flex) so `text-overflow` applies;
+ * `3px + 18px + 3px` fills the 25px row so the name sits optically centred
+ * against the bonus chip beside it and their hairlines line up. */
 .tidy5e-sheet.ddb button.ddb-skill-name {
+  display: block;
   justify-self: stretch;
-  padding: 5px 0;
+  width: 100%;
+  min-height: 0;
+  padding: 3px 4px 3px 0;
   border: 0;
+  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
   border-radius: 0;
   background: none;
+  box-shadow: none;
   text-align: left;
   font-family: var(--ddb-font-condensed);
-  font-size: 14px;
-  line-height: 1.2;
+  font-size: var(--ddb-size-body);
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--ddb-text);
   cursor: pointer;
 }
@@ -498,7 +600,10 @@
   box-shadow: var(--ddb-focus-ring);
 }
 
+/* 34px wide + the bonus cell's 4px left pad = the 38px bonus column, so the
+ * chip fills the column exactly and every value sits on the same right edge. */
 .tidy5e-sheet.ddb .ddb-skill-bonus {
   min-width: 34px;
-  padding: 2px 5px;
+  min-height: 21px;
+  padding: 2px 4px;
 }

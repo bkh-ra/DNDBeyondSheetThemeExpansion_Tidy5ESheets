@@ -1,0 +1,531 @@
+/* DDB-FORK: flat-table restyle for the REUSED quadrone tab content that the DDB
+ * layout mounts inside `.tidy5e-sheet.ddb .ddb-primary-box-content`.
+ *
+ * Goal: make Tidy's `.tidy-table*` item tables, action bars and spell headers
+ * read like D&D Beyond's flat tables (design/captures/athelstan/{dark,light}/
+ * 01-actions, 02-spells, 03-inventory) instead of quadrone's saturated
+ * accent-filled header bars and rarity-gradient rows.
+ *
+ * Strategy, in priority order:
+ *   1. Re-point Tidy's own `--t5e-*` variables inside the DDB scope. This is
+ *      how quadrone itself neutralizes tables (see `.theme-basic` in
+ *      `src/less/quadrone/tables.css`), so it survives Tidy markup churn.
+ *   2. Only where a quadrone rule hard-codes a gradient/color (row `.highlight`
+ *      overlays, `.equipped` / `.prepared` / `.expanded` backgrounds) fall back
+ *      to a scoped selector override.
+ *
+ * Constraints honored:
+ *   - Visual properties only (background, color, border, font, border-radius,
+ *     box-shadow). No display / position / overflow / grid / flex changes, so
+ *     Tidy's table layout stays intact.
+ *   - Everything is scoped to `.tidy5e-sheet.ddb .ddb-primary-box-content`
+ *     (or `.tidy5e-sheet.ddb` for sheet-wide var re-points).
+ *   - Both themes come from `--ddb-*` tokens, which already switch on
+ *     `.theme-dark` (see `ddb-tokens.css`). No `.theme-dark` fork needed except
+ *     where noted.
+ *
+ * Import order note: this file must be imported after `ddb/ddb-tokens.css` AND
+ * after the `quadrone/*` stack, so equal-specificity var re-points win. The
+ * DDB import group in `src/less/tidy5e.css` already satisfies both.
+ */
+
+/* ------------------------------------------------------------------ */
+/* 1. Variable re-points                                              */
+/* ------------------------------------------------------------------ */
+
+/* The second selector is not a dark-theme fork — it is the same declaration
+ * block matched at one extra class of specificity, so it outranks
+ * `variables-quadrone.css`'s `.tidy5e-sheet.quadrone.theme-dark` block
+ * (also 0-3-0) regardless of future import ordering. Values are identical
+ * because the `--ddb-*` tokens are already theme-aware. */
+.tidy5e-sheet.ddb .ddb-primary-box-content,
+.tidy5e-sheet.ddb.theme-dark .ddb-primary-box-content {
+  /* --- table chrome ------------------------------------------------ */
+  /* Kills the accent-purple section header fill at the source: quadrone
+   * paints `.tidy-table-header-row` with
+   * `linear-gradient(to right, <left>, <right>)`. */
+  --t5e-table-header-background-left: transparent;
+  --t5e-table-header-background-right: transparent;
+  --t5e-table-header-background-default: transparent;
+  --t5e-table-header-background-container: transparent;
+  /* Inset ring that quadrone draws around header rows. */
+  --t5e-table-header-border-color: transparent;
+  --t5e-table-header-box-shadow: none;
+
+  /* Row separators: DDB uses a flat 1px hairline, not quadrone's gold
+   * fade-out gradient border-image. */
+  --t5e-table-row-border-image: none;
+  --t5e-table-row-divider: var(--ddb-panel-border);
+  --t5e-table-row-background-default: var(--ddb-table-row-bg);
+  --t5e-table-row-background-expanded: var(--ddb-table-row-alt-bg);
+
+  /* --- surfaces used as row / expansion backdrops ------------------ */
+  --t5e-component-card-default: var(--ddb-table-row-alt-bg);
+  --t5e-component-card-darker: var(--ddb-table-row-bg);
+  --t5e-component-card-lighter: var(--ddb-table-row-alt-bg);
+  --t5e-component-card-default-lighter: var(--ddb-table-row-alt-bg);
+  --t5e-component-card-foreground: var(--ddb-text);
+  --t5e-component-card-foreground-diminished: var(--ddb-text-muted);
+  --t5e-component-card-foreground-disabled: var(--ddb-text-disabled);
+
+  /* --- text ------------------------------------------------------- */
+  --t5e-color-text-default: var(--ddb-text);
+  --t5e-color-text-lighter: var(--ddb-text-muted);
+  --t5e-color-text-lightest: var(--ddb-text-disabled);
+  --t5e-color-text-disabled: var(--ddb-text-disabled);
+  /* Tidy's "gold" text is its decorative accent for uses dividers, spell
+   * school icons and inline labels; DDB renders those neutral. */
+  --t5e-color-text-gold: var(--ddb-text-muted);
+  --t5e-color-text-gold-emphasis: var(--ddb-text-muted);
+  --t5e-color-text-gold-light: var(--ddb-text);
+  --t5e-color-gold: var(--ddb-panel-border);
+  --t5e-color-link-default: var(--ddb-link);
+  --t5e-color-link-hover: var(--ddb-accent-hover);
+
+  /* --- icons ------------------------------------------------------- */
+  --t5e-color-icon-default: var(--ddb-text);
+  --t5e-color-icon-button: var(--ddb-text-muted);
+  --t5e-color-icon-diminished: var(--ddb-text-muted);
+  --t5e-color-icon-disabled: var(--ddb-text-disabled);
+
+  /* --- fields & buttons (search / filter / action bar) -------------- */
+  --t5e-component-field-background: var(--ddb-panel-bg);
+  --t5e-component-field-background-hover: var(--ddb-table-row-alt-bg);
+  --t5e-component-field-background-active: var(--ddb-table-row-alt-bg);
+  --t5e-component-field-background-hover-emphasis: var(--ddb-table-row-alt-bg);
+  --t5e-component-field-background-disabled: var(--ddb-table-row-alt-bg);
+  --t5e-component-field-border: var(--ddb-panel-border);
+  --t5e-component-field-border-hover: var(--ddb-accent);
+  --t5e-component-field-focus: var(--ddb-accent);
+  --t5e-component-pill-background: var(--ddb-panel-bg);
+  --t5e-component-pill-border: var(--ddb-panel-border);
+  --t5e-component-pill-border-interactive: var(--ddb-accent);
+
+  /* DDB fields are flat: no drop shadows, accent ring on focus only. */
+  --t5e-drop-shadow-field: none;
+  --t5e-drop-shadow-field-hover: none;
+  --t5e-drop-shadow-field-focus: var(--ddb-focus-ring);
+  --t5e-drop-shadow-card: none;
+  --t5e-outline-field-focus: 0.0625rem solid var(--ddb-accent);
+
+  /* --- base typography inside the content panel --------------------- */
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  line-height: var(--ddb-lineheight-body);
+  color: var(--ddb-text);
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Section headers (item table group headers)                      */
+/* ------------------------------------------------------------------ */
+
+/* WEAPONS 3 / EQUIPMENT 2 / CANTRIPS 6 …
+ * Quadrone paints these with the sheet accent and white foreground. Re-point
+ * the foreground family *on the header row only* (never sheet-wide — the same
+ * vars drive active filter chips and primary buttons, which SHOULD stay
+ * accent-contrast per requirement 5). Same technique quadrone uses for
+ * `.theme-basic .tidy-table-header-row`. */
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row {
+  --t5e-theme-color-foreground: var(--ddb-heading);
+  --t5e-theme-color-foreground-diminished: var(--ddb-text-muted);
+  --t5e-theme-color-foreground-disabled: var(--ddb-text-disabled);
+  --t5e-theme-color-foreground-darker: var(--ddb-heading);
+  --t5e-theme-color-foreground-darker-diminished: var(--ddb-text-muted);
+  --t5e-theme-color-foreground-darker-disabled: var(--ddb-text-disabled);
+  /* `.spell-method` header rows derive their fill from `--t5e-method-color`
+   * (at-will / pact / innate / ritual spellcasting hues). Neutralize it so
+   * spell-level headers match every other group header. */
+  --t5e-method-color: transparent;
+  --t5e-table-header-background-left: transparent;
+  --t5e-table-header-background-right: transparent;
+
+  background: transparent;
+  border-radius: 0;
+  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  box-shadow: none;
+  color: var(--ddb-heading);
+}
+
+/* `.diminished` group headers (empty sections) get a grey gradient in
+ * quadrone; flatten it too. */
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row.diminished,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row.spell-method {
+  background: transparent;
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row:hover {
+  background: var(--ddb-table-row-alt-bg);
+  border-bottom-color: var(--ddb-accent-transparent);
+}
+
+/* Group title: 11px condensed caps. Overrides quadrone's
+ * `.header-label-cell > *` (Modesto Condensed / 16px). */
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row .header-label-cell > *,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row .header-label-cell h3 {
+  font-family: var(--ddb-font-condensed);
+  font-size: 11px;
+  font-weight: var(--ddb-weight-label);
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-heading);
+}
+
+/* Count badge next to the group title — muted, not a filled chip. */
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row .table-header-count {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  background: none;
+  border: none;
+  box-shadow: none;
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row:hover .header-label-cell h3,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row:hover .tidy-table-header-cell,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row:hover .table-header-count {
+  color: var(--ddb-text);
+}
+
+/* Expand chevron in the header row. */
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row .button.expand-button i {
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row .tidy-table-button i,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row .header-cell-actions .header-action {
+  color: var(--ddb-text-muted);
+  background: none;
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row .tidy-table-button:hover i {
+  background: var(--ddb-table-row-alt-bg);
+  color: var(--ddb-text);
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Column headers                                                  */
+/* ------------------------------------------------------------------ */
+
+/* WEIGHT / QTY / COST (GP) / NOTES — Tidy packs these into the same header
+ * row as the group title, in the non-primary cells. 10px condensed caps. */
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-cell:not(.primary):not(.header-cell-actions) {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: 0.03em;
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-text-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. Item rows                                                       */
+/* ------------------------------------------------------------------ */
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row {
+  background: var(--ddb-table-row-bg);
+  border-radius: 0;
+  /* quadrone declares `border-width: 0 0 1px 0; border-style: solid` and then
+   * paints it with a gradient `border-image`. `--t5e-table-row-border-image`
+   * is already re-pointed to `none` above; this supplies the flat color. */
+  border-color: var(--ddb-panel-border);
+  border-image: none;
+  color: var(--ddb-text);
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  line-height: var(--ddb-lineheight-body);
+}
+
+/* Quadrone tints whole rows for state (equipped / prepared / spell method /
+ * expanded) with white-to-transparent gradients. Replace with the flat DDB
+ * alternate row tone so state stays legible without a wash of color. */
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.equipped,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.prepared,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.spell-method,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.spell-method:not(.diminished),
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.expanded,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.equipped.expanded,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.prepared.expanded {
+  background: var(--ddb-table-row-alt-bg);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.diminished {
+  background: var(--ddb-table-row-bg);
+  color: var(--ddb-text-muted);
+}
+
+/* The `.highlight` overlay div is quadrone's rarity / equipped color wash.
+ * Blank it everywhere — rarity is re-expressed as a left bar below. */
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row .highlight,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.rarity .highlight,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.equipped .highlight,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.diminished div.highlight {
+  background: none;
+}
+
+/* Row hover. Declared after the state rules so it wins at equal specificity. */
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row:hover,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row-container:hover > .tidy-table-row {
+  background: var(--ddb-table-row-hover-bg);
+}
+
+/* Vertical cell dividers: DDB's tables have none. */
+.tidy5e-sheet.ddb .ddb-primary-box-content :is(.tidy-table-cell, .tidy-table-header-cell):not(:last-child) {
+  border-right-color: transparent;
+  border-image: none;
+}
+
+/* Item name keeps its link affordance; sub-line stays muted. */
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .cell-name {
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  color: var(--ddb-link);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row:hover .cell-name,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell a:hover .cell-name {
+  color: var(--ddb-accent-hover);
+  text-decoration: none;
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .cell-context,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .cell-label {
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.diminished .cell-name {
+  color: var(--ddb-text-muted);
+}
+
+/* Inline / nested tables (activities, container contents) inherit the flat
+ * look; quadrone gives them their own gradients. */
+.tidy5e-sheet.ddb .ddb-primary-box-content .inline-content-view,
+.tidy5e-sheet.ddb .ddb-primary-box-content .inline-content-view .tidy-table-row-container,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row ~ .expandable.expanded,
+.tidy5e-sheet.ddb .ddb-primary-box-content .expandable .expandable .tidy-table-row.expanded {
+  background: var(--ddb-table-row-alt-bg);
+  border-image: none;
+  border-color: var(--ddb-panel-border);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .inline-content-view .tidy-table-header-row {
+  background: transparent;
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row-container.context {
+  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. Magic-item rarity: 3px left bar, no row wash                    */
+/* ------------------------------------------------------------------ */
+
+/* `--t5e-item-color` is Tidy's per-row rarity color (set in
+ * `quadrone/apps.css` from `.rarity.common | .uncommon | .rare | .veryrare |
+ * .legendary | .artifact`). Reuse it as a left bar.
+ *
+ * Rendered as an INSET box-shadow rather than `border-left-width` on purpose:
+ * it is pixel-identical to a 3px left border but adds no box-model width, so
+ * Tidy's flex column math is untouched (per the layout constraint). */
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.rarity {
+  background: var(--ddb-table-row-bg);
+  box-shadow: inset 3px 0 0 0 var(--t5e-item-color);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.rarity.equipped,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.rarity.expanded {
+  background: var(--ddb-table-row-alt-bg);
+  box-shadow: inset 3px 0 0 0 var(--t5e-item-color);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.rarity:hover {
+  background: var(--ddb-table-row-hover-bg);
+  box-shadow: inset 3px 0 0 0 var(--t5e-item-color);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.rarity.diminished {
+  box-shadow: inset 3px 0 0 0 var(--ddb-text-disabled);
+}
+
+/* ------------------------------------------------------------------ */
+/* 6. Search / filter / action bar                                    */
+/* ------------------------------------------------------------------ */
+
+/* Field + button geometry. Colors already arrive via the
+ * `--t5e-component-field-*` re-points in section 1. */
+.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar :where(search),
+.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar input[type='text'],
+.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar .input-group,
+.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar select {
+  background: var(--ddb-panel-bg);
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border-radius: var(--ddb-radius-input);
+  box-shadow: none;
+  color: var(--ddb-text);
+  font-family: var(--ddb-font-body);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar :where(search) input[type='text'] {
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar :where(search) input[type='text']::placeholder {
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar :where(search) i,
+.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar :where(search) .cancel-search {
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar :where(search):focus-within {
+  background: var(--ddb-panel-bg);
+  border-color: var(--ddb-accent);
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* Neutral (inactive) buttons and filter chips. */
+.tidy5e-sheet.ddb .ddb-primary-box-content :is(button, .button) {
+  --button-background: var(--ddb-panel-bg);
+  --button-background-hover: var(--ddb-table-row-alt-bg);
+  --button-background-active: var(--ddb-table-row-alt-bg);
+  --button-border: var(--ddb-panel-border);
+  --button-border-hover: var(--ddb-accent);
+  --button-text: var(--ddb-text);
+  --button-icon: var(--ddb-text-muted);
+  --button-icon-hover: var(--ddb-text);
+  --button-shadow: none;
+  --button-focus: var(--ddb-focus-ring);
+  border-radius: var(--ddb-radius-input);
+  font-family: var(--ddb-font-condensed);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content :is(button, .button).button-borderless,
+.tidy5e-sheet.ddb .ddb-primary-box-content :is(button, .button).unbutton {
+  --button-background: transparent;
+  --button-border: transparent;
+  border-radius: var(--ddb-radius-control);
+}
+
+/* Accent is reserved for ACTIVE filter state (requirement 5). */
+.tidy5e-sheet.ddb .ddb-primary-box-content :is(button, .button).button-toggle.include,
+.tidy5e-sheet.ddb .ddb-primary-box-content :is(button, .button).button-primary {
+  --button-background: var(--ddb-accent);
+  --button-background-hover: var(--ddb-accent-hover);
+  --button-background-active: var(--ddb-accent-active);
+  --button-border: var(--ddb-accent);
+  --button-border-hover: var(--ddb-accent-hover);
+  --button-text: var(--ddb-accent-chip-contrast);
+  --button-icon: var(--ddb-accent-chip-contrast);
+  --button-icon-hover: var(--ddb-accent-chip-contrast);
+}
+
+/* Excluded / disabled filter chips read as struck-out, not colored. */
+.tidy5e-sheet.ddb .ddb-primary-box-content :is(button, .button).button-toggle.exclude,
+.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar .button-toggle.exclude,
+.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar .button-toggle.disabled {
+  --button-background: var(--ddb-table-row-alt-bg);
+  --button-text: var(--ddb-text-disabled);
+  --button-icon: var(--ddb-text-disabled);
+  background-color: var(--ddb-table-row-alt-bg);
+  box-shadow: none;
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar .button-toggle.exclude::before,
+.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar .button-toggle.disabled::before {
+  color: var(--ddb-text-disabled);
+}
+
+/* Filter dropdown menu surface. */
+.tidy5e-sheet.ddb .ddb-primary-box-content .button-with-options-wrapper menu {
+  background: var(--ddb-panel-bg-solid);
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border-radius: var(--ddb-radius-input);
+  box-shadow: var(--ddb-shadow-elevated);
+  color: var(--ddb-text);
+}
+
+/* ------------------------------------------------------------------ */
+/* 7. Spell level headers + slot pips                                 */
+/* ------------------------------------------------------------------ */
+
+/* Header treatment for At-Will / Cantrips / 1st Level … is inherited from
+ * section 2 (the `--t5e-method-color: transparent` re-point plus the flat
+ * `.spell-method` background). Only the pips need their own tokens. */
+.tidy5e-sheet.ddb .ddb-primary-box-content .pips.spell-pips {
+  --pip-color: var(--ddb-pip-border);
+  --pip-border-color: var(--ddb-pip-border);
+  --pip-active-color: var(--ddb-pip-filled);
+  --pip-hover-color: var(--ddb-accent-subtle-bg);
+  --pip-border-hover-color: var(--ddb-accent);
+  --pip-active-hover-color: var(--ddb-accent-hover);
+  --pip-shadow-color: var(--ddb-accent);
+}
+
+/* DDB draws slot pips as small squares, not circles. Spent slots are empty
+ * with a muted outline; available slots are accent-filled. */
+.tidy5e-sheet.ddb .ddb-primary-box-content .pips.spell-pips .pip {
+  background: var(--ddb-pip-empty);
+  border-color: var(--ddb-pip-border);
+  border-radius: 0.125rem;
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .pips.spell-pips .pip.active {
+  background: var(--ddb-pip-filled);
+  border-color: var(--ddb-pip-filled);
+}
+
+/* Numeric slot tracker next to the pips. */
+.tidy5e-sheet.ddb .ddb-primary-box-content .spell-slot-tracker input[type='number'] {
+  font-family: var(--ddb-font-condensed);
+  color: var(--ddb-text);
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .spell-row-icon,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row[data-tidy-item-type='spell'] .spell-school-icon dnd5e-icon {
+  --icon-fill: var(--ddb-text-muted);
+  color: var(--ddb-text-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/* 8. Misc content typography                                         */
+/* ------------------------------------------------------------------ */
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .uses,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .hit-save {
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .uses .divider,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .uses .max,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .uses .modifier,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .hit-save .modifier,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .hit-save .ability {
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .empty-container {
+  color: var(--ddb-text-muted);
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+}
+
+/* Use buttons keep their rarity/method outline as the only saturated accent
+ * left in a row, matching DDB's small colored item toggle. */
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row-use-button {
+  --t5e-use-button-border-color: var(--ddb-panel-border);
+  border-radius: var(--ddb-radius-control);
+}

@@ -14,6 +14,23 @@
   let context = $derived(getCharacterSheetQuadroneContext());
 
   const localize = FoundryAdapter.localize;
+
+  /**
+   * DDB splits the label around the value inside the shield: "ARMOR" above,
+   * "CLASS" below. The split is derived from the localized string rather than
+   * hardcoded, so a single-word translation simply renders below the value.
+   */
+  let acLabelWords = $derived(
+    localize('DND5E.ArmorClass').split(/\s+/).filter(Boolean),
+  );
+
+  let acLabelTop = $derived(
+    acLabelWords.length > 1 ? acLabelWords[0] : undefined,
+  );
+
+  let acLabelBottom = $derived(
+    acLabelWords.length > 1 ? acLabelWords.slice(1).join(' ') : acLabelWords[0],
+  );
 </script>
 
 <section
@@ -24,11 +41,17 @@
 >
   <DdbShieldShape />
   <div class="ddb-ac-shield__content">
+    {#if acLabelTop}
+      <span class="ddb-ac-shield__label ddb-ac-shield__label--top">
+        {acLabelTop}
+      </span>
+    {/if}
     <span class="ddb-ac-shield__value">
       {context.system.attributes.ac.value}
     </span>
-    <!-- "Armor Class" wraps to two lines inside the shield, as DDB shows it. -->
-    <span class="ddb-ac-shield__label">{localize('DND5E.ArmorClass')}</span>
+    <span class="ddb-ac-shield__label ddb-ac-shield__label--bottom">
+      {acLabelBottom}
+    </span>
   </div>
   {#if context.unlocked}
     <button

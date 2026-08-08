@@ -32,7 +32,7 @@
 </script>
 
 <section class="ddb-hp-block">
-  <DdbStatBoxShape width={317} height={89} />
+  <DdbStatBoxShape width={360} height={78} />
   <h2 class="ddb-hp-block__title">{localize('DND5E.HitPoints')}</h2>
   <div class="ddb-hp-block__fields">
     <div class="ddb-hp-block__field ddb-hp-block__field--current">
@@ -96,17 +96,18 @@
       {/if}
     </div>
 
-    {#if context.unlocked}
-      <button
-        type="button"
-        class="ddb-hp-block__config"
-        aria-label={localize('DND5E.HitPointsConfig')}
-        data-tooltip="DND5E.HitPointsConfig"
-        data-action="showConfiguration"
-        data-config="hitPoints"
-      >
-        <i class="fas fa-cog"></i>
-      </button>
-    {/if}
   </div>
+
+  {#if context.unlocked}
+    <button
+      type="button"
+      class="ddb-hp-block__config"
+      aria-label={localize('DND5E.HitPointsConfig')}
+      data-tooltip="DND5E.HitPointsConfig"
+      data-action="showConfiguration"
+      data-config="hitPoints"
+    >
+      <i class="fas fa-cog"></i>
+    </button>
+  {/if}
 </section>

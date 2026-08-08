@@ -43,8 +43,8 @@
     unit,
     label,
     tooltip,
-    width = 70,
-    height = 62,
+    width = 78,
+    height = 78,
     children,
     ...rest
   }: Props = $props();

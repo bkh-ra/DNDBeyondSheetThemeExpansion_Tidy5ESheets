@@ -12,12 +12,21 @@
 /* Conditions & Defenses strip                                        */
 /* ------------------------------------------------------------------ */
 
+/* DDB sizes this box to its content — the two groups sit inline next to each
+ * other and the border hugs them; it never stretches to fill the row. The
+ * `align-self`/`justify-self`/`margin-right: auto` trio keeps that true whether
+ * the host row is a flex or a grid container. */
 .tidy5e-sheet.ddb .ddb-conditions-defenses {
-  display: flex;
+  display: inline-flex;
   align-items: stretch;
   gap: 0;
-  padding: 0.5rem 0.75rem;
-  background: var(--ddb-box-bg);
+  width: fit-content;
+  max-width: 100%;
+  align-self: start;
+  justify-self: start;
+  margin-right: auto;
+  padding: 0.5rem 0.625rem;
+  background: var(--ddb-panel-bg);
   border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
   border-radius: var(--ddb-radius-control);
   box-shadow: var(--ddb-shadow-hairline);
@@ -26,9 +35,9 @@
 }
 
 .tidy5e-sheet.ddb .ddb-conditions-defenses .ddb-cd-group {
-  flex: 1 1 50%;
+  flex: 0 1 auto;
   min-width: 0;
-  padding: 0 0.75rem;
+  padding: 0 0.625rem;
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
@@ -38,6 +47,10 @@
   padding-left: 0;
 }
 
+.tidy5e-sheet.ddb .ddb-conditions-defenses .ddb-cd-group:last-child {
+  padding-right: 0;
+}
+
 .tidy5e-sheet.ddb .ddb-conditions-defenses .ddb-cd-group + .ddb-cd-group {
   border-left: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
 }
@@ -45,7 +58,7 @@
 .tidy5e-sheet.ddb .ddb-conditions-defenses .ddb-cd-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 0.25rem;
 }
 
@@ -119,6 +132,8 @@
   flex-wrap: wrap;
   gap: 0 0.25rem;
   min-width: 0;
+  /* Wrap long runs onto a second line instead of stretching the box. */
+  max-width: 16rem;
 }
 
 .tidy5e-sheet.ddb .ddb-condition {
@@ -271,7 +286,8 @@
 .tidy5e-sheet.ddb .ddb-tab-strip .tidy-tabs.ddb-tabs {
   display: flex;
   flex-wrap: nowrap;
-  gap: 1rem;
+  justify-content: flex-start;
+  gap: 0.875rem;
   min-width: max-content;
   margin: 0;
   padding: 0;
@@ -300,8 +316,16 @@
   cursor: pointer;
 }
 
+/* DDB's tab strip is text-only. The tab registry still carries `iconClass`
+ * (other Tidy surfaces, e.g. tab-selection settings, render it), so the icon is
+ * hidden here rather than removed from the registry. `icon-start` is the class
+ * Tabs.svelte adds whenever a tab has an icon; neutralize its inset too. */
 .tidy5e-sheet.ddb .ddb-tab-strip .tab-option.ddb-tab .tab-icon {
-  font-size: 0.6875rem;
+  display: none;
+}
+
+.tidy5e-sheet.ddb .ddb-tab-strip .tab-option.ddb-tab.icon-start {
+  padding-left: 0;
 }
 
 .tidy5e-sheet.ddb .ddb-tab-strip .tab-option.ddb-tab:hover {

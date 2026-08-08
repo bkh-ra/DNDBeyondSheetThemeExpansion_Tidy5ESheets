@@ -21,8 +21,8 @@ import { buildCharacterFeaturesTabOptions } from 'src/settings/tab-options/Chara
  *
  * Phase 0 (current): reuses the quadrone tab components verbatim so the layout
  * is functional end-to-end; tabs are ordered to match the D&D Beyond primary
- * box (Actions | Spells | Inventory | Features & Traits | Description | Notes)
- * followed by the Foundry-only extra tabs (Effects, Bastion, Attributes).
+ * box (Actions | Spells | Inventory | Features & Traits | Background | Notes)
+ * followed by the Foundry-only extra tabs (Effects, Bastion, Character).
  *
  * Later phases will replace these components with DDB-styled versions from
  * src/sheets/ddb/character/tabs/ one at a time.
@@ -31,7 +31,10 @@ export const CharacterSheetDdbRuntime =
   new ActorSheetQuadroneRuntime<CharacterSheetQuadroneContext>(
     [
       {
-        title: 'Sheet',
+        // DDB tab labels: localization keys where dnd5e/Tidy provide an exact
+        // match, plain strings otherwise (Tabs.svelte runs every title through
+        // `localize()`, and Foundry echoes unknown keys back verbatim).
+        title: 'DND5E.ActionPl',
         content: {
           component: CharacterSheetTab,
           type: 'svelte',
@@ -42,7 +45,7 @@ export const CharacterSheetDdbRuntime =
         tabOptionsBuilder: buildCharacterSheetTabOptions,
       },
       {
-        title: 'DND5E.Spellbook',
+        title: 'TYPES.Item.spellPl',
         content: {
           component: ActorSpellbookTab,
           type: 'svelte',
@@ -64,7 +67,8 @@ export const CharacterSheetDdbRuntime =
         tabOptionsBuilder: buildActorInventoryTabOptions,
       },
       {
-        title: 'DND5E.Features',
+        // No dnd5e key pairs "Features" with "Traits"; DDB's label is literal.
+        title: 'Features & Traits',
         content: {
           component: CharacterFeaturesTab,
           type: 'svelte',
@@ -75,7 +79,7 @@ export const CharacterSheetDdbRuntime =
         tabOptionsBuilder: buildCharacterFeaturesTabOptions,
       },
       {
-        title: 'DND5E.Biography',
+        title: 'DND5E.Background',
         content: {
           component: CharacterBiographyTab,
           type: 'svelte',
@@ -85,7 +89,7 @@ export const CharacterSheetDdbRuntime =
         iconClass: 'fa-solid fa-feather',
       },
       {
-        title: 'TIDY5E.JournalTabName',
+        title: 'DND5E.Notes',
         content: {
           component: ActorJournalTab,
           type: 'svelte',
