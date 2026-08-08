@@ -3,7 +3,7 @@
   --sidebar-width: var(--sidebar-expanded-width);
   --sidebar-background-image-height: 31.875rem;
   --window-border-color: var(--t5e-color-gold);
-  --sidebar-bg: var(--t5e-sidebar-bg, url('../../modules/tidy5e-sheet/images/sidebar-item-sheet.webp') top center / auto no-repeat,
+  --sidebar-bg: var(--t5e-sidebar-bg, url('../../modules/ddb5e-sheets/images/sidebar-item-sheet.webp') top center / auto no-repeat,
       var(--t5e-component-card-dark-darker));
 
   /* Items and Containers feature a sidebar that extends to the top of the sheet, inside the header area. */
@@ -352,19 +352,19 @@
 
     &:where(.theme-light) {
       &::before {
-        background: url('../../modules/tidy5e-sheet/images/texture-gray-1.webp') no-repeat top center;
+        background: url('../../modules/ddb5e-sheets/images/texture-gray-1.webp') no-repeat top center;
         background-size: cover;
       }
 
       &::after {
-        background: url('../../modules/tidy5e-sheet/images/texture-gray-2.webp') no-repeat bottom center;
+        background: url('../../modules/ddb5e-sheets/images/texture-gray-2.webp') no-repeat bottom center;
         background-size: cover;
       }
     }
 
     &:where(.theme-dark) {
       &::before {
-        background: url('../../modules/tidy5e-sheet/images/denim075.png') repeat top center;
+        background: url('../../modules/ddb5e-sheets/images/denim075.png') repeat top center;
         background-size: auto;
       }
     }

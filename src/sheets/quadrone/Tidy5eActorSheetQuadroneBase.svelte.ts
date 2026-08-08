@@ -128,7 +128,7 @@ export function getTidy5eActorSheetQuadroneBase<
 
     static DEFAULT_OPTIONS: Partial<ApplicationConfiguration> = {
       classes: [
-        CONSTANTS.MODULE_ID,
+        CONSTANTS.SHEET_CSS_CLASS,
         'sheet',
         'actor',
         sheetType,

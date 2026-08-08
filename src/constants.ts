@@ -1,7 +1,11 @@
-const moduleId = 'tidy5e-sheet';
+const moduleId = 'ddb5e-sheets'; // DDB-FORK: new module identity
 
 export const CONSTANTS = {
   MODULE_ID: moduleId,
+  // DDB-FORK: CSS root class stays 'tidy5e-sheet' so all existing selectors keep working
+  SHEET_CSS_CLASS: 'tidy5e-sheet',
+  // DDB-FORK: original Tidy module id, used for read-only legacy flag fallback
+  LEGACY_FLAG_SCOPE: 'tidy5e-sheet',
   DND5E_SYSTEM_ID: 'dnd5e',
   SYSTEM_FLAG_ADVANCEMENT_ORIGIN: 'advancementOrigin',
   SYSTEM_FLAG_PATH_ADVANCEMENT_ORIGIN: 'flags.dnd5e.advancementOrigin',
@@ -225,6 +229,7 @@ export const CONSTANTS = {
   SHEET_LAYOUT_ALL: 'all',
   SHEET_LAYOUT_CLASSIC: 'classic',
   SHEET_LAYOUT_QUADRONE: 'quadrone',
+  SHEET_LAYOUT_DDB: 'ddb', // DDB-FORK: D&D Beyond-style layout
   CIRCULAR_PORTRAIT_OPTION_ALL: 'all',
   CIRCULAR_PORTRAIT_OPTION_CHARACTER: 'pc',
   CIRCULAR_PORTRAIT_OPTION_NPCVEHICLE: 'npc-vehicle',

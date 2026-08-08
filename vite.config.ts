@@ -2,7 +2,7 @@ import { defineConfig, PluginOption } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import path, { resolve } from 'path';
 
-const s_PACKAGE_ID = 'modules/tidy5e-sheet';
+const s_PACKAGE_ID = 'modules/ddb5e-sheets'; // DDB-FORK: new module identity
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {

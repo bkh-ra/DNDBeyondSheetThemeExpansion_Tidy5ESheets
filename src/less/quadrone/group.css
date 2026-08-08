@@ -461,8 +461,8 @@
       }
 
       .inspiration-badge {
-        --t5e-inspiration-image-single: url('../../modules/tidy5e-sheet/images/badge_inspiration_single_dark.webp');
-        --t5e-inspiration-image-stacked: url('../../modules/tidy5e-sheet/images/badge_inspiration_stacked_dark.webp');
+        --t5e-inspiration-image-single: url('../../modules/ddb5e-sheets/images/badge_inspiration_single_dark.webp');
+        --t5e-inspiration-image-stacked: url('../../modules/ddb5e-sheets/images/badge_inspiration_stacked_dark.webp');
         position: relative;
 
         &:hover .inspiration-controls {
@@ -529,8 +529,8 @@
     }
 
     .tidy-tab.members .inspiration-badge {
-      --t5e-inspiration-image-single: url('../../modules/tidy5e-sheet/images/badge_inspiration_single_light.webp');
-      --t5e-inspiration-image-stacked: url('../../modules/tidy5e-sheet/images/badge_inspiration_stacked_light.webp');
+      --t5e-inspiration-image-single: url('../../modules/ddb5e-sheets/images/badge_inspiration_single_light.webp');
+      --t5e-inspiration-image-stacked: url('../../modules/ddb5e-sheets/images/badge_inspiration_stacked_light.webp');
       position: relative;
     }
   }

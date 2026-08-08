@@ -88,7 +88,7 @@ export class Tidy5eContainerSheetQuadrone
     }
   > = {
     classes: [
-      CONSTANTS.MODULE_ID,
+      CONSTANTS.SHEET_CSS_CLASS,
       'sheet',
       'item',
       CONSTANTS.ITEM_TYPE_CONTAINER,

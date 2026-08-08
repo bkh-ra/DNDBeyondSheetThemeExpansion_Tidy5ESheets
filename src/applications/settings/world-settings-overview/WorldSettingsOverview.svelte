@@ -56,7 +56,7 @@
       <a href="https://foundryvtt.com/packages/tidy5e-sheet/" target="_blank">
         <img
           class="logo"
-          src="../modules/tidy5e-sheet/images/tidy-shield-large.webp"
+          src="../modules/ddb5e-sheets/images/tidy-shield-large.webp"
           alt={localize('TIDY5E.Settings.About.logoAltText')}
         />
       </a>

@@ -38,6 +38,22 @@ import { loadConditionalStyles } from './utils/css-loading';
 import * as registry from './registry';
 
 Hooks.once('init', () => {
+  // DDB-FORK: this module is a fork of Tidy 5e Sheets and replaces it entirely.
+  // Running both would double-register every sheet and collide on the shared
+  // .tidy5e-sheet CSS root class, so bail out with a warning instead.
+  if (game.modules.get('tidy5e-sheet')?.active) {
+    console.error(
+      'ddb5e-sheets | Tidy 5e Sheets (tidy5e-sheet) is active. DDB 5e Sheets is a replacement fork and will not initialize while Tidy is enabled. Disable one of the two modules.',
+    );
+    Hooks.once('ready', () => {
+      ui.notifications.error(
+        'DDB 5e Sheets: disable the original Tidy 5e Sheets module — both cannot run at once.',
+        { permanent: true },
+      );
+    });
+    return;
+  }
+
   initSettings();
 
   // Establish Tidy config registry as early as possible.

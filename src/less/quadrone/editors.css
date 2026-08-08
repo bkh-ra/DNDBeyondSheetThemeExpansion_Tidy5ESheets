@@ -451,7 +451,7 @@
       &::after {
         content: "";
         background-color: var(--t5e-color-palette-gold-45);
-        mask-image: url('../../modules/tidy5e-sheet/images/notable-right-corner.svg'), url('../../modules/tidy5e-sheet/images/notable-left-corner.svg');
+        mask-image: url('../../modules/ddb5e-sheets/images/notable-right-corner.svg'), url('../../modules/ddb5e-sheets/images/notable-left-corner.svg');
         mask-position: 0, 100%;
         mask-size: contain;
         mask-repeat: no-repeat;

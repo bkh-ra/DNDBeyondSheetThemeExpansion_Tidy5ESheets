@@ -38,7 +38,7 @@ export default class SpellSourceItemAssignmentsFormApplication extends DocumentS
 
   static DEFAULT_OPTIONS: Partial<ApplicationConfiguration> = {
     classes: [
-      CONSTANTS.MODULE_ID,
+      CONSTANTS.SHEET_CSS_CLASS,
       'sheet',
       CONSTANTS.SHEET_LAYOUT_QUADRONE,
       'tidy-spell-source-class-assignments-application',

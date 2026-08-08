@@ -23,7 +23,7 @@ export class DetachedInfoCardApplication extends getSvelteApplicationMixin(
     ApplicationConfiguration & { dragDrop: Partial<DragDropConfiguration>[] }
   > = {
     classes: [
-      CONSTANTS.MODULE_ID,
+      CONSTANTS.SHEET_CSS_CLASS,
       'application-shell',
       'tidy-info-card-application',
       CONSTANTS.SHEET_LAYOUT_CLASSIC,

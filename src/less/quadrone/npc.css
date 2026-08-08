@@ -1,5 +1,5 @@
 .tidy5e-sheet.application:where(.quadrone.npc) {
-  --t5e-background-image: url('../../modules/tidy5e-sheet/images/banner-npc.jpg');
+  --t5e-background-image: url('../../modules/ddb5e-sheets/images/banner-npc.jpg');
 
   .actor-context-row {
     margin-block-start: var(--t5e-size-2x);

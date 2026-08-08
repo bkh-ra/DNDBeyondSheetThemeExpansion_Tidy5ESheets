@@ -93,7 +93,7 @@ export class Tidy5eGroupSheetClassic extends getTidy5eActorSheetBaseMixin(
     ApplicationConfiguration & { dragDrop: Partial<DragDropConfiguration>[] }
   > = {
     classes: [
-      CONSTANTS.MODULE_ID,
+      CONSTANTS.SHEET_CSS_CLASS,
       'sheet',
       'actor',
       CONSTANTS.SHEET_TYPE_GROUP,

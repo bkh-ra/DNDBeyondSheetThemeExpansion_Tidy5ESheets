@@ -184,7 +184,7 @@
             {const bgImg = $derived(chosen.img.includes(
               'systems/dnd5e/icons/svg/items/facility.svg',
             )
-              ? '../../modules/tidy5e-sheet/images/facility-default-background.webp'
+              ? '../../modules/ddb5e-sheets/images/facility-default-background.webp'
               : chosen.img)}
 
             {const img = $derived(!chosen.disabled
@@ -377,7 +377,7 @@
             {const bgImg = $derived(chosen.img.includes(
               'systems/dnd5e/icons/svg/items/facility.svg',
             )
-              ? '../../modules/tidy5e-sheet/images/facility-default-background.webp'
+              ? '../../modules/ddb5e-sheets/images/facility-default-background.webp'
               : chosen.img)}
 
             {const img = $derived(!chosen.disabled

@@ -32,7 +32,7 @@ export class WorldSettingsFormApplication extends getSvelteApplicationMixin<
 
   static DEFAULT_OPTIONS: Partial<ApplicationConfiguration> = {
     classes: [
-      CONSTANTS.MODULE_ID,
+      CONSTANTS.SHEET_CSS_CLASS,
       'settings',
       'application-shell',
       CONSTANTS.SHEET_LAYOUT_CLASSIC,

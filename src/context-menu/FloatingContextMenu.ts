@@ -56,7 +56,7 @@ export default class FloatingContextMenu
     const el = container.get?.(0) ?? container;
 
     return el
-      .closest(`.${CONSTANTS.MODULE_ID}`)
+      .closest(`.${CONSTANTS.SHEET_CSS_CLASS}`)
       ?.classList?.contains(CONSTANTS.SHEET_LAYOUT_CLASSIC)
       ? CONSTANTS.SHEET_LAYOUT_CLASSIC
       : CONSTANTS.SHEET_LAYOUT_QUADRONE;

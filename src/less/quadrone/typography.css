@@ -4,8 +4,8 @@
   font-style: normal;
   font-weight: 100 900;
   src:
-    url('../../modules/tidy5e-sheet/fonts/roboto-condensed/RobotoCondensed-VariableFont_wght.ttf') format('truetype-variations'),
-    url('../../modules/tidy5e-sheet/fonts/roboto-condensed/RobotoCondensed-VariableFont_wght.ttf') format('truetype');
+    url('../../modules/ddb5e-sheets/fonts/roboto-condensed/RobotoCondensed-VariableFont_wght.ttf') format('truetype-variations'),
+    url('../../modules/ddb5e-sheets/fonts/roboto-condensed/RobotoCondensed-VariableFont_wght.ttf') format('truetype');
 }
 
 @font-face {
@@ -13,8 +13,8 @@
   font-style: italic;
   font-weight: 100 900;
   src:
-    url('../../modules/tidy5e-sheet/fonts/roboto-condensed/RobotoCondensed-Italic-VariableFont_wght.ttf') format('truetype-variations'),
-    url('../../modules/tidy5e-sheet/fonts/roboto-condensed/RobotoCondensed-Italic-VariableFont_wght.ttf') format('truetype');
+    url('../../modules/ddb5e-sheets/fonts/roboto-condensed/RobotoCondensed-Italic-VariableFont_wght.ttf') format('truetype-variations'),
+    url('../../modules/ddb5e-sheets/fonts/roboto-condensed/RobotoCondensed-Italic-VariableFont_wght.ttf') format('truetype');
 }
 
 .tidy5e-sheet.quadrone.application {

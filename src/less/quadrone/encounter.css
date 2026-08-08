@@ -1,5 +1,5 @@
 .tidy5e-sheet.application:where(.quadrone.encounter) {
-  --t5e-background-image: url('../../modules/tidy5e-sheet/images/banner-encounter.jpg');
+  --t5e-background-image: url('../../modules/ddb5e-sheets/images/banner-encounter.jpg');
   --difficulty-diplay-size: 6rem;
 
   /* HEADER
@@ -40,7 +40,7 @@
       text-overflow: ellipsis;
 
       &::before {
-        background-image: url('../../modules/tidy5e-sheet/images/badge_encounter_difficulty_dark.webp');
+        background-image: url('../../modules/ddb5e-sheets/images/badge_encounter_difficulty_dark.webp');
         background-size: contain;
         background-repeat: no-repeat;
         background-position: center;
@@ -262,7 +262,7 @@
   &.theme-light.theme-parchment {
     .difficulty-block {
       &::before {
-        background-image: url('../../modules/tidy5e-sheet/images/badge_encounter_difficulty_light.webp');
+        background-image: url('../../modules/ddb5e-sheets/images/badge_encounter_difficulty_light.webp');
       }
     }
   }

@@ -1604,8 +1604,24 @@ export class TidyFlags {
    * It is simply doing an optimistic cast to the target type.
    */
   static tryGetFlag<T>(flagged: any | undefined, flagName: string) {
-    return (
-      flagged ? flagged.getFlag(CONSTANTS.MODULE_ID, flagName) : undefined
+    if (!flagged) {
+      return undefined as T | null | undefined;
+    }
+
+    const value = flagged.getFlag(CONSTANTS.MODULE_ID, flagName);
+
+    if (value !== undefined) {
+      return value as T | null | undefined;
+    }
+
+    // DDB-FORK: read-only fallback to legacy Tidy 5e Sheets flag data so
+    // favorites, notes, sections, and theme settings written by the original
+    // module survive the fork's new flag scope. Writes always target the new
+    // scope; legacy data is never modified. Raw property access is used
+    // because getFlag() rejects scopes of inactive modules.
+    return foundry.utils.getProperty(
+      flagged,
+      `flags.${CONSTANTS.LEGACY_FLAG_SCOPE}.${flagName}`,
     ) as T | null | undefined;
   }
 

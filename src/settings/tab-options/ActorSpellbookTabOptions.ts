@@ -44,7 +44,7 @@ export function buildActorSpellbookTabOptions(
             },
           ],
           // TODO: make it so TidyFlags can provide this info.
-          prop: `flags.tidy5e-sheet.sheetPreferences.${context.actor.type}.spellSlotTrackerMode`,
+          prop: `flags.${CONSTANTS.MODULE_ID}.sheetPreferences.${context.actor.type}.spellSlotTrackerMode`, // DDB-FORK
           doc: game.user,
           default: CONSTANTS.SPELL_SLOT_TRACKER_MODE_VALUE_MAX,
         },
@@ -66,7 +66,7 @@ export function buildActorSpellbookTabOptions(
               value: CONSTANTS.SPELL_CAST_ACTIVITY_GROUPING_PER_ITEM,
             },
           ],
-          prop: 'flags.tidy5e-sheet.userPreferences.castActivitySpellGrouping',
+          prop: `flags.${CONSTANTS.MODULE_ID}.userPreferences.castActivitySpellGrouping`, // DDB-FORK
           doc: game.user,
           default: CONSTANTS.SPELL_CAST_ACTIVITY_GROUPING_ADDITIONAL,
         },

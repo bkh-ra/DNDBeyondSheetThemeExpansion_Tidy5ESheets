@@ -81,7 +81,7 @@ export class Tidy5eItemSheetQuadrone extends getTidyExtensibleDocumentSheetMixin
     ApplicationConfiguration & { dragDrop: Partial<DragDropConfiguration>[] }
   > = {
     classes: [
-      CONSTANTS.MODULE_ID,
+      CONSTANTS.SHEET_CSS_CLASS,
       'sheet',
       CONSTANTS.SHEET_TYPE_ITEM,
       'quadrone',

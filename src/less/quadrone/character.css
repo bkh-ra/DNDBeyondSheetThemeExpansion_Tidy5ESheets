@@ -59,7 +59,7 @@
     position: relative;
 
     .shield {
-      --t5e-shield-image: url('../../modules/tidy5e-sheet/images/badge_ac_dark.webp');
+      --t5e-shield-image: url('../../modules/ddb5e-sheets/images/badge_ac_dark.webp');
 
       .ac-label {
         display: none;
@@ -393,12 +393,12 @@
   &.theme-light.theme-parchment {
     .sheet-header {
       .level-block {
-        --t5e-level-image: url('../../modules/tidy5e-sheet/images/badge_level_light.webp');
+        --t5e-level-image: url('../../modules/ddb5e-sheets/images/badge_level_light.webp');
       }
 
       .ac-container {
         .shield {
-          --t5e-shield-image: url('../../modules/tidy5e-sheet/images/badge_ac_light.webp');
+          --t5e-shield-image: url('../../modules/ddb5e-sheets/images/badge_ac_light.webp');
         }
       }
     }

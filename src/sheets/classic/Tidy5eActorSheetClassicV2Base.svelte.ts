@@ -65,7 +65,7 @@ export function getTidy5eActorSheetClassicV2Base<
 
     static DEFAULT_OPTIONS: Partial<ApplicationConfiguration> = {
       classes: [
-        CONSTANTS.MODULE_ID,
+        CONSTANTS.SHEET_CSS_CLASS,
         'sheet',
         'actor',
         sheetType,

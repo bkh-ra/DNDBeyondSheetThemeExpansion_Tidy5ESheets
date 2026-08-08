@@ -134,7 +134,7 @@ export class TidySheetSettingsQuadroneApplication
   }
 
   static DEFAULT_OPTIONS: Partial<DocumentSheetConfiguration> = {
-    classes: [CONSTANTS.MODULE_ID, 'sheet', 'quadrone', 'tidy-sheet-settings'],
+    classes: [CONSTANTS.SHEET_CSS_CLASS, 'sheet', 'quadrone', 'tidy-sheet-settings'],
     id: 'tidy-sheet-settings-{id}',
     tag: 'div',
     sheetConfig: false,

@@ -8,7 +8,7 @@ export function loadConditionalStyles(fileName: string) {
     return;
   }
 
-  const importDeclaration = `@import url('modules/tidy5e-sheet/${fileName}.css') layer(modules);`;
+  const importDeclaration = `@import url('modules/ddb5e-sheets/${fileName}.css') layer(modules);`;
 
   if (loaded.has(importDeclaration)) {
     return;

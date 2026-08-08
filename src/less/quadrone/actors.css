@@ -47,8 +47,8 @@
     }
 
     .sheet-body {
-      --t5e-background-image-top: url('../../modules/tidy5e-sheet/images/parchment-texture-top.webp');
-      --t5e-background-image-bottom: url('../../modules/tidy5e-sheet/images/parchment-texture-bottom.webp');
+      --t5e-background-image-top: url('../../modules/ddb5e-sheets/images/parchment-texture-top.webp');
+      --t5e-background-image-bottom: url('../../modules/ddb5e-sheets/images/parchment-texture-bottom.webp');
       display: flex;
       flex: 1;
       flex-direction: row;
@@ -113,14 +113,14 @@
     --t5e-sheet-header-bg: url('../../systems/dnd5e/ui/official/banner-npc-dark.webp');
 
     &.actor::before {
-      background-image: url('../../modules/tidy5e-sheet/images/texture-gray-1.webp');
+      background-image: url('../../modules/ddb5e-sheets/images/texture-gray-1.webp');
       filter: none;
       opacity: 1;
       mix-blend-mode: normal;
     }
 
     &.actor .sheet-body {
-      background-image: url('../../modules/tidy5e-sheet/images/texture-gray-2.webp');
+      background-image: url('../../modules/ddb5e-sheets/images/texture-gray-2.webp');
     }
 
     &::after {
@@ -132,7 +132,7 @@
     }
 
     &.theme-dark {
-      background: url('../../modules/tidy5e-sheet/images/denim065.png'),
+      background: url('../../modules/ddb5e-sheets/images/denim065.png'),
         var(--t5e-component-card-dark-darker);
       background-position: top center, center;
       background-repeat: repeat, no-repeat;
@@ -143,7 +143,7 @@
       }
 
       &::after {
-        background-image: url('../../modules/tidy5e-sheet/images/texture-gray-2.webp');
+        background-image: url('../../modules/ddb5e-sheets/images/texture-gray-2.webp');
         background-position: bottom center;
         background-repeat: no-repeat;
         background-size: cover;
@@ -1471,7 +1471,7 @@
     }
 
     .sheet-body {
-      background: url('../../modules/tidy5e-sheet/images/denim065.png') top center / auto repeat,
+      background: url('../../modules/ddb5e-sheets/images/denim065.png') top center / auto repeat,
         var(--t5e-component-card-dark-darker);
       background-size: auto;
 

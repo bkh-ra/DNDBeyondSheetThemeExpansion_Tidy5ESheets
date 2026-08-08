@@ -25,7 +25,7 @@ export class DocumentTabSectionConfigApplication extends DocumentSheetDialog<
 
   static DEFAULT_OPTIONS = {
     classes: [
-      CONSTANTS.MODULE_ID,
+      CONSTANTS.SHEET_CSS_CLASS,
       'application-shell',
       'tidy-5e-sheets-section-configuration',
       CONSTANTS.SHEET_LAYOUT_CLASSIC,

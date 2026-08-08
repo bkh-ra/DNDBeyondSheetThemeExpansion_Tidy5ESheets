@@ -414,12 +414,12 @@
 
   &:where(.theme-light) {
     &::before {
-      background: url('../../modules/tidy5e-sheet/images/texture-gray-1.webp') no-repeat top center;
+      background: url('../../modules/ddb5e-sheets/images/texture-gray-1.webp') no-repeat top center;
       background-size: cover;
     }
 
     &::after {
-      background: url('../../modules/tidy5e-sheet/images/texture-gray-2.webp') no-repeat bottom center;
+      background: url('../../modules/ddb5e-sheets/images/texture-gray-2.webp') no-repeat bottom center;
       background-size: cover;
     }
 
@@ -629,7 +629,7 @@
   }
 
   &.theme-dark {
-    background: var(--app-background) url('../../modules/tidy5e-sheet/images/denim065.png');
+    background: var(--app-background) url('../../modules/ddb5e-sheets/images/denim065.png');
     border-color: var(--t5e-color-palette-gold-45);
 
     .window-resize-handle {

@@ -29,7 +29,7 @@ export class JournalEntryApplication extends DocumentSheetDialog<
   }
 
   static DEFAULT_OPTIONS: Partial<DocumentSheetApplicationConfiguration> = {
-    classes: [CONSTANTS.MODULE_ID, 'sheet', 'quadrone', 'tidy-journal-entry'],
+    classes: [CONSTANTS.SHEET_CSS_CLASS, 'sheet', 'quadrone', 'tidy-journal-entry'],
     tag: 'form',
     sheetConfig: false,
     window: {

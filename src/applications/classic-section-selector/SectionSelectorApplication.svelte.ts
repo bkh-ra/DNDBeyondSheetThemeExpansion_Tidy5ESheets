@@ -76,7 +76,7 @@ export class SectionSelectorApplication extends DocumentSheetDialog<
 
   static DEFAULT_OPTIONS: Partial<ApplicationConfiguration> = {
     classes: [
-      CONSTANTS.MODULE_ID,
+      CONSTANTS.SHEET_CSS_CLASS,
       'sheet',
       'quadrone',
       'tidy-section-selector-application',

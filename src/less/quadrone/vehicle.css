@@ -1,5 +1,5 @@
 .tidy5e-sheet.application:where(.quadrone.vehicle) {
-  --t5e-background-image: url('../../modules/tidy5e-sheet/images/banner-vehicle.webp');
+  --t5e-background-image: url('../../modules/ddb5e-sheets/images/banner-vehicle.webp');
   --t5e-text-warning: var(--t5e-color-palette-orange-70);
 
   .dr-container {

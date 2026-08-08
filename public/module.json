@@ -1,8 +1,8 @@
 {
-  "id": "tidy5e-sheet",
-  "title": "Tidy 5e Sheets",
-  "description": "D&D 5e sheet layouts for Foundry VTT, focused on a clean UI, user ergonomics, and extensibility.",
-  "version": "0.0a",
+  "id": "ddb5e-sheets",
+  "title": "DDB 5e Sheets",
+  "description": "D&D Beyond-style character sheet layout for Foundry VTT. A local fork of Tidy 5e Sheets by kgar (MIT), adding a third 'DDB' sheet layout alongside Classic and Quadrone.",
+  "version": "13.7.0-ddb.0",
   "authors": [
     {
       "id": "kgar",
@@ -131,11 +131,14 @@
       }
     ],
     "requires": [],
-    "conflicts": []
+    "conflicts": [
+      {
+        "id": "tidy5e-sheet",
+        "reason": "DDB 5e Sheets is a fork that ships all Tidy 5e sheets plus the DDB layout; running both causes duplicate registrations and CSS collisions."
+      }
+    ]
   },
   "url": "https://github.com/kgar/foundry-vtt-tidy-5e-sheets",
-  "download": "https://github.com/kgar/foundry-vtt-tidy-5e-sheets/releases/download/v1.0.0/module.zip",
-  "manifest": "https://github.com/kgar/foundry-vtt-tidy-5e-sheets/releases/latest/download/module.json",
   "readme": "https://github.com/kgar/foundry-vtt-tidy-5e-sheets/blob/main/README.md",
   "bugs": "https://github.com/kgar/foundry-vtt-tidy-5e-sheets/issues",
   "changelog": "https://github.com/kgar/foundry-vtt-tidy-5e-sheets/releases",

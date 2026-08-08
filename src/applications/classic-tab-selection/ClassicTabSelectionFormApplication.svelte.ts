@@ -37,7 +37,7 @@ export default class ClassicTabSelectionFormApplication extends getSvelteApplica
 
   static DEFAULT_OPTIONS = {
     classes: [
-      CONSTANTS.MODULE_ID,
+      CONSTANTS.SHEET_CSS_CLASS,
       'application-shell',
       'tab-selection',
       CONSTANTS.SHEET_LAYOUT_CLASSIC,

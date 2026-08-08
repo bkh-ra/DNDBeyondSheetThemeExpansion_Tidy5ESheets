@@ -29,7 +29,7 @@ export default class ActorOriginSummaryConfigFormApplication extends DocumentShe
 >() {
   static DEFAULT_OPTIONS: Partial<DocumentSheetApplicationConfiguration> = {
     classes: [
-      CONSTANTS.MODULE_ID,
+      CONSTANTS.SHEET_CSS_CLASS,
       'sheet',
       'quadrone',
       'tidy-origin-summary-application',

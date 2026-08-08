@@ -68,7 +68,7 @@ export class WorldSettingsQuadroneApplication
   hasChanges: boolean;
 
   static DEFAULT_OPTIONS: Partial<ApplicationConfiguration> = {
-    classes: [CONSTANTS.MODULE_ID, 'sheet', 'quadrone', 'tidy-sheet-settings'],
+    classes: [CONSTANTS.SHEET_CSS_CLASS, 'sheet', 'quadrone', 'tidy-sheet-settings'],
     id: 'tidy-world-settings',
     tag: 'form',
     sheetConfig: false,

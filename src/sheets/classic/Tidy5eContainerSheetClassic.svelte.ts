@@ -67,7 +67,7 @@ export class Tidy5eContainerSheetClassic extends getTidyExtensibleDocumentSheetM
     ApplicationConfiguration & { dragDrop: Partial<DragDropConfiguration>[] }
   > = {
     classes: [
-      CONSTANTS.MODULE_ID,
+      CONSTANTS.SHEET_CSS_CLASS,
       'sheet',
       'item',
       CONSTANTS.ITEM_TYPE_CONTAINER,
