@@ -289,51 +289,93 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-rows: repeat(3, auto);
   grid-auto-flow: column;
+  /* Fixed rows, equal-fraction columns: all six cells are identically sized no
+   * matter how wide the abbreviation or how many digits the modifier has. */
+  grid-template-rows: repeat(3, 30px);
   /* 8px row / 10px column: the captures run the two save columns further apart
    * than the rows, so the pair of entries never reads as one wide row. */
   gap: 8px 10px;
 }
 
-/* One cell per ability: pip | abbreviation chip | signed modifier chip.
- * The 22px chips plus the 8px row gap give the 30px row pitch of the capture. */
+/* Positioning context for the pip that floats over the roll button. */
 .tidy5e-sheet.ddb .ddb-save-entry {
+  position: relative;
   display: grid;
-  grid-template-columns: var(--ddb-pip-size, 10px) minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 5px;
-  min-height: 22px;
+  min-width: 0;
 }
 
-.tidy5e-sheet.ddb .ddb-save-abbr {
-  justify-content: center;
-  min-width: 0;
-  min-height: 22px;
-  padding: 2px 3px;
-  /* Muted like every other caps label on this column; only the value chip
-   * beside it carries full-strength text. */
-  color: var(--ddb-label);
+/* The whole entry is one button: pip gutter | abbreviation | modifier.
+ * `padding-left` reserves the gutter the pip is absolutely positioned into, so
+ * the abbreviation never shifts between proficient and non-proficient rows. */
+.tidy5e-sheet.ddb button.ddb-save-roll {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0 8px 0 24px;
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border-radius: var(--ddb-radius-input);
+  background: var(--ddb-box-bg);
+  box-shadow: none;
   cursor: pointer;
 }
 
-.tidy5e-sheet.ddb .ddb-save-abbr:hover:not(:disabled) {
+.tidy5e-sheet.ddb button.ddb-save-roll:hover:not(:disabled) {
   border-color: var(--ddb-dice-roll-border);
+  box-shadow: none;
+}
+
+.tidy5e-sheet.ddb button.ddb-save-roll:hover:not(:disabled) .ddb-save-modifier {
   color: var(--ddb-link);
 }
 
-.tidy5e-sheet.ddb .ddb-save-abbr:disabled {
+.tidy5e-sheet.ddb button.ddb-save-roll:disabled {
   cursor: default;
-  color: var(--ddb-text-disabled);
 }
 
-.tidy5e-sheet.ddb .ddb-save-abbr:focus-visible {
+.tidy5e-sheet.ddb button.ddb-save-roll:focus-visible {
   outline: none;
   box-shadow: var(--ddb-focus-ring);
 }
 
+/* Centred in the gutter reserved by the button's 24px left padding. Doubled
+ * class (not `.ddb-save-pip` alone) to outrank `button.ddb-pip`'s
+ * `position: relative` on specificity rather than on source order. */
+.tidy5e-sheet.ddb .ddb-pip.ddb-save-pip {
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  z-index: 1;
+  transform: translateY(-50%);
+}
+
+.tidy5e-sheet.ddb .ddb-save-abbr {
+  min-width: 0;
+  text-align: center;
+  font-family: var(--ddb-font-condensed);
+  font-size: 12px;
+  font-weight: var(--ddb-weight-label);
+  text-transform: var(--ddb-transform-label);
+  letter-spacing: 0.02em;
+  color: var(--ddb-label);
+}
+
+/* Fixed width, not `auto`: it keeps the abbreviation column the same size in
+ * all six cells, so every abbreviation sits at the same x whether the modifier
+ * beside it is "+1" or "-12". */
 .tidy5e-sheet.ddb .ddb-save-modifier {
-  min-width: 28px;
-  min-height: 22px;
-  padding: 2px 4px;
+  min-width: 34px;
+  text-align: right;
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-value-md);
+  font-weight: var(--ddb-weight-value);
+  line-height: 1;
+  color: var(--ddb-text);
+  white-space: nowrap;
 }
 
 /* Rendered only when the actor has a save bonus (see DdbSavingThrowsBox), so

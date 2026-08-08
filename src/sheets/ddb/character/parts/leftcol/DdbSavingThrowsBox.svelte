@@ -32,8 +32,29 @@
   <div class="ddb-saves-grid">
     {#each context.abilities as ability (ability.key)}
       {@const modifier = getModifierData(ability.save.value)}
+      <!--
+        One uniform button per ability. The pip is a sibling floated over the
+        button's reserved left padding rather than a child, because a button
+        cannot legally nest inside another button and the pip needs to stay
+        independently clickable for proficiency cycling in edit mode.
+      -->
       <div class="ddb-save-entry" data-ability={ability.key}>
+        <button
+          type="button"
+          class="ddb-save-roll"
+          onclick={(event) =>
+            context.actor.rollSavingThrow({ ability: ability.key, event })}
+          data-tidy-sheet-part={CONSTANTS.SHEET_PARTS.ABILITY_SAVE_ROLLER}
+          data-has-roll-modes
+          disabled={!context.owner}
+        >
+          <span class="ddb-save-abbr">{ability.abbr}</span>
+          <span class="ddb-save-modifier">
+            <span class="ddb-sign">{modifier.sign}</span>{modifier.value}
+          </span>
+        </button>
         <DdbProficiencyPip
+          class="ddb-save-pip"
           actor={context.actor}
           aria-label={localize(ability.hover)}
           data-tooltip=""
@@ -44,20 +65,6 @@
             ? (ability.source?.proficient ?? 0)
             : ability.proficient}
         />
-        <button
-          type="button"
-          class="ddb-save-abbr ddb-chip"
-          onclick={(event) =>
-            context.actor.rollSavingThrow({ ability: ability.key, event })}
-          data-tidy-sheet-part={CONSTANTS.SHEET_PARTS.ABILITY_SAVE_ROLLER}
-          data-has-roll-modes
-          disabled={!context.owner}
-        >
-          {ability.abbr}
-        </button>
-        <span class="ddb-save-modifier ddb-chip ddb-chip-value">
-          <span class="ddb-sign">{modifier.sign}</span>{modifier.value}
-        </span>
       </div>
     {/each}
   </div>

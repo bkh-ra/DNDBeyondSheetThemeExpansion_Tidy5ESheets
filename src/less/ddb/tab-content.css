@@ -79,8 +79,13 @@
   --t5e-color-text-gold-emphasis: var(--ddb-text-muted);
   --t5e-color-text-gold-light: var(--ddb-text);
   --t5e-color-gold: var(--ddb-panel-border);
-  --t5e-color-link-default: var(--ddb-link);
-  --t5e-color-link-hover: var(--ddb-accent-hover);
+  /* Quadrone points `--t5e-color-link-default` straight at the sheet accent
+   * (`--t5e-theme-color-default`), which made every item / spell / feature
+   * name render red-on-red (or purple-on-purple). DDB names rest in plain
+   * body text and only shift on hover, so the RESTING link color is neutral
+   * and the accent is kept for the hover state. */
+  --t5e-color-link-default: var(--ddb-text);
+  --t5e-color-link-hover: var(--ddb-accent);
 
   /* --- icons ------------------------------------------------------- */
   --t5e-color-icon-default: var(--ddb-text);
@@ -277,25 +282,64 @@
   border-image: none;
 }
 
-/* Item name keeps its link affordance; sub-line stays muted. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .cell-name {
+/* Item / spell / feature NAMES rest in plain body text (white in dark theme,
+ * near-black in light) — never the accent. Covers both the `.cell-name` span
+ * and the anchor wrapping it, since `a[href]` picks up `--t5e-color-link-*`. */
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .cell-name,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .cell-text,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .item-name,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .item-name a,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell a[href],
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell.primary a {
   font-family: var(--ddb-font-body);
   font-size: var(--ddb-size-body);
-  color: var(--ddb-link);
-}
-
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row:hover .cell-name,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell a:hover .cell-name {
-  color: var(--ddb-accent-hover);
+  color: var(--ddb-text);
   text-decoration: none;
+  text-shadow: none;
 }
 
+/* Hover keeps the affordance: underline plus the accent. */
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .item-name:hover .cell-name,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .item-name a:hover,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell a[href]:hover,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell.primary a:hover {
+  color: var(--ddb-accent);
+  text-decoration: underline;
+  text-shadow: none;
+}
+
+/* Sub-lines / context lines under the name stay muted, never accent. */
 .tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .cell-context,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .cell-label {
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .cell-label,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .advancement-cell-context,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .advancement-cell-context p,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .item-context {
   color: var(--ddb-text-muted);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.diminished .cell-name {
+/* Utility text classes quadrone sprinkles through the rows. */
+.tidy5e-sheet.ddb .ddb-primary-box-content .color-text-default {
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .color-text-lighter,
+.tidy5e-sheet.ddb .ddb-primary-box-content .color-text-gold,
+.tidy5e-sheet.ddb .ddb-primary-box-content .color-text-gold-emphasis,
+.tidy5e-sheet.ddb .ddb-primary-box-content .color-icon-theme,
+.tidy5e-sheet.ddb .ddb-primary-box-content .color-icon-theme-highlight {
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .color-text-lightest,
+.tidy5e-sheet.ddb .ddb-primary-box-content .color-text-disabled {
+  color: var(--ddb-text-disabled);
+}
+
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.diminished .cell-name,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.diminished .item-name,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.diminished .item-name a,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.spell:not(.equipped) .item-label,
+.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.spell:not(.equipped) .item-context {
   color: var(--ddb-text-muted);
 }
 

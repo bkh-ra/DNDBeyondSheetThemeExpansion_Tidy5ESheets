@@ -514,9 +514,14 @@
  * width cap means the panel is the same size whether it is showing the HP
  * figures or the death-save pips, and it can never spread to eat the row.
  * Everything inside is in normal flow (flex row -> column -> grid), so nothing
- * can overprint anything else when the labels get long. */
+ * can overprint anything else when the labels get long.
+ *
+ * Unlike the other quick-info boxes the surface here is CSS, not an SVG frame
+ * (see DdbHpBlock.svelte) — painting it on the root guarantees it spans the
+ * whole block in both interior modes, whatever the children measure. */
 .tidy5e-sheet.ddb .ddb-hp-block {
   position: relative;
+  box-sizing: border-box;
   display: flex;
   flex: 0 1 25rem; /* 400px */
   align-items: center;
@@ -526,6 +531,16 @@
   max-width: 25rem;
   height: 4.875rem; /* 78px, level with the stat boxes */
   padding: 0.25rem 0.5rem;
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border-radius: var(--ddb-radius-input);
+  background: var(--ddb-box-bg);
+}
+
+/* Both interiors sit above the panel surface. */
+.tidy5e-sheet.ddb .ddb-hp-block__applicator,
+.tidy5e-sheet.ddb .ddb-hp-block__readout {
+  position: relative;
+  z-index: 1;
 }
 
 /* HEAL / amount / DAMAGE quick-adjust, down the left edge as DDB stacks it. */

@@ -23,7 +23,6 @@
   import TextInputQuadrone from 'src/components/inputs/TextInputQuadrone.svelte';
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
   import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
-  import DdbStatBoxShape from 'src/sheets/ddb/svg/DdbStatBoxShape.svelte';
   import DdbDeathSaves from './DdbDeathSaves.svelte';
 
   let context = $derived(getCharacterSheetQuadroneContext());
@@ -62,9 +61,14 @@
   }
 </script>
 
+<!--
+  The panel surface is plain CSS here, not an SVG frame: this block is the only
+  quick-info box whose root is a flex container laying out two real children
+  (applicator + readout), and an absolutely positioned SVG behind a flex root
+  did not reliably cover the full fixed width. A background + 1px border on the
+  root is size-independent, so both interior modes always sit on the panel.
+-->
 <section class="ddb-hp-block">
-  <DdbStatBoxShape width={448} height={78} />
-
   {#if context.editable}
     <div class="ddb-hp-block__applicator">
       <button

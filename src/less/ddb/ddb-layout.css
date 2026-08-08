@@ -66,9 +66,16 @@
 }
 
 /* --- three FIXED columns (DDB parity: panes are fixed size and position;
- * only the tabbed list content scrolls) --- */
+ * only the tabbed list content scrolls) ---
+ *
+ * Height model: the row's height comes from the tallest INTRINSIC column —
+ * the skills column (fixed content: 18 rows). The primary column contributes
+ * ZERO intrinsic height (its scrollable content uses flex-basis 0 / height 0)
+ * so a long inventory can never inflate the row; it stretches to match the
+ * skills column and scrolls inside. The left column's last box stretches so
+ * all three columns end on the same line. */
 .tidy5e-sheet.ddb .ddb-columns {
-  flex: 1;
+  flex: 0 0 auto;
   min-height: 0;
   display: grid;
   grid-template-columns: 215px 210px minmax(0, 1fr);
@@ -82,6 +89,11 @@
   gap: 6px;
   min-width: 0;
   min-height: 0;
+}
+
+/* Bottom-align the left column with the skills column */
+.tidy5e-sheet.ddb .ddb-col-left > :last-child {
+  flex: 1 1 auto;
 }
 
 /* Primary column: combat row + tab bar fixed, tab CONTENT scrolls */
@@ -124,7 +136,10 @@
 }
 
 .tidy5e-sheet.ddb .ddb-col-primary .ddb-primary-box-content {
-  flex: 1;
+  /* flex-basis 0 + height 0: contributes no intrinsic height, so the grid row
+   * is sized by the skills column, then this stretches to fill and scrolls. */
+  flex: 1 1 0;
+  height: 0;
   min-height: 0;
   overflow: hidden auto;
   scrollbar-width: thin;
