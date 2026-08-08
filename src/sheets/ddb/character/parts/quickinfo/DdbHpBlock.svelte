@@ -1,8 +1,11 @@
 <!--
   DDB-FORK: Hit Points block in the quick-info band.
 
-  P1 scope: CURRENT / MAX / TEMP only. The HEAL and DAMAGE quick-apply inputs
-  that DDB shows on the left of this block are P4.
+  Layout mirrors design/captures/athelstan/*/01-actions.png: a compact
+  HEAL / amount / DAMAGE applicator down the left edge, then a three-column
+  readout (CURRENT "/" MAX ... TEMP) with the "HIT POINTS" title centred
+  underneath. Every piece is in normal flow — the only absolutely positioned
+  children are the SVG frame and the config cog.
 
   Inline editing follows the quadrone health parts
   (src/sheets/quadrone/actor/parts/ActorHealthBar.svelte): a TextInputQuadrone
@@ -10,6 +13,11 @@
   HP. Max HP is only editable while the sheet is unlocked, mirroring how the
   classic sheet treats system.attributes.hp.max as an override field; when
   locked it renders as text plus the dnd5e hit-points config control.
+
+  The applicator uses the dnd5e Actor5e#applyDamage API: a bare number is taken
+  as a delta with resistances ignored (`options.ignore ??= true` in the system),
+  positive for damage and negative for healing — the same call core dnd5e makes
+  from `modifyTokenAttribute` for HP bar drags.
 -->
 <script lang="ts">
   import TextInputQuadrone from 'src/components/inputs/TextInputQuadrone.svelte';
@@ -29,73 +37,130 @@
     context.system.attributes?.hp?.effectiveMax ?? hpMax,
   );
   let hpTemp = $derived(context.system.attributes?.hp?.temp ?? 0);
+
+  /** Amount typed into the quick-adjust field. Empty means "do nothing". */
+  let amount = $state<number | null>(null);
+
+  let applyAmount = $derived(
+    typeof amount === 'number' && Number.isFinite(amount) && amount > 0
+      ? Math.floor(amount)
+      : 0,
+  );
+
+  let canApply = $derived(context.editable && applyAmount > 0);
+
+  /** `sign` is 1 for damage and -1 for healing, per Actor5e#applyDamage. */
+  async function applyHealthDelta(sign: 1 | -1) {
+    if (!canApply) {
+      return;
+    }
+
+    await context.actor.applyDamage(sign * applyAmount);
+
+    amount = null;
+  }
 </script>
 
 <section class="ddb-hp-block">
-  <DdbStatBoxShape width={360} height={78} />
-  <h2 class="ddb-hp-block__title">{localize('DND5E.HitPoints')}</h2>
-  <div class="ddb-hp-block__fields">
-    <div class="ddb-hp-block__field ddb-hp-block__field--current">
-      <span class="ddb-hp-block__label">
-        {localize('DND5E.HitPointsCurrent')}
-      </span>
-      {#if context.editable}
-        <TextInputQuadrone
-          id="{appId}-ddb-hp-value"
-          document={context.actor}
-          field="system.attributes.hp.value"
-          class="ddb-hp-block__input"
-          value={hpValue}
-          selectOnFocus={true}
-          enableDeltaChanges={true}
-          blurAfterChange={true}
-          aria-label={localize('DND5E.HitPointsCurrent')}
-        />
-      {:else}
-        <span class="ddb-hp-block__value">{hpValue}</span>
-      {/if}
+  <DdbStatBoxShape width={448} height={78} />
+
+  {#if context.editable}
+    <div class="ddb-hp-block__applicator">
+      <button
+        type="button"
+        class="ddb-hp-block__apply ddb-hp-block__apply--heal"
+        aria-label={localize('DND5E.ActionHeal')}
+        data-tooltip="DND5E.ActionHeal"
+        disabled={!canApply}
+        onclick={() => applyHealthDelta(-1)}
+      >
+        {localize('DND5E.ActionHeal')}
+      </button>
+      <input
+        class="ddb-hp-block__apply-amount"
+        type="number"
+        min="0"
+        step="1"
+        inputmode="numeric"
+        aria-label={localize('DND5E.HitPoints')}
+        bind:value={amount}
+      />
+      <button
+        type="button"
+        class="ddb-hp-block__apply ddb-hp-block__apply--damage"
+        aria-label={localize('DND5E.Damage')}
+        data-tooltip="DND5E.Damage"
+        disabled={!canApply}
+        onclick={() => applyHealthDelta(1)}
+      >
+        {localize('DND5E.Damage')}
+      </button>
+    </div>
+  {/if}
+
+  <div class="ddb-hp-block__readout">
+    <div class="ddb-hp-block__fields">
+      <div class="ddb-hp-block__field ddb-hp-block__field--current">
+        <span class="ddb-hp-block__label">{localize('DND5E.Current')}</span>
+        {#if context.editable}
+          <TextInputQuadrone
+            id="{appId}-ddb-hp-value"
+            document={context.actor}
+            field="system.attributes.hp.value"
+            class="ddb-hp-block__input"
+            value={hpValue}
+            selectOnFocus={true}
+            enableDeltaChanges={true}
+            blurAfterChange={true}
+            aria-label={localize('DND5E.HitPointsCurrent')}
+          />
+        {:else}
+          <span class="ddb-hp-block__value">{hpValue}</span>
+        {/if}
+      </div>
+
+      <span class="ddb-hp-block__separator" aria-hidden="true">/</span>
+
+      <div class="ddb-hp-block__field ddb-hp-block__field--max">
+        <span class="ddb-hp-block__label">{localize('DND5E.Max')}</span>
+        {#if context.editable && context.unlocked}
+          <TextInputQuadrone
+            id="{appId}-ddb-hp-max"
+            document={context.actor}
+            field="system.attributes.hp.max"
+            class="ddb-hp-block__input"
+            value={hpMax}
+            selectOnFocus={true}
+            saveEmptyAsNull={true}
+            blurAfterChange={true}
+            aria-label={localize('DND5E.HitPointsMax')}
+          />
+        {:else}
+          <span class="ddb-hp-block__value">{effectiveMaxHp}</span>
+        {/if}
+      </div>
+
+      <div class="ddb-hp-block__field ddb-hp-block__field--temp">
+        <span class="ddb-hp-block__label">{localize('DND5E.Temp')}</span>
+        {#if context.editable}
+          <TextInputQuadrone
+            id="{appId}-ddb-hp-temp"
+            document={context.actor}
+            field="system.attributes.hp.temp"
+            class="ddb-hp-block__input"
+            value={hpTemp}
+            selectOnFocus={true}
+            enableDeltaChanges={true}
+            blurAfterChange={true}
+            aria-label={localize('DND5E.HitPointsTemp')}
+          />
+        {:else}
+          <span class="ddb-hp-block__value">{hpTemp}</span>
+        {/if}
+      </div>
     </div>
 
-    <span class="ddb-hp-block__separator">/</span>
-
-    <div class="ddb-hp-block__field ddb-hp-block__field--max">
-      <span class="ddb-hp-block__label">{localize('DND5E.HitPointsMax')}</span>
-      {#if context.editable && context.unlocked}
-        <TextInputQuadrone
-          id="{appId}-ddb-hp-max"
-          document={context.actor}
-          field="system.attributes.hp.max"
-          class="ddb-hp-block__input"
-          value={hpMax}
-          selectOnFocus={true}
-          saveEmptyAsNull={true}
-          blurAfterChange={true}
-          aria-label={localize('DND5E.HitPointsMax')}
-        />
-      {:else}
-        <span class="ddb-hp-block__value">{effectiveMaxHp}</span>
-      {/if}
-    </div>
-
-    <div class="ddb-hp-block__field ddb-hp-block__field--temp">
-      <span class="ddb-hp-block__label">{localize('DND5E.HitPointsTemp')}</span>
-      {#if context.editable}
-        <TextInputQuadrone
-          id="{appId}-ddb-hp-temp"
-          document={context.actor}
-          field="system.attributes.hp.temp"
-          class="ddb-hp-block__input"
-          value={hpTemp}
-          selectOnFocus={true}
-          enableDeltaChanges={true}
-          blurAfterChange={true}
-          aria-label={localize('DND5E.HitPointsTemp')}
-        />
-      {:else}
-        <span class="ddb-hp-block__value">{hpTemp}</span>
-      {/if}
-    </div>
-
+    <h2 class="ddb-hp-block__title">{localize('DND5E.HitPoints')}</h2>
   </div>
 
   {#if context.unlocked}

@@ -43,7 +43,7 @@
     unit,
     label,
     tooltip,
-    width = 78,
+    width = 74,
     height = 78,
     children,
     ...rest

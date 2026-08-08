@@ -10,6 +10,34 @@
  * because the harvest baked one character's accent into computed values.
  */
 
+/* Roboto (OFL, bundled at public/fonts/roboto) — DDB's body typeface.
+ * Tidy already bundles Roboto Condensed; together they cover the DDB stack. */
+@font-face {
+  font-family: 'Roboto';
+  src:
+    url('../../modules/ddb5e-sheets/fonts/roboto/Roboto-VariableFont_wdth,wght.ttf')
+      format('truetype-variations'),
+    url('../../modules/ddb5e-sheets/fonts/roboto/Roboto-VariableFont_wdth,wght.ttf')
+      format('truetype');
+  font-weight: 100 900;
+  font-stretch: 75% 100%;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto';
+  src:
+    url('../../modules/ddb5e-sheets/fonts/roboto/Roboto-Italic-VariableFont_wdth,wght.ttf')
+      format('truetype-variations'),
+    url('../../modules/ddb5e-sheets/fonts/roboto/Roboto-Italic-VariableFont_wdth,wght.ttf')
+      format('truetype');
+  font-weight: 100 900;
+  font-stretch: 75% 100%;
+  font-style: italic;
+  font-display: swap;
+}
+
 .tidy5e-sheet.ddb {
   /* ---- accent (character-scoped, theme-invariant) ---- */
   --ddb-accent: var(--t5e-theme-color-default, #c53131);

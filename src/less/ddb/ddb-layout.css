@@ -1,46 +1,135 @@
-/* DDB-FORK: root grid for the DDB layout. Column proportions measured from
- * design/captures (desktop sheet: left boxes ~215px, skills ~205px, primary
- * box flexible). */
+/* DDB-FORK: root layout for the DDB sheet.
+ *
+ * Height model (DDB parity): the window is a FIXED viewport — header and
+ * quick-info band stay put, and the three columns each scroll INTERNALLY.
+ * The whole sheet never scrolls as one page.
+ *
+ * Backdrop model: the DDB sheet root suppresses quadrone's themed header
+ * chrome (accent background + 18.75rem grayscale banner pseudo-elements,
+ * which otherwise bleed through as a colored strip) and instead paints the
+ * character's Tidy header/background image as a full-sheet backdrop under a
+ * page-color tint — matching DDB's backdrop-decoration look. Panels sit on
+ * top (the dark panel token is semi-transparent, exactly like DDB's).
+ */
 
+/* --- suppress quadrone root chrome, repaint root --- */
+.tidy5e-sheet.application.ddb {
+  background: var(--ddb-page-bg);
+}
+
+.tidy5e-sheet.application.ddb::before,
+.tidy5e-sheet.application.ddb::after {
+  display: none;
+}
+
+.tidy5e-sheet.ddb .window-header {
+  background: transparent;
+}
+
+/* --- fixed-viewport sheet --- */
 .tidy5e-sheet.ddb .window-content {
   padding: 0;
-  overflow: hidden auto;
+  overflow: hidden;
 }
 
 .tidy5e-sheet.ddb .ddb-sheet {
+  height: 100%;
   display: flex;
   flex-direction: column;
-  min-height: 100%;
+  min-height: 0;
+  /* full-sheet backdrop: page tint over the character's theme image */
+  background:
+    linear-gradient(
+      color-mix(in srgb, var(--ddb-page-bg) 68%, transparent),
+      color-mix(in srgb, var(--ddb-page-bg) 88%, transparent)
+    ),
+    var(--t5e-sheet-header-bg, var(--t5e-background-image, none)) top center /
+      cover no-repeat,
+    var(--ddb-page-bg);
+}
+
+.tidy5e-sheet.ddb .ddb-sheet > :not(.ddb-sheet-body) {
+  flex: 0 0 auto;
 }
 
 .tidy5e-sheet.ddb .ddb-sheet-body {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 10px 12px 14px;
+  gap: 8px;
+  padding: 8px 10px 10px;
 }
 
+.tidy5e-sheet.ddb .ddb-sheet-body > :not(.ddb-columns) {
+  flex: 0 0 auto;
+}
+
+/* --- three columns, each its own scroll region --- */
 .tidy5e-sheet.ddb .ddb-columns {
+  flex: 1;
+  min-height: 0;
   display: grid;
   grid-template-columns: 215px 210px minmax(0, 1fr);
-  gap: 10px;
-  align-items: start;
+  gap: 8px;
+  align-items: stretch;
 }
 
 .tidy5e-sheet.ddb .ddb-col {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   min-width: 0;
+  min-height: 0;
 }
 
-/* Narrow windows: stack the two stat columns beside each other above primary */
+.tidy5e-sheet.ddb .ddb-col-left,
+.tidy5e-sheet.ddb .ddb-col-skills {
+  overflow: hidden auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ddb-accent-transparent) transparent;
+  padding-right: 2px;
+}
+
+/* Primary column: strip + tab bar fixed, tab CONTENT scrolls */
+.tidy5e-sheet.ddb .ddb-col-primary {
+  overflow: hidden;
+}
+
+.tidy5e-sheet.ddb .ddb-col-primary .ddb-primary-box {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tidy5e-sheet.ddb .ddb-col-primary .ddb-primary-box > :not(.ddb-primary-box-content) {
+  flex: 0 0 auto;
+}
+
+.tidy5e-sheet.ddb .ddb-col-primary .ddb-primary-box-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ddb-accent-transparent) transparent;
+}
+
+/* Narrow windows: stack the two stat columns beside each other above primary;
+ * the sheet body itself becomes the scroll region in this fallback. */
 @media (max-width: 900px) {
+  .tidy5e-sheet.ddb .ddb-sheet-body {
+    overflow: hidden auto;
+  }
   .tidy5e-sheet.ddb .ddb-columns {
     grid-template-columns: 1fr 1fr;
   }
+  .tidy5e-sheet.ddb .ddb-col-left,
+  .tidy5e-sheet.ddb .ddb-col-skills {
+    overflow: visible;
+  }
   .tidy5e-sheet.ddb .ddb-col-primary {
     grid-column: 1 / -1;
+    overflow: visible;
   }
 }

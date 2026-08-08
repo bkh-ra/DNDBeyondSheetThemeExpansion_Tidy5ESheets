@@ -35,7 +35,7 @@
   data-tidy-sheet-part="inspiration-tracker-container"
 >
   <!-- The frame covers only the icon; the two-line caps label sits beneath it. -->
-  <DdbStatBoxShape width={72} height={50} />
+  <DdbStatBoxShape width={70} height={50} />
   {#if banked}
     <div class="ddb-inspiration-box__content">
       <button

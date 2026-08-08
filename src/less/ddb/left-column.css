@@ -36,17 +36,19 @@
 /* Box frame (DdbBox.svelte)                                          */
 /* ------------------------------------------------------------------ */
 
+/* The panel fill, border and corner details are all drawn by the inline
+ * `DdbPanelFrame` svg behind the content — hence no `background`, `border` or
+ * `border-radius` here. `position: relative` anchors that svg; the 13px/16px
+ * padding clears the 8px corner chamfers on every edge. */
 .tidy5e-sheet.ddb .ddb-box {
   /* Pip diameter, harvested from `.ct-skills-pane__icon--none`. Declared on the
    * frame so row grids can reserve the pip column without measuring. */
   --ddb-pip-size: 10px;
 
+  position: relative;
   display: flex;
   flex-direction: column;
   padding: 13px 16px 8px;
-  background: var(--ddb-panel-bg);
-  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
-  border-radius: var(--ddb-radius-input);
   color: var(--ddb-text);
   font-family: var(--ddb-font-body);
   font-size: var(--ddb-size-body);
@@ -54,7 +56,37 @@
   min-width: 0;
 }
 
+/* Behind everything, and never intercepting a roll/gear click. */
+.tidy5e-sheet.ddb .ddb-panel-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.tidy5e-sheet.ddb .ddb-panel-frame__panel {
+  fill: var(--ddb-panel-bg);
+  stroke: var(--ddb-panel-border);
+  stroke-width: var(--ddb-border-width-panel);
+}
+
+/* The companion stroke that doubles each corner. Slightly dialled back so it
+ * reads as a hand-drawn echo of the chamfer rather than a second hard edge. */
+.tidy5e-sheet.ddb .ddb-panel-frame__accent {
+  fill: none;
+  stroke: var(--ddb-panel-border);
+  stroke-width: var(--ddb-border-width-panel);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.65;
+}
+
+/* Content sits above the frame; both need a stacking context of their own so
+ * the svg's `z-index: 0` cannot paint over them. */
 .tidy5e-sheet.ddb .ddb-box-body {
+  position: relative;
+  z-index: 1;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -63,9 +95,13 @@
 }
 
 /* The DDB signature: the title sits at the BOTTOM of the box, centred, with
- * the gear pinned to its right so the title stays optically centred. */
+ * the gear pinned to its right so the title stays optically centred. It sits
+ * *inside* the frame's unbroken bottom border (see DdbPanelFrame) and keeps a
+ * transparent background so the panel fill shows through. */
 .tidy5e-sheet.ddb .ddb-box-footer {
   position: relative;
+  z-index: 1;
+  background: none;
   display: flex;
   align-items: center;
   justify-content: center;
