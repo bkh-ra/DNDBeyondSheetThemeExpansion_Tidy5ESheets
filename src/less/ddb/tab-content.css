@@ -1,5 +1,5 @@
 /* DDB-FORK: flat-table restyle for the REUSED quadrone tab content that the DDB
- * layout mounts inside `.tidy5e-sheet.ddb .ddb-primary-box-content`.
+ * layout mounts inside `.tidy5e-sheet.application.ddb .ddb-primary-box-content`.
  *
  * Goal: make Tidy's `.tidy-table*` item tables, action bars and spell headers
  * read like D&D Beyond's flat tables (design/captures/athelstan/{dark,light}/
@@ -18,8 +18,8 @@
  *   - Visual properties only (background, color, border, font, border-radius,
  *     box-shadow). No display / position / overflow / grid / flex changes, so
  *     Tidy's table layout stays intact.
- *   - Everything is scoped to `.tidy5e-sheet.ddb .ddb-primary-box-content`
- *     (or `.tidy5e-sheet.ddb` for sheet-wide var re-points).
+ *   - Everything is scoped to `.tidy5e-sheet.application.ddb .ddb-primary-box-content`
+ *     (or `.tidy5e-sheet.application.ddb` for sheet-wide var re-points).
  *   - Both themes come from `--ddb-*` tokens, which already switch on
  *     `.theme-dark` (see `ddb-tokens.css`). No `.theme-dark` fork needed except
  *     where noted.
@@ -38,8 +38,8 @@
  * `variables-quadrone.css`'s `.tidy5e-sheet.quadrone.theme-dark` block
  * (also 0-3-0) regardless of future import ordering. Values are identical
  * because the `--ddb-*` tokens are already theme-aware. */
-.tidy5e-sheet.ddb .ddb-primary-box-content,
-.tidy5e-sheet.ddb.theme-dark .ddb-primary-box-content {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content,
+.tidy5e-sheet.application.ddb.theme-dark .ddb-primary-box-content {
   /* --- table chrome ------------------------------------------------ */
   /* Kills the accent-purple section header fill at the source: quadrone
    * paints `.tidy-table-header-row` with
@@ -111,7 +111,7 @@
   --t5e-drop-shadow-field-hover: none;
   --t5e-drop-shadow-field-focus: var(--ddb-focus-ring);
   --t5e-drop-shadow-card: none;
-  --t5e-outline-field-focus: 0.0625rem solid var(--ddb-accent);
+  --t5e-outline-field-focus: var(--ddb-border-width-panel) solid var(--ddb-accent);
 
   /* --- base typography inside the content panel --------------------- */
   font-family: var(--ddb-font-body);
@@ -130,7 +130,7 @@
  * vars drive active filter chips and primary buttons, which SHOULD stay
  * accent-contrast per requirement 5). Same technique quadrone uses for
  * `.theme-basic .tidy-table-header-row`. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row {
   --t5e-theme-color-foreground: var(--ddb-heading);
   --t5e-theme-color-foreground-diminished: var(--ddb-text-muted);
   --t5e-theme-color-foreground-disabled: var(--ddb-text-disabled);
@@ -153,32 +153,32 @@
 
 /* `.diminished` group headers (empty sections) get a grey gradient in
  * quadrone; flatten it too. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row.diminished,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row.spell-method {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row.diminished,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row.spell-method {
   background: transparent;
   color: var(--ddb-text-muted);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row:hover {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row:hover {
   background: var(--ddb-table-row-alt-bg);
   border-bottom-color: var(--ddb-accent-transparent);
 }
 
-/* Group title: 11px condensed caps. Overrides quadrone's
+/* Group title: 12px condensed caps (--ddb-size-label-md). Overrides quadrone's
  * `.header-label-cell > *` (Modesto Condensed / 16px). */
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row .header-label-cell > *,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row .header-label-cell h3 {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row .header-label-cell > *,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row .header-label-cell h3 {
   font-family: var(--ddb-font-condensed);
-  font-size: 11px;
+  font-size: var(--ddb-size-label-md);
   font-weight: var(--ddb-weight-label);
   line-height: 1.3;
-  letter-spacing: 0.02em;
+  letter-spacing: var(--ddb-letterspacing-label);
   text-transform: var(--ddb-transform-label);
   color: var(--ddb-heading);
 }
 
 /* Count badge next to the group title — muted, not a filled chip. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row .table-header-count {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row .table-header-count {
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-label);
   font-weight: var(--ddb-weight-label);
@@ -188,24 +188,24 @@
   color: var(--ddb-text-muted);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row:hover .header-label-cell h3,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row:hover .tidy-table-header-cell,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row:hover .table-header-count {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row:hover .header-label-cell h3,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row:hover .tidy-table-header-cell,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row:hover .table-header-count {
   color: var(--ddb-text);
 }
 
 /* Expand chevron in the header row. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row .button.expand-button i {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row .button.expand-button i {
   color: var(--ddb-text-muted);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row .tidy-table-button i,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row .header-cell-actions .header-action {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row .tidy-table-button i,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row .header-cell-actions .header-action {
   color: var(--ddb-text-muted);
   background: none;
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-row .tidy-table-button:hover i {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row .tidy-table-button:hover i {
   background: var(--ddb-table-row-alt-bg);
   color: var(--ddb-text);
 }
@@ -216,11 +216,11 @@
 
 /* WEIGHT / QTY / COST (GP) / NOTES — Tidy packs these into the same header
  * row as the group title, in the non-primary cells. 10px condensed caps. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-header-cell:not(.primary):not(.header-cell-actions) {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-cell:not(.primary):not(.header-cell-actions) {
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-label);
   font-weight: var(--ddb-weight-label);
-  letter-spacing: 0.03em;
+  letter-spacing: var(--ddb-letterspacing-label);
   text-transform: var(--ddb-transform-label);
   color: var(--ddb-text-muted);
 }
@@ -229,7 +229,7 @@
 /* 4. Item rows                                                       */
 /* ------------------------------------------------------------------ */
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row {
   background: var(--ddb-table-row-bg);
   border-radius: 0;
   /* quadrone declares `border-width: 0 0 1px 0; border-style: solid` and then
@@ -246,38 +246,38 @@
 /* Quadrone tints whole rows for state (equipped / prepared / spell method /
  * expanded) with white-to-transparent gradients. Replace with the flat DDB
  * alternate row tone so state stays legible without a wash of color. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.equipped,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.prepared,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.spell-method,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.spell-method:not(.diminished),
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.expanded,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.equipped.expanded,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.prepared.expanded {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.equipped,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.prepared,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.spell-method,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.spell-method:not(.diminished),
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.expanded,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.equipped.expanded,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.prepared.expanded {
   background: var(--ddb-table-row-alt-bg);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.diminished {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.diminished {
   background: var(--ddb-table-row-bg);
   color: var(--ddb-text-muted);
 }
 
 /* The `.highlight` overlay div is quadrone's rarity / equipped color wash.
  * Blank it everywhere — rarity is re-expressed as a left bar below. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row .highlight,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.rarity .highlight,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.equipped .highlight,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.diminished div.highlight {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row .highlight,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.rarity .highlight,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.equipped .highlight,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.diminished div.highlight {
   background: none;
 }
 
 /* Row hover. Declared after the state rules so it wins at equal specificity. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row:hover,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row-container:hover > .tidy-table-row {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row:hover,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row-container:hover > .tidy-table-row {
   background: var(--ddb-table-row-hover-bg);
 }
 
 /* Vertical cell dividers: DDB's tables have none. */
-.tidy5e-sheet.ddb .ddb-primary-box-content :is(.tidy-table-cell, .tidy-table-header-cell):not(:last-child) {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.tidy-table-cell, .tidy-table-header-cell):not(:last-child) {
   border-right-color: transparent;
   border-image: none;
 }
@@ -285,12 +285,12 @@
 /* Item / spell / feature NAMES rest in plain body text (white in dark theme,
  * near-black in light) — never the accent. Covers both the `.cell-name` span
  * and the anchor wrapping it, since `a[href]` picks up `--t5e-color-link-*`. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .cell-name,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .cell-text,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .item-name,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .item-name a,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell a[href],
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell.primary a {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell .cell-name,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell .cell-text,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell .item-name,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell .item-name a,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell a[href],
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell.primary a {
   font-family: var(--ddb-font-body);
   font-size: var(--ddb-size-body);
   color: var(--ddb-text);
@@ -299,66 +299,66 @@
 }
 
 /* Hover keeps the affordance: underline plus the accent. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .item-name:hover .cell-name,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .item-name a:hover,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell a[href]:hover,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell.primary a:hover {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell .item-name:hover .cell-name,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell .item-name a:hover,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell a[href]:hover,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell.primary a:hover {
   color: var(--ddb-accent);
   text-decoration: underline;
   text-shadow: none;
 }
 
 /* Sub-lines / context lines under the name stay muted, never accent. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .cell-context,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .cell-label,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .advancement-cell-context,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .advancement-cell-context p,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .item-context {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell .cell-context,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell .cell-label,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell .advancement-cell-context,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell .advancement-cell-context p,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell .item-context {
   color: var(--ddb-text-muted);
 }
 
 /* Utility text classes quadrone sprinkles through the rows. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .color-text-default {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .color-text-default {
   color: var(--ddb-text);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .color-text-lighter,
-.tidy5e-sheet.ddb .ddb-primary-box-content .color-text-gold,
-.tidy5e-sheet.ddb .ddb-primary-box-content .color-text-gold-emphasis,
-.tidy5e-sheet.ddb .ddb-primary-box-content .color-icon-theme,
-.tidy5e-sheet.ddb .ddb-primary-box-content .color-icon-theme-highlight {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .color-text-lighter,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .color-text-gold,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .color-text-gold-emphasis,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .color-icon-theme,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .color-icon-theme-highlight {
   color: var(--ddb-text-muted);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .color-text-lightest,
-.tidy5e-sheet.ddb .ddb-primary-box-content .color-text-disabled {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .color-text-lightest,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .color-text-disabled {
   color: var(--ddb-text-disabled);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.diminished .cell-name,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.diminished .item-name,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.diminished .item-name a,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.spell:not(.equipped) .item-label,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.spell:not(.equipped) .item-context {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.diminished .cell-name,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.diminished .item-name,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.diminished .item-name a,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.spell:not(.equipped) .item-label,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.spell:not(.equipped) .item-context {
   color: var(--ddb-text-muted);
 }
 
 /* Inline / nested tables (activities, container contents) inherit the flat
  * look; quadrone gives them their own gradients. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .inline-content-view,
-.tidy5e-sheet.ddb .ddb-primary-box-content .inline-content-view .tidy-table-row-container,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row ~ .expandable.expanded,
-.tidy5e-sheet.ddb .ddb-primary-box-content .expandable .expandable .tidy-table-row.expanded {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .inline-content-view,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .inline-content-view .tidy-table-row-container,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row ~ .expandable.expanded,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .expandable .expandable .tidy-table-row.expanded {
   background: var(--ddb-table-row-alt-bg);
   border-image: none;
   border-color: var(--ddb-panel-border);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .inline-content-view .tidy-table-header-row {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .inline-content-view .tidy-table-header-row {
   background: transparent;
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row-container.context {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row-container.context {
   box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-accent);
 }
 
@@ -371,26 +371,26 @@
  * .legendary | .artifact`). Reuse it as a left bar.
  *
  * Rendered as an INSET box-shadow rather than `border-left-width` on purpose:
- * it is pixel-identical to a 3px left border but adds no box-model width, so
+ * it is pixel-identical to a --ddb-rarity-bar-width left border but adds no box-model width, so
  * Tidy's flex column math is untouched (per the layout constraint). */
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.rarity {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.rarity {
   background: var(--ddb-table-row-bg);
-  box-shadow: inset 3px 0 0 0 var(--t5e-item-color);
+  box-shadow: inset var(--ddb-rarity-bar-width) 0 0 0 var(--t5e-item-color);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.rarity.equipped,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.rarity.expanded {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.rarity.equipped,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.rarity.expanded {
   background: var(--ddb-table-row-alt-bg);
-  box-shadow: inset 3px 0 0 0 var(--t5e-item-color);
+  box-shadow: inset var(--ddb-rarity-bar-width) 0 0 0 var(--t5e-item-color);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.rarity:hover {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.rarity:hover {
   background: var(--ddb-table-row-hover-bg);
-  box-shadow: inset 3px 0 0 0 var(--t5e-item-color);
+  box-shadow: inset var(--ddb-rarity-bar-width) 0 0 0 var(--t5e-item-color);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row.rarity.diminished {
-  box-shadow: inset 3px 0 0 0 var(--ddb-text-disabled);
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.rarity.diminished {
+  box-shadow: inset var(--ddb-rarity-bar-width) 0 0 0 var(--ddb-text-disabled);
 }
 
 /* ------------------------------------------------------------------ */
@@ -399,10 +399,10 @@
 
 /* Field + button geometry. Colors already arrive via the
  * `--t5e-component-field-*` re-points in section 1. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar :where(search),
-.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar input[type='text'],
-.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar .input-group,
-.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar select {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .action-bar :where(search),
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .action-bar input[type='text'],
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .action-bar .input-group,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .action-bar select {
   background: var(--ddb-panel-bg);
   border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
   border-radius: var(--ddb-radius-input);
@@ -411,7 +411,7 @@
   font-family: var(--ddb-font-body);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar :where(search) input[type='text'] {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .action-bar :where(search) input[type='text'] {
   background: none;
   border: none;
   border-radius: 0;
@@ -421,23 +421,23 @@
   color: var(--ddb-text);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar :where(search) input[type='text']::placeholder {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .action-bar :where(search) input[type='text']::placeholder {
   color: var(--ddb-text-muted);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar :where(search) i,
-.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar :where(search) .cancel-search {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .action-bar :where(search) i,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .action-bar :where(search) .cancel-search {
   color: var(--ddb-text-muted);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar :where(search):focus-within {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .action-bar :where(search):focus-within {
   background: var(--ddb-panel-bg);
   border-color: var(--ddb-accent);
   box-shadow: var(--ddb-focus-ring);
 }
 
 /* Neutral (inactive) buttons and filter chips. */
-.tidy5e-sheet.ddb .ddb-primary-box-content :is(button, .button) {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(button, .button) {
   --button-background: var(--ddb-panel-bg);
   --button-background-hover: var(--ddb-table-row-alt-bg);
   --button-background-active: var(--ddb-table-row-alt-bg);
@@ -452,16 +452,16 @@
   font-family: var(--ddb-font-condensed);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content :is(button, .button).button-borderless,
-.tidy5e-sheet.ddb .ddb-primary-box-content :is(button, .button).unbutton {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(button, .button).button-borderless,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(button, .button).unbutton {
   --button-background: transparent;
   --button-border: transparent;
   border-radius: var(--ddb-radius-control);
 }
 
 /* Accent is reserved for ACTIVE filter state (requirement 5). */
-.tidy5e-sheet.ddb .ddb-primary-box-content :is(button, .button).button-toggle.include,
-.tidy5e-sheet.ddb .ddb-primary-box-content :is(button, .button).button-primary {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(button, .button).button-toggle.include,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(button, .button).button-primary {
   --button-background: var(--ddb-accent);
   --button-background-hover: var(--ddb-accent-hover);
   --button-background-active: var(--ddb-accent-active);
@@ -473,9 +473,9 @@
 }
 
 /* Excluded / disabled filter chips read as struck-out, not colored. */
-.tidy5e-sheet.ddb .ddb-primary-box-content :is(button, .button).button-toggle.exclude,
-.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar .button-toggle.exclude,
-.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar .button-toggle.disabled {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(button, .button).button-toggle.exclude,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .action-bar .button-toggle.exclude,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .action-bar .button-toggle.disabled {
   --button-background: var(--ddb-table-row-alt-bg);
   --button-text: var(--ddb-text-disabled);
   --button-icon: var(--ddb-text-disabled);
@@ -483,13 +483,13 @@
   box-shadow: none;
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar .button-toggle.exclude::before,
-.tidy5e-sheet.ddb .ddb-primary-box-content .action-bar .button-toggle.disabled::before {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .action-bar .button-toggle.exclude::before,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .action-bar .button-toggle.disabled::before {
   color: var(--ddb-text-disabled);
 }
 
 /* Filter dropdown menu surface. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .button-with-options-wrapper menu {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .button-with-options-wrapper menu {
   background: var(--ddb-panel-bg-solid);
   border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
   border-radius: var(--ddb-radius-input);
@@ -504,7 +504,7 @@
 /* Header treatment for At-Will / Cantrips / 1st Level … is inherited from
  * section 2 (the `--t5e-method-color: transparent` re-point plus the flat
  * `.spell-method` background). Only the pips need their own tokens. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .pips.spell-pips {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .pips.spell-pips {
   --pip-color: var(--ddb-pip-border);
   --pip-border-color: var(--ddb-pip-border);
   --pip-active-color: var(--ddb-pip-filled);
@@ -516,19 +516,20 @@
 
 /* DDB draws slot pips as small squares, not circles. Spent slots are empty
  * with a muted outline; available slots are accent-filled. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .pips.spell-pips .pip {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .pips.spell-pips .pip {
   background: var(--ddb-pip-empty);
   border-color: var(--ddb-pip-border);
-  border-radius: 0.125rem;
+  /* Squares, per the radii contract: spell-slot pips = radius-control (3px). */
+  border-radius: var(--ddb-radius-control);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .pips.spell-pips .pip.active {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .pips.spell-pips .pip.active {
   background: var(--ddb-pip-filled);
   border-color: var(--ddb-pip-filled);
 }
 
 /* Numeric slot tracker next to the pips. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .spell-slot-tracker input[type='number'] {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .spell-slot-tracker input[type='number'] {
   font-family: var(--ddb-font-condensed);
   color: var(--ddb-text);
   background: none;
@@ -536,8 +537,8 @@
   box-shadow: none;
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .spell-row-icon,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row[data-tidy-item-type='spell'] .spell-school-icon dnd5e-icon {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .spell-row-icon,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row[data-tidy-item-type='spell'] .spell-school-icon dnd5e-icon {
   --icon-fill: var(--ddb-text-muted);
   color: var(--ddb-text-muted);
 }
@@ -546,22 +547,22 @@
 /* 8. Misc content typography                                         */
 /* ------------------------------------------------------------------ */
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .uses,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .hit-save {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell .uses,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell .hit-save {
   font-family: var(--ddb-font-body);
   font-size: var(--ddb-size-body);
   color: var(--ddb-text);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .uses .divider,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .uses .max,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .uses .modifier,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .hit-save .modifier,
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-cell .hit-save .ability {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell .uses .divider,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell .uses .max,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell .uses .modifier,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell .hit-save .modifier,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell .hit-save .ability {
   color: var(--ddb-text-muted);
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .empty-container {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .empty-container {
   color: var(--ddb-text-muted);
   font-family: var(--ddb-font-body);
   font-size: var(--ddb-size-body);
@@ -569,7 +570,7 @@
 
 /* Use buttons keep their rarity/method outline as the only saturated accent
  * left in a row, matching DDB's small colored item toggle. */
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-table-row-use-button {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row-use-button {
   --t5e-use-button-border-color: var(--ddb-panel-border);
   border-radius: var(--ddb-radius-control);
 }

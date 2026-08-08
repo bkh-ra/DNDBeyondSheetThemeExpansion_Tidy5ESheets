@@ -38,7 +38,7 @@
   font-display: swap;
 }
 
-.tidy5e-sheet.ddb {
+.tidy5e-sheet.application.ddb {
   /* ---- accent (character-scoped, theme-invariant) ---- */
   --ddb-accent: var(--t5e-theme-color-default, #c53131);
   --ddb-accent-hover: color-mix(in srgb, var(--ddb-accent) 88%, #000);
@@ -53,26 +53,51 @@
   --ddb-dice-roll-border: var(--ddb-accent);
   --ddb-stat-modified: var(--ddb-accent);
 
-  /* ---- typography (theme-invariant) ---- */
+  /* ---- typography (theme-invariant) ----
+   * The type scale is exactly six steps; do not add sizes outside it.
+   *   label 10 | label-md 12 | body 13 | value-md 16 | value-lg 26 | name 2rem
+   * The character name is the ONE deliberate serif exception (user choice):
+   * Tidy's bundled Modesto Condensed, closest free match to DDB's serif
+   * small-caps name face. Everything else is Roboto / Roboto Condensed. */
   --ddb-font-body: 'Roboto', Helvetica, sans-serif;
   --ddb-font-condensed: 'Roboto Condensed', Roboto, Helvetica, sans-serif;
+  --ddb-font-name: var(--t5e-font-modesto-condensed, 'Modesto Condensed', serif);
   --ddb-size-label: 10px;
-  --ddb-size-value-lg: 26px;
-  --ddb-size-value-md: 16px;
+  --ddb-size-label-md: 12px;
   --ddb-size-body: 13px;
+  --ddb-size-value-md: 16px;
+  --ddb-size-value-lg: 26px;
+  --ddb-size-name: 2rem;
   --ddb-lineheight-body: 1.4;
+  --ddb-letterspacing-label: normal; /* harvest truth: DDB adds no tracking */
   --ddb-letterspacing-value-lg: -1px;
   --ddb-weight-label: 700;
   --ddb-weight-value: 700;
   --ddb-transform-label: uppercase;
-  --ddb-tab-font-size: 0.75rem;
+  --ddb-tab-font-size: var(--ddb-size-label-md);
   --ddb-tab-indicator-width: 0.125rem;
+  /* quadrone forms use Signika (--t5e-font-family-forms); keep DDB scope on Roboto */
+  --t5e-font-family-forms: var(--ddb-font-body);
 
-  /* ---- shape (theme-invariant; panel frames are SVG-drawn, see svg/) ---- */
+  /* ---- spacing scale (theme-invariant) ---- */
+  --ddb-space-half: 2px;
+  --ddb-space-1: 4px;
+  --ddb-space-2: 6px;
+  --ddb-space-3: 8px;
+  --ddb-space-4: 10px;
+  --ddb-space-5: 12px;
+
+  /* ---- shape (theme-invariant; panel frames are SVG-drawn, see svg/) ----
+   * Radii contract: panels & inputs = radius-input (4px); chips & small
+   * controls = radius-control (3px); prof/death pips = radius-pill (round);
+   * spell-slot pips = radius-control (DDB's squares). */
   --ddb-radius-pill: 50%;
   --ddb-radius-control: 3px;
   --ddb-radius-input: 4px;
-  --ddb-border-width-panel: 1px;
+  --ddb-border-width-panel: 1.5px; /* user choice: heavier than DDB's 1px */
+  --ddb-stroke-echo-opacity: 0.65; /* decorative second strokes (frames, shield) */
+  --ddb-rarity-bar-width: 3px;
+  --ddb-transition: 0.1s ease-in-out;
   --ddb-shadow-elevated: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
 
   /* ---- light theme (DDB default) ---- */
@@ -112,11 +137,12 @@
 }
 
 /* ---- dark theme (DDB "Underdark Mode") ---- */
-.tidy5e-sheet.ddb.theme-dark {
+.tidy5e-sheet.application.ddb.theme-dark {
   --ddb-page-bg: #10161a;
   --ddb-panel-bg: #10161adb;
   --ddb-panel-bg-solid: #10161a;
-  --ddb-panel-border: var(--ddb-accent-transparent);
+  /* user choice: 60% accent (was 40%) so outlines read clearly in dark */
+  --ddb-panel-border: color-mix(in srgb, var(--ddb-accent) 60%, transparent);
   --ddb-box-bg: #10161adb;
   --ddb-sidebar-bg: #10161a;
   --ddb-table-row-bg: rgba(16, 22, 26, 0.859);
@@ -144,7 +170,7 @@
 }
 
 /* Base type inside the DDB layout */
-.tidy5e-sheet.ddb .window-content {
+.tidy5e-sheet.application.ddb .window-content {
   font-family: var(--ddb-font-body);
   font-size: var(--ddb-size-body);
   line-height: var(--ddb-lineheight-body);

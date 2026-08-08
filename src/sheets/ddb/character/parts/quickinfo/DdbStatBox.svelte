@@ -44,7 +44,7 @@
     label,
     tooltip,
     width = 70,
-    height = 78,
+    height = 80,
     children,
     ...rest
   }: Props = $props();

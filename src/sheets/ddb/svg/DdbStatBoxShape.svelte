@@ -8,8 +8,10 @@
   hit points 317 x 89); no DDB path data is used or referenced.
 
   `width` / `height` set the viewBox so the notch geometry is drawn in real
-  pixels and never distorts when the box is stretched. Fill and stroke are
-  supplied entirely by CSS (see src/less/ddb/quick-info.css).
+  pixels and never distorts when the box is stretched. Every stroked edge sits
+  on the half-pixel grid (the 0.5 inset convention used by DdbPanelFrame), so
+  lines stay crisp at --ddb-border-width-panel. Fill and stroke are supplied
+  entirely by CSS (see src/less/ddb/quick-info.css).
 -->
 <script lang="ts">
   import type { ClassValue } from 'svelte/elements';
@@ -27,23 +29,31 @@
   /** Top corner radius. */
   const r = 4;
 
+  /** Half the stroke, so an edge lands on the pixel grid instead of straddling it. */
+  const inset = 0.5;
+
   /** Bottom corner notch depth. */
   let notch = $derived(Math.min(7, Math.max(3, Math.round(height * 0.16))));
 
-  let d = $derived(
-    [
-      `M ${r + 1} 1`,
-      `H ${width - r - 1}`,
-      `A ${r} ${r} 0 0 1 ${width - 1} ${r + 1}`,
-      `V ${height - notch - 1}`,
-      `L ${width - notch - 1} ${height - 1}`,
-      `H ${notch + 1}`,
-      `L 1 ${height - notch - 1}`,
-      `V ${r + 1}`,
-      `A ${r} ${r} 0 0 1 ${r + 1} 1`,
+  let d = $derived.by(() => {
+    const l = inset;
+    const t = inset;
+    const right = width - inset;
+    const b = height - inset;
+
+    return [
+      `M ${l + r} ${t}`,
+      `H ${right - r}`,
+      `A ${r} ${r} 0 0 1 ${right} ${t + r}`,
+      `V ${b - notch}`,
+      `L ${right - notch} ${b}`,
+      `H ${l + notch}`,
+      `L ${l} ${b - notch}`,
+      `V ${t + r}`,
+      `A ${r} ${r} 0 0 1 ${l + r} ${t}`,
       'Z',
-    ].join(' '),
-  );
+    ].join(' ');
+  });
 </script>
 
 <svg

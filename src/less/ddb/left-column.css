@@ -4,51 +4,46 @@
  * TRAINING) and the tall SKILLS box beside them, plus the shared box frame and
  * the proficiency pip.
  *
- * Rules: every rule is scoped to `.tidy5e-sheet.ddb`, and every colour, font
- * and radius comes from a `--ddb-*` token in `ddb-tokens.css`. No literals.
- * Metrics (widths, paddings, gaps) are the harvested DDB values recorded in
- * design/tokens.raw.json under the `skills` and `senses-proficiencies`
- * components.
+ * Rules: every rule is scoped to `.tidy5e-sheet.application.ddb`, and every
+ * colour, font, radius, spacing step and border width comes from a `--ddb-*`
+ * token in `ddb-tokens.css`. Remaining raw px are component geometry that has
+ * no token (pip diameter, grid column widths, the pip gutter) and each one is
+ * commented where it appears.
  *
- * Phase 1 draws the box frames as 1px rounded rects. Upstream DDB draws them
- * as inline SVG with notched corners (design/SVG-MOTIFS.md); swapping in that
- * frame later only touches `.ddb-box`.
+ * Box frames are drawn by `DdbPanelFrame.svelte` as an inline SVG behind the
+ * content — chamfered corners with a doubled corner echo, redrawn from the
+ * captures. `.ddb-box` therefore carries no border or background of its own.
+ *
+ * ON THE QUADRONE BUTTON LEAK
+ * ---------------------------
+ * `.tidy5e-sheet.application:where(.quadrone) :is(button, .button)` computes to
+ * 0-3-0; every selector here is 0-4-0, so we now WIN every property we set and
+ * no `button.` qualifier or double-class trick is needed for specificity.
+ *
+ * But that rule still MATCHES these buttons — it only loses the properties we
+ * declare. Anything left unset still leaks. That is why the explicit
+ * `min-height` resets below are NOT redundant: without them Quadrone's
+ * `min-height: var(--t5e-field-size-default)` (28px) applies, and a `min-height`
+ * beats a `height` regardless of which rule won the cascade. Removing them is
+ * what turned the pips into tall ovals the first time. Same for `box-shadow`.
  */
-
-/* ------------------------------------------------------------------ */
-/* Left column container                                              */
-/* ------------------------------------------------------------------ */
-
-.tidy5e-sheet.ddb .ddb-left-column {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.tidy5e-sheet.ddb .ddb-left-column-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 0;
-}
 
 /* ------------------------------------------------------------------ */
 /* Box frame (DdbBox.svelte)                                          */
 /* ------------------------------------------------------------------ */
 
-/* The panel fill, border and corner details are all drawn by the inline
- * `DdbPanelFrame` svg behind the content — hence no `background`, `border` or
- * `border-radius` here. `position: relative` anchors that svg; the 13px/16px
- * padding clears the 8px corner chamfers on every edge. */
-.tidy5e-sheet.ddb .ddb-box {
-  /* Pip diameter, harvested from `.ct-skills-pane__icon--none`. Declared on the
-   * frame so row grids can reserve the pip column without measuring. */
+/* `position: relative` anchors the frame svg. Padding clears the frame's 8px
+ * corner chamfers on every edge. */
+.tidy5e-sheet.application.ddb .ddb-box {
+  /* Pip diameter, harvested from `.ct-skills-pane__icon--none`. Declared here,
+   * on the frame, so descendant row grids and the save-button gutter can size
+   * the pip column off it without measuring anything. */
   --ddb-pip-size: 10px;
 
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: 13px 16px 8px;
+  padding: var(--ddb-space-5) var(--ddb-space-5) var(--ddb-space-3);
   color: var(--ddb-text);
   font-family: var(--ddb-font-body);
   font-size: var(--ddb-size-body);
@@ -56,8 +51,9 @@
   min-width: 0;
 }
 
-/* Behind everything, and never intercepting a roll/gear click. */
-.tidy5e-sheet.ddb .ddb-panel-frame {
+/* Behind everything, and never intercepting a roll/gear click. `overflow` stays
+ * visible so the 1.5px stroke may bleed past the 0.5 path inset (DdbPanelFrame). */
+.tidy5e-sheet.application.ddb .ddb-panel-frame {
   position: absolute;
   inset: 0;
   z-index: 0;
@@ -65,61 +61,62 @@
   overflow: visible;
 }
 
-.tidy5e-sheet.ddb .ddb-panel-frame__panel {
+.tidy5e-sheet.application.ddb .ddb-panel-frame__panel {
   fill: var(--ddb-panel-bg);
   stroke: var(--ddb-panel-border);
   stroke-width: var(--ddb-border-width-panel);
 }
 
-/* The companion stroke that doubles each corner. Slightly dialled back so it
- * reads as a hand-drawn echo of the chamfer rather than a second hard edge. */
-.tidy5e-sheet.ddb .ddb-panel-frame__accent {
+/* The companion stroke that doubles each corner — a hand-drawn echo of the
+ * chamfer rather than a second hard edge. */
+.tidy5e-sheet.application.ddb .ddb-panel-frame__accent {
   fill: none;
   stroke: var(--ddb-panel-border);
   stroke-width: var(--ddb-border-width-panel);
   stroke-linecap: round;
   stroke-linejoin: round;
-  opacity: 0.65;
+  opacity: var(--ddb-stroke-echo-opacity);
 }
 
 /* Content sits above the frame; both need a stacking context of their own so
  * the svg's `z-index: 0` cannot paint over them. */
-.tidy5e-sheet.ddb .ddb-box-body {
+.tidy5e-sheet.application.ddb .ddb-box-body {
   position: relative;
   z-index: 1;
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--ddb-space-4);
 }
 
 /* The DDB signature: the title sits at the BOTTOM of the box, centred, with
  * the gear pinned to its right so the title stays optically centred. It sits
  * *inside* the frame's unbroken bottom border (see DdbPanelFrame) and keeps a
  * transparent background so the panel fill shows through. */
-.tidy5e-sheet.ddb .ddb-box-footer {
+.tidy5e-sheet.application.ddb .ddb-box-footer {
   position: relative;
   z-index: 1;
   background: none;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  margin-top: 8px;
-  padding-top: 4px;
-  min-height: 18px;
+  gap: var(--ddb-space-1);
+  margin-top: var(--ddb-space-3);
+  padding-top: var(--ddb-space-1);
+  min-height: 18px; /* keeps the footer band even across boxes with/without a gear */
 }
 
-.tidy5e-sheet.ddb .ddb-box-title {
+.tidy5e-sheet.application.ddb .ddb-box-title {
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-label);
   font-weight: var(--ddb-weight-label);
   text-transform: var(--ddb-transform-label);
+  letter-spacing: var(--ddb-letterspacing-label);
   color: var(--ddb-heading-box);
 }
 
-.tidy5e-sheet.ddb .ddb-box-gear {
+.tidy5e-sheet.application.ddb .ddb-box-gear {
   display: inline-flex;
   align-items: center;
 }
@@ -128,20 +125,16 @@
 /* Shared primitives: gear button, chips, sign, empty state           */
 /* ------------------------------------------------------------------ */
 
-/* `min-*`/`box-shadow` are reset on every control in this file: Quadrone's
- * global `:is(button, .button)` rule sets `min-height: var(--t5e-field-size-default)`
- * (28px) and a drop shadow, which otherwise stretches these small DDB controls
- * — the pips in particular render as tall ovals instead of circles. */
-.tidy5e-sheet.ddb button.ddb-gear {
+.tidy5e-sheet.application.ddb .ddb-gear {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
   box-sizing: border-box;
-  width: 14px;
+  width: 14px; /* icon box; matches the 10px glyph plus optical padding */
   height: 14px;
   min-width: 0;
-  min-height: 0;
+  min-height: 0; /* see "ON THE QUADRONE BUTTON LEAK" */
   padding: 0;
   border: 0;
   border-radius: var(--ddb-radius-control);
@@ -151,28 +144,28 @@
   font-size: var(--ddb-size-label);
   line-height: 1;
   cursor: pointer;
+  transition: color var(--ddb-transition);
 }
 
-.tidy5e-sheet.ddb .ddb-gear:hover {
+.tidy5e-sheet.application.ddb .ddb-gear:hover {
   color: var(--ddb-accent);
   box-shadow: none;
 }
 
-.tidy5e-sheet.ddb .ddb-gear:focus-visible {
+.tidy5e-sheet.application.ddb .ddb-gear:focus-visible {
   outline: none;
   box-shadow: var(--ddb-focus-ring);
 }
 
-/* A bordered rounded rect — DDB's ability-abbreviation and value pills.
- * Applied to both spans and buttons, hence the explicit `min-height`/`box-shadow`
- * that neutralise the Quadrone button defaults (see `.ddb-gear` above). */
-.tidy5e-sheet.ddb .ddb-chip {
+/* A bordered rounded rect — DDB's value pills. One height for every chip in the
+ * column (was 20/21/22 across three call sites). */
+.tidy5e-sheet.application.ddb .ddb-chip {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  min-height: 20px;
-  padding: 2px 5px;
+  min-height: 22px;
+  padding: var(--ddb-space-half) var(--ddb-space-1);
   border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
   border-radius: var(--ddb-radius-control);
   background: none;
@@ -186,19 +179,19 @@
   white-space: nowrap;
 }
 
-.tidy5e-sheet.ddb .ddb-chip-value {
+.tidy5e-sheet.application.ddb .ddb-chip-value {
   font-family: var(--ddb-font-body);
-  font-size: 14px;
+  font-size: var(--ddb-size-body);
   font-weight: var(--ddb-weight-value);
   text-transform: none;
 }
 
-.tidy5e-sheet.ddb .ddb-sign {
+.tidy5e-sheet.application.ddb .ddb-sign {
   color: var(--ddb-text-muted);
   font-weight: var(--ddb-weight-value);
 }
 
-.tidy5e-sheet.ddb .ddb-empty {
+.tidy5e-sheet.application.ddb .ddb-empty {
   color: var(--ddb-condition-muted);
   font-style: italic;
 }
@@ -207,17 +200,11 @@
 /* Proficiency pip (DdbProficiencyPip.svelte)                         */
 /* ------------------------------------------------------------------ */
 
-/* A true circle, always. The size is pinned on all four axes (`width`, `height`,
- * `min-*`, `max-*`) plus `aspect-ratio`, and stretching is disabled in every
- * layout context the pip appears in — flex item (`flex: 0 0 auto` /
- * `align-self`), grid item (`justify-self`/`align-self`).
- *
- * `min-height` is the load-bearing one: Quadrone's global
- * `:is(button, .button)` rule sets `min-height: var(--t5e-field-size-default)`
- * (28px), and a `min-height` always beats a `height` no matter which rule wins
- * the cascade — that is what rendered these as tall ovals. The `button.`
- * qualifier also lifts specificity above that rule so `display`/`padding` land. */
-.tidy5e-sheet.ddb button.ddb-pip {
+/* A true circle, always. Size is pinned on every axis plus `aspect-ratio`, and
+ * stretching is disabled in each layout context the pip appears in — flex item
+ * (`flex: 0 0 auto` / `align-self`) and grid item (`justify-self`/`align-self`).
+ * The `min-height` is load-bearing; see the header note on the Quadrone leak. */
+.tidy5e-sheet.application.ddb .ddb-pip {
   position: relative;
   display: inline-block;
   box-sizing: border-box;
@@ -238,19 +225,20 @@
   background: var(--ddb-pip-empty);
   box-shadow: none;
   cursor: pointer;
+  transition: background-color var(--ddb-transition), border-color var(--ddb-transition);
 }
 
-.tidy5e-sheet.ddb .ddb-pip:disabled {
+.tidy5e-sheet.application.ddb .ddb-pip:disabled {
   cursor: default;
 }
 
-.tidy5e-sheet.ddb .ddb-pip:focus-visible {
+.tidy5e-sheet.application.ddb .ddb-pip:focus-visible {
   outline: none;
   box-shadow: var(--ddb-focus-ring);
 }
 
 /* Half proficiency — filled on one side only. */
-.tidy5e-sheet.ddb .ddb-pip[data-proficiency='0.5'] {
+.tidy5e-sheet.application.ddb .ddb-pip[data-proficiency='0.5'] {
   background: linear-gradient(
     to right,
     var(--ddb-pip-filled) 0 50%,
@@ -260,19 +248,19 @@
 }
 
 /* Proficient — solid fill. */
-.tidy5e-sheet.ddb .ddb-pip[data-proficiency='1'] {
+.tidy5e-sheet.application.ddb .ddb-pip[data-proficiency='1'] {
   background: var(--ddb-pip-filled);
   border-color: var(--ddb-pip-filled);
 }
 
 /* Expertise — solid fill plus an outer ring. */
-.tidy5e-sheet.ddb .ddb-pip[data-proficiency='2'] {
+.tidy5e-sheet.application.ddb .ddb-pip[data-proficiency='2'] {
   background: var(--ddb-pip-filled);
   border-color: var(--ddb-pip-empty);
   box-shadow: 0 0 0 var(--ddb-border-width-panel) var(--ddb-pip-filled);
 }
 
-.tidy5e-sheet.ddb .ddb-pip[data-proficiency='2']:focus-visible {
+.tidy5e-sheet.application.ddb .ddb-pip[data-proficiency='2']:focus-visible {
   box-shadow:
     0 0 0 var(--ddb-border-width-panel) var(--ddb-pip-filled),
     var(--ddb-focus-ring);
@@ -283,92 +271,104 @@
 /* ------------------------------------------------------------------ */
 
 /* Column-major fill so the reading order matches DDB:
- * STR / DEX / CON down the left, INT / WIS / CHA down the right. */
-.tidy5e-sheet.ddb .ddb-saves-grid {
+ * STR / DEX / CON down the left, INT / WIS / CHA down the right.
+ *
+ * Fixed 30px rows: all six cells are identically sized regardless of how wide
+ * the abbreviation or how many digits the modifier is. These are deliberately
+ * TALLER than the 26px list-row rhythm used by the senses and skills boxes —
+ * they are the column's primary touch targets and were specified at 30-32px.
+ * The 4px row gap keeps the resulting 34px pitch close to DDB's 31px. */
+.tidy5e-sheet.application.ddb .ddb-saves-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(3, auto);
-  grid-auto-flow: column;
-  /* Fixed rows, equal-fraction columns: all six cells are identically sized no
-   * matter how wide the abbreviation or how many digits the modifier has. */
   grid-template-rows: repeat(3, 30px);
-  /* 8px row / 10px column: the captures run the two save columns further apart
-   * than the rows, so the pair of entries never reads as one wide row. */
-  gap: 8px 10px;
+  grid-auto-flow: column;
+  /* Wider column gap than row gap: the captures separate the two save columns
+   * more than the rows, so a pair of entries never reads as one wide row. */
+  gap: var(--ddb-space-1) var(--ddb-space-4);
 }
 
 /* Positioning context for the pip that floats over the roll button. */
-.tidy5e-sheet.ddb .ddb-save-entry {
+.tidy5e-sheet.application.ddb .ddb-save-entry {
   position: relative;
   display: grid;
   min-width: 0;
 }
 
 /* The whole entry is one button: pip gutter | abbreviation | modifier.
- * `padding-left` reserves the gutter the pip is absolutely positioned into, so
- * the abbreviation never shifts between proficient and non-proficient rows. */
-.tidy5e-sheet.ddb button.ddb-save-roll {
+ * The left padding reserves the gutter the pip is absolutely positioned into,
+ * derived from the pip diameter so the abbreviation never shifts between
+ * proficient and non-proficient rows. */
+.tidy5e-sheet.application.ddb .ddb-save-roll {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  /* Abbreviation sized to its content, modifier takes the remaining space and
+   * right-aligns in it. The reverse (1fr abbr + fixed-width modifier) starved
+   * the abbreviation to 13px inside this 87px button and clipped it. Every
+   * abbreviation is three letters, so `auto` still lands them all on the same
+   * x — and the modifiers still share a right edge. */
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 4px;
+  gap: var(--ddb-space-2);
   box-sizing: border-box;
   width: 100%;
   height: 100%;
   min-height: 0;
-  padding: 0 8px 0 24px;
+  padding-block: 0;
+  padding-inline: calc(
+      var(--ddb-space-3) + var(--ddb-pip-size, 10px) + var(--ddb-space-2)
+    )
+    var(--ddb-space-3);
   border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
-  border-radius: var(--ddb-radius-input);
+  border-radius: var(--ddb-radius-control);
   background: var(--ddb-box-bg);
   box-shadow: none;
   cursor: pointer;
+  transition: border-color var(--ddb-transition);
 }
 
-.tidy5e-sheet.ddb button.ddb-save-roll:hover:not(:disabled) {
+.tidy5e-sheet.application.ddb .ddb-save-roll:hover:not(:disabled) {
   border-color: var(--ddb-dice-roll-border);
   box-shadow: none;
 }
 
-.tidy5e-sheet.ddb button.ddb-save-roll:hover:not(:disabled) .ddb-save-modifier {
+.tidy5e-sheet.application.ddb .ddb-save-roll:hover:not(:disabled) .ddb-save-modifier {
   color: var(--ddb-link);
 }
 
-.tidy5e-sheet.ddb button.ddb-save-roll:disabled {
+.tidy5e-sheet.application.ddb .ddb-save-roll:disabled {
   cursor: default;
 }
 
-.tidy5e-sheet.ddb button.ddb-save-roll:focus-visible {
+.tidy5e-sheet.application.ddb .ddb-save-roll:focus-visible {
   outline: none;
   box-shadow: var(--ddb-focus-ring);
 }
 
-/* Centred in the gutter reserved by the button's 24px left padding. Doubled
- * class (not `.ddb-save-pip` alone) to outrank `button.ddb-pip`'s
- * `position: relative` on specificity rather than on source order. */
-.tidy5e-sheet.ddb .ddb-pip.ddb-save-pip {
+/* Centred in the gutter reserved by the roll button's left padding. This rule
+ * follows `.ddb-pip` in source order, which is what lets it override that
+ * rule's `position: relative` at equal (0-4-0) specificity. */
+.tidy5e-sheet.application.ddb .ddb-save-pip {
   position: absolute;
   top: 50%;
-  left: 8px;
+  left: var(--ddb-space-3);
   z-index: 1;
   transform: translateY(-50%);
 }
 
-.tidy5e-sheet.ddb .ddb-save-abbr {
+.tidy5e-sheet.application.ddb .ddb-save-abbr {
   min-width: 0;
   text-align: center;
   font-family: var(--ddb-font-condensed);
-  font-size: 12px;
+  font-size: var(--ddb-size-label-md);
   font-weight: var(--ddb-weight-label);
   text-transform: var(--ddb-transform-label);
-  letter-spacing: 0.02em;
+  letter-spacing: var(--ddb-letterspacing-label);
   color: var(--ddb-label);
 }
 
-/* Fixed width, not `auto`: it keeps the abbreviation column the same size in
- * all six cells, so every abbreviation sits at the same x whether the modifier
- * beside it is "+1" or "-12". */
-.tidy5e-sheet.ddb .ddb-save-modifier {
-  min-width: 34px;
+/* Fills the rest of the button and right-aligns, so every modifier shares one
+ * right edge regardless of digit count or sign. */
+.tidy5e-sheet.application.ddb .ddb-save-modifier {
   text-align: right;
   font-family: var(--ddb-font-body);
   font-size: var(--ddb-size-value-md);
@@ -380,21 +380,22 @@
 
 /* Rendered only when the actor has a save bonus (see DdbSavingThrowsBox), so
  * the box collapses to a clean 2x3 grid when there is nothing to say. */
-.tidy5e-sheet.ddb .ddb-saves-note {
+.tidy5e-sheet.application.ddb .ddb-saves-note {
   display: flex;
-  gap: 5px;
-  margin-top: 2px;
+  gap: var(--ddb-space-2);
+  margin-top: var(--ddb-space-half);
   font-family: var(--ddb-font-condensed);
-  font-size: 12px;
+  font-size: var(--ddb-size-label-md);
   line-height: 1.3;
   color: var(--ddb-text-prose);
 }
 
-.tidy5e-sheet.ddb .ddb-saves-note-label {
+.tidy5e-sheet.application.ddb .ddb-saves-note-label {
   flex: 0 0 auto;
   font-size: var(--ddb-size-label);
   font-weight: var(--ddb-weight-label);
   text-transform: var(--ddb-transform-label);
+  letter-spacing: var(--ddb-letterspacing-label);
   color: var(--ddb-label);
 }
 
@@ -402,12 +403,12 @@
 /* SENSES box                                                         */
 /* ------------------------------------------------------------------ */
 
-.tidy5e-sheet.ddb .ddb-senses-passives {
+/* 26px row + 4px gap = a 30px pitch, matching the passive stack in the
+ * athelstan 01-actions captures. */
+.tidy5e-sheet.application.ddb .ddb-senses-passives {
   display: flex;
   flex-direction: column;
-  /* 26px row + 5px gap = the 31px pitch measured off the passive stack in
-   * the athelstan 01-actions captures. */
-  gap: 5px;
+  gap: var(--ddb-space-1);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -417,50 +418,54 @@
  * draws its passive-score rows (see the athelstan 01-actions captures).
  * NB: never write a capture path with a wildcard segment inside a CSS comment.
  * A star followed by a slash closes the comment early and spills the rest of
- * the line into the stylesheet, which silently ate this very rule. */
-.tidy5e-sheet.ddb .ddb-sense-row {
+ * the line into the stylesheet, which silently ate this very rule once. */
+/* `border-box` so `min-height` is the row's real height: with content-box the
+ * 22px chip plus padding and two 1.5px borders pushed these rows to 32px and
+ * broke the shared 26px list rhythm. No block padding for the same reason — the
+ * chip's own height sets the interior. */
+.tidy5e-sheet.application.ddb .ddb-sense-row {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
+  box-sizing: border-box;
+  gap: var(--ddb-space-3);
   min-height: 26px;
-  padding: 2px 6px 2px 2px;
+  padding: 0 var(--ddb-space-2) 0 var(--ddb-space-half);
   border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
-  border-radius: var(--ddb-radius-input);
+  border-radius: var(--ddb-radius-control);
 }
 
-.tidy5e-sheet.ddb .ddb-sense-value {
-  min-width: 30px;
-  min-height: 22px;
+.tidy5e-sheet.application.ddb .ddb-sense-value {
+  min-width: 30px; /* fits a 3-digit passive without the chip resizing */
 }
 
-.tidy5e-sheet.ddb .ddb-sense-label {
+.tidy5e-sheet.application.ddb .ddb-sense-label {
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-label);
   font-weight: var(--ddb-weight-label);
   text-transform: var(--ddb-transform-label);
-  letter-spacing: 0.02em;
+  letter-spacing: var(--ddb-letterspacing-label);
   color: var(--ddb-label);
 }
 
-.tidy5e-sheet.ddb .ddb-senses-special {
+.tidy5e-sheet.application.ddb .ddb-senses-special {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  margin-top: 4px;
+  gap: var(--ddb-space-half);
+  margin-top: var(--ddb-space-1);
   text-align: center;
   font-family: var(--ddb-font-condensed);
-  font-size: 12px;
+  font-size: var(--ddb-size-label-md);
   color: var(--ddb-text-prose);
 }
 
-.tidy5e-sheet.ddb .ddb-sense-special-row {
+.tidy5e-sheet.application.ddb .ddb-sense-special-row {
   display: flex;
   justify-content: center;
-  gap: 4px;
+  gap: var(--ddb-space-1);
 }
 
-.tidy5e-sheet.ddb .ddb-sense-special-value {
+.tidy5e-sheet.application.ddb .ddb-sense-special-value {
   font-weight: var(--ddb-weight-value);
 }
 
@@ -468,54 +473,56 @@
 /* PROFICIENCIES & TRAINING box                                       */
 /* ------------------------------------------------------------------ */
 
-.tidy5e-sheet.ddb .ddb-prof-groups {
+.tidy5e-sheet.application.ddb .ddb-prof-groups {
   display: flex;
   flex-direction: column;
   font-family: var(--ddb-font-condensed);
 }
 
-.tidy5e-sheet.ddb .ddb-prof-group + .ddb-prof-group {
-  margin-top: 10px;
-  padding-top: 10px;
+.tidy5e-sheet.application.ddb .ddb-prof-group + .ddb-prof-group {
+  margin-top: var(--ddb-space-4);
+  padding-top: var(--ddb-space-4);
   border-top: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
 }
 
-.tidy5e-sheet.ddb .ddb-prof-group-header {
+.tidy5e-sheet.application.ddb .ddb-prof-group-header {
   display: flex;
   align-items: center;
-  gap: 4px;
-  min-height: 12px;
+  gap: var(--ddb-space-1);
+  min-height: 12px; /* one label line; keeps headerless groups from collapsing */
 }
 
-.tidy5e-sheet.ddb .ddb-prof-group-label {
+.tidy5e-sheet.application.ddb .ddb-prof-group-label {
   font-size: var(--ddb-size-label);
   font-weight: var(--ddb-weight-label);
   text-transform: var(--ddb-transform-label);
-  letter-spacing: 0.02em;
+  letter-spacing: var(--ddb-letterspacing-label);
   line-height: 1.2;
   color: var(--ddb-label);
 }
 
-.tidy5e-sheet.ddb .ddb-prof-group-items {
+.tidy5e-sheet.application.ddb .ddb-prof-group-items {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 4px;
-  margin-top: 4px;
+  gap: 0 var(--ddb-space-1);
+  margin-top: var(--ddb-space-1);
   line-height: var(--ddb-lineheight-body);
   color: var(--ddb-text);
 }
 
-.tidy5e-sheet.ddb .ddb-prof-item {
+.tidy5e-sheet.application.ddb .ddb-prof-item {
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-body);
   color: var(--ddb-text);
 }
 
-.tidy5e-sheet.ddb .ddb-prof-sep {
+.tidy5e-sheet.application.ddb .ddb-prof-sep {
   color: var(--ddb-text-muted);
 }
 
-.tidy5e-sheet.ddb button.ddb-prof-item-rollable {
+/* `display: inline` so a rollable tool sits in the wrapped prose run exactly
+ * like the plain `.ddb-prof-item` spans beside it. */
+.tidy5e-sheet.application.ddb .ddb-prof-item-rollable {
   display: inline;
   min-height: 0;
   padding: 0;
@@ -523,20 +530,24 @@
   border-radius: var(--ddb-radius-control);
   background: none;
   box-shadow: none;
+  font-family: inherit;
+  font-size: inherit;
   line-height: inherit;
+  color: inherit;
   cursor: pointer;
+  transition: color var(--ddb-transition);
 }
 
-.tidy5e-sheet.ddb button.ddb-prof-item-rollable:hover:not(:disabled) {
+.tidy5e-sheet.application.ddb .ddb-prof-item-rollable:hover:not(:disabled) {
   color: var(--ddb-link);
   box-shadow: none;
 }
 
-.tidy5e-sheet.ddb button.ddb-prof-item-rollable:disabled {
+.tidy5e-sheet.application.ddb .ddb-prof-item-rollable:disabled {
   cursor: default;
 }
 
-.tidy5e-sheet.ddb button.ddb-prof-item-rollable:focus-visible {
+.tidy5e-sheet.application.ddb .ddb-prof-item-rollable:focus-visible {
   outline: none;
   box-shadow: var(--ddb-focus-ring);
 }
@@ -545,43 +556,41 @@
 /* SKILLS box                                                         */
 /* ------------------------------------------------------------------ */
 
-/* DDB's skills box runs its columns much closer to the frame than the stacked
- * boxes do (measured off the captures: ~6px of inset against ~13px elsewhere),
- * which is what buys the skill-name column enough room for "Animal Handling"
- * at this width. The frame, vertical padding and bottom title stay uniform. */
-.tidy5e-sheet.ddb .ddb-skills-box {
-  padding-inline: 8px;
-}
-
-.tidy5e-sheet.ddb .ddb-skills-box .ddb-box-body {
-  gap: 5px;
+/* The one deliberate departure from the shared box padding: DDB runs the skills
+ * columns closer to the frame than the stacked boxes (measured off the
+ * captures), which is what buys the name column enough room for "Animal
+ * Handling" at this width. 8px still clears the frame's 8px corner chamfer,
+ * because the first content row starts well below the corner. Vertical padding,
+ * the frame and the bottom title stay uniform with the other boxes. */
+.tidy5e-sheet.application.ddb .ddb-skills-box {
+  padding-inline: var(--ddb-space-3);
 }
 
 /* THE shared grid template: the header labels and every skill row are laid out
- * by this one declaration, so PROF / ABILITY / SKILL / BONUS always line up.
+ * by this one declaration, so PROF / MOD / SKILL / BONUS always line up.
  * Columns are gapless — each cell pads itself — so the name column keeps the
  * full remainder. */
-.tidy5e-sheet.ddb .ddb-skills-header,
-.tidy5e-sheet.ddb .ddb-skill-row {
+.tidy5e-sheet.application.ddb .ddb-skills-header,
+.tidy5e-sheet.application.ddb .ddb-skill-row {
   display: grid;
   grid-template-columns: 26px 28px minmax(0, 1fr) 38px;
 }
 
-.tidy5e-sheet.ddb .ddb-skills-header {
+.tidy5e-sheet.application.ddb .ddb-skills-header {
   align-items: center;
-  margin-bottom: 4px;
+  margin-bottom: var(--ddb-space-1);
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-label);
   font-weight: var(--ddb-weight-label);
   text-transform: var(--ddb-transform-label);
-  letter-spacing: 0.02em;
+  letter-spacing: var(--ddb-letterspacing-label);
   color: var(--ddb-label);
 }
 
-.tidy5e-sheet.ddb .ddb-skills-list {
+.tidy5e-sheet.application.ddb .ddb-skills-list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--ddb-space-half);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -590,63 +599,70 @@
 
 /* `stretch` (not `center`) so the name and bonus cells fill the row height and
  * their bottom hairlines meet as one continuous rule, as in the captures.
- * 25px + the list's 4px gap = the ~29px row pitch measured off the capture. */
-.tidy5e-sheet.ddb .ddb-skill-row {
+ * 26px shares the list-row height used by the senses box; + the 2px list gap
+ * that is the ~29px pitch measured off the capture. */
+.tidy5e-sheet.application.ddb .ddb-skill-row {
   align-items: stretch;
-  min-height: 25px;
+  min-height: 26px;
 }
 
-.tidy5e-sheet.ddb .ddb-skills-col-prof,
-.tidy5e-sheet.ddb .ddb-skills-col-mod {
+.tidy5e-sheet.application.ddb .ddb-skills-col-prof,
+.tidy5e-sheet.application.ddb .ddb-skills-col-mod {
   display: flex;
   align-items: center;
   justify-content: center;
   min-width: 0;
 }
 
-.tidy5e-sheet.ddb .ddb-skills-col-bonus {
+/* Small gutter so the ability abbreviation never kisses the skill name in the
+ * gapless row grid — the columns carry their own inset by design. */
+.tidy5e-sheet.application.ddb .ddb-skills-col-mod {
+  padding-inline: var(--ddb-space-half);
+}
+
+.tidy5e-sheet.application.ddb .ddb-skills-col-bonus {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   min-width: 0;
-  padding-left: 4px;
+  padding-left: var(--ddb-space-1);
 }
 
 /* The hairline under a skill row runs from the name to the right edge only —
  * it never crosses the pip or ability columns. Paired with the matching
  * `border-bottom` on `.ddb-skill-name` below, it reads as one rule. */
-.tidy5e-sheet.ddb .ddb-skill-row .ddb-skills-col-bonus {
+.tidy5e-sheet.application.ddb .ddb-skill-row .ddb-skills-col-bonus {
   border-bottom: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
 }
 
-.tidy5e-sheet.ddb .ddb-skill-ability {
+.tidy5e-sheet.application.ddb .ddb-skill-ability {
   font-family: var(--ddb-font-condensed);
-  font-size: 12px;
+  font-size: var(--ddb-size-label-md);
   font-weight: var(--ddb-weight-label);
   text-transform: var(--ddb-transform-label);
   color: var(--ddb-label);
 }
 
-.tidy5e-sheet.ddb .ddb-skill-ability-select {
+.tidy5e-sheet.application.ddb .ddb-skill-ability-select {
   width: 100%;
   min-height: 0;
   height: 20px;
-  padding: 0 2px;
+  padding: 0 var(--ddb-space-half);
   font-family: var(--ddb-font-condensed);
-  font-size: 12px;
+  font-size: var(--ddb-size-label-md);
   text-transform: var(--ddb-transform-label);
   color: var(--ddb-label);
 }
 
-/* `display: block` (not the inherited inline-flex) so `text-overflow` applies;
- * `3px + 18px + 3px` fills the 25px row so the name sits optically centred
- * against the bonus chip beside it and their hairlines line up. */
-.tidy5e-sheet.ddb button.ddb-skill-name {
+/* `display: block` (not inline-flex) so `text-overflow` applies; 4px + 18px +
+ * 4px fills the 26px row so the name sits optically centred against the bonus
+ * chip beside it and their hairlines line up. */
+.tidy5e-sheet.application.ddb .ddb-skill-name {
   display: block;
   justify-self: stretch;
   width: 100%;
   min-height: 0;
-  padding: 3px 4px 3px 0;
+  padding: var(--ddb-space-1) var(--ddb-space-1) var(--ddb-space-1) 0;
   border: 0;
   border-bottom: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
   border-radius: 0;
@@ -655,33 +671,32 @@
   text-align: left;
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-body);
-  line-height: 18px;
+  line-height: 18px; /* 4 + 18 + 4 = the 26px row */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--ddb-text);
   cursor: pointer;
+  transition: color var(--ddb-transition);
 }
 
-.tidy5e-sheet.ddb button.ddb-skill-name:hover:not(:disabled) {
+.tidy5e-sheet.application.ddb .ddb-skill-name:hover:not(:disabled) {
   color: var(--ddb-link);
   box-shadow: none;
 }
 
-.tidy5e-sheet.ddb button.ddb-skill-name:disabled {
+.tidy5e-sheet.application.ddb .ddb-skill-name:disabled {
   cursor: default;
   color: var(--ddb-text-disabled);
 }
 
-.tidy5e-sheet.ddb button.ddb-skill-name:focus-visible {
+.tidy5e-sheet.application.ddb .ddb-skill-name:focus-visible {
   outline: none;
   box-shadow: var(--ddb-focus-ring);
 }
 
 /* 34px wide + the bonus cell's 4px left pad = the 38px bonus column, so the
  * chip fills the column exactly and every value sits on the same right edge. */
-.tidy5e-sheet.ddb .ddb-skill-bonus {
+.tidy5e-sheet.application.ddb .ddb-skill-bonus {
   min-width: 34px;
-  min-height: 21px;
-  padding: 2px 4px;
 }

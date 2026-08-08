@@ -1,7 +1,7 @@
 /* DDB-FORK: primary box shell — the DEFENSES/CONDITIONS strip, the DDB tab
  * strip, and the tab content panel.
  *
- * Scoped to `.tidy5e-sheet.ddb` so the quadrone and classic layouts are
+ * Scoped to `.tidy5e-sheet.application.ddb` so the quadrone and classic layouts are
  * untouched. Colors, fonts and metrics come exclusively from `--ddb-*` tokens
  * (see `src/less/ddb/ddb-tokens.css` and `design/DESIGN-TOKENS.md`).
  *
@@ -16,7 +16,7 @@
  * other and the border hugs them; it never stretches to fill the row. The
  * `align-self`/`justify-self`/`margin-right: auto` trio keeps that true whether
  * the host row is a flex or a grid container. */
-.tidy5e-sheet.ddb .ddb-conditions-defenses {
+.tidy5e-sheet.application.ddb .ddb-conditions-defenses {
   display: inline-flex;
   align-items: stretch;
   gap: 0;
@@ -25,44 +25,45 @@
   align-self: start;
   justify-self: start;
   margin-right: auto;
-  padding: 0.5rem 0.625rem;
+  padding: var(--ddb-space-3) var(--ddb-space-4);
   background: var(--ddb-panel-bg);
   border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
-  border-radius: var(--ddb-radius-control);
+  /* Panel, so radius-input (4px) per the radii contract; chips below stay 3px. */
+  border-radius: var(--ddb-radius-input);
   box-shadow: var(--ddb-shadow-hairline);
   font-family: var(--ddb-font-body);
   color: var(--ddb-text);
 }
 
-.tidy5e-sheet.ddb .ddb-conditions-defenses .ddb-cd-group {
+.tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-group {
   flex: 0 1 auto;
   min-width: 0;
-  padding: 0 0.625rem;
+  padding: 0 var(--ddb-space-4);
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+  gap: var(--ddb-space-half);
 }
 
-.tidy5e-sheet.ddb .ddb-conditions-defenses .ddb-cd-group:first-child {
+.tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-group:first-child {
   padding-left: 0;
 }
 
-.tidy5e-sheet.ddb .ddb-conditions-defenses .ddb-cd-group:last-child {
+.tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-group:last-child {
   padding-right: 0;
 }
 
-.tidy5e-sheet.ddb .ddb-conditions-defenses .ddb-cd-group + .ddb-cd-group {
+.tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-group + .ddb-cd-group {
   border-left: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
 }
 
-.tidy5e-sheet.ddb .ddb-conditions-defenses .ddb-cd-header {
+.tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-header {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 0.25rem;
+  gap: var(--ddb-space-1);
 }
 
-.tidy5e-sheet.ddb .ddb-conditions-defenses .ddb-cd-label {
+.tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-label {
   margin: 0;
   border: none;
   font-family: var(--ddb-font-condensed);
@@ -73,49 +74,49 @@
   line-height: 1.3;
 }
 
-.tidy5e-sheet.ddb .ddb-conditions-defenses .ddb-cd-empty {
+.tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-empty {
   font-size: var(--ddb-size-body);
   color: var(--ddb-condition-muted);
 }
 
 /* --- defenses --- */
 
-.tidy5e-sheet.ddb .ddb-defense-list {
+.tidy5e-sheet.application.ddb .ddb-defense-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+  gap: var(--ddb-space-half);
 }
 
-.tidy5e-sheet.ddb .ddb-defense {
+.tidy5e-sheet.application.ddb .ddb-defense {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--ddb-space-1);
   min-width: 0;
   font-size: var(--ddb-size-body);
   line-height: var(--ddb-lineheight-body);
   color: var(--ddb-defense-active);
 }
 
-.tidy5e-sheet.ddb .ddb-defense .ddb-defense-icon,
-.tidy5e-sheet.ddb .ddb-defense .ddb-defense-type-icon {
+.tidy5e-sheet.application.ddb .ddb-defense .ddb-defense-icon,
+.tidy5e-sheet.application.ddb .ddb-defense .ddb-defense-type-icon {
   flex: 0 0 auto;
-  font-size: 0.6875rem;
+  font-size: var(--ddb-size-label-md);
   color: var(--ddb-text-muted);
 }
 
-.tidy5e-sheet.ddb .ddb-defense.vulnerability .ddb-defense-icon {
+.tidy5e-sheet.application.ddb .ddb-defense.vulnerability .ddb-defense-icon {
   color: var(--ddb-negative);
 }
 
-.tidy5e-sheet.ddb .ddb-defense.immunity .ddb-defense-icon,
-.tidy5e-sheet.ddb .ddb-defense.condition-immunity .ddb-defense-icon {
+.tidy5e-sheet.application.ddb .ddb-defense.immunity .ddb-defense-icon,
+.tidy5e-sheet.application.ddb .ddb-defense.condition-immunity .ddb-defense-icon {
   color: var(--ddb-positive);
 }
 
-.tidy5e-sheet.ddb .ddb-defense .ddb-defense-label {
+.tidy5e-sheet.application.ddb .ddb-defense .ddb-defense-label {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -124,19 +125,19 @@
 
 /* --- conditions --- */
 
-.tidy5e-sheet.ddb .ddb-condition-list {
+.tidy5e-sheet.application.ddb .ddb-condition-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0 0.25rem;
+  gap: 0 var(--ddb-space-1);
   min-width: 0;
   /* Wrap long runs onto a second line instead of stretching the box. */
   max-width: 16rem;
 }
 
-.tidy5e-sheet.ddb .ddb-condition {
+.tidy5e-sheet.application.ddb .ddb-condition {
   display: inline-flex;
   align-items: center;
   font-size: var(--ddb-size-body);
@@ -145,12 +146,12 @@
 }
 
 /* DDB renders active conditions as a comma-separated run of text. */
-.tidy5e-sheet.ddb .ddb-condition:not(:last-child)::after {
+.tidy5e-sheet.application.ddb .ddb-condition:not(:last-child)::after {
   content: ',';
   color: var(--ddb-condition-muted);
 }
 
-.tidy5e-sheet.ddb .ddb-condition .ddb-condition-toggle {
+.tidy5e-sheet.application.ddb .ddb-condition .ddb-condition-toggle {
   margin: 0;
   padding: 0;
   border: none;
@@ -163,17 +164,17 @@
   cursor: pointer;
 }
 
-.tidy5e-sheet.ddb .ddb-condition .ddb-condition-toggle:hover {
+.tidy5e-sheet.application.ddb .ddb-condition .ddb-condition-toggle:hover {
   color: var(--ddb-accent);
   text-decoration: line-through;
 }
 
-.tidy5e-sheet.ddb .ddb-condition .ddb-condition-toggle:focus-visible {
+.tidy5e-sheet.application.ddb .ddb-condition .ddb-condition-toggle:focus-visible {
   outline: none;
   box-shadow: var(--ddb-focus-ring);
 }
 
-.tidy5e-sheet.ddb .ddb-conditions-manage {
+.tidy5e-sheet.application.ddb .ddb-conditions-manage {
   flex: 0 0 auto;
   margin: 0;
   padding: 0;
@@ -182,37 +183,38 @@
   line-height: 1;
   border: none;
   background: none;
-  font-size: 0.6875rem;
+  font-size: var(--ddb-size-label-md);
   color: var(--ddb-text-muted);
   cursor: pointer;
 }
 
-.tidy5e-sheet.ddb .ddb-conditions-manage:hover {
+.tidy5e-sheet.application.ddb .ddb-conditions-manage:hover {
   color: var(--ddb-accent);
 }
 
-.tidy5e-sheet.ddb .ddb-conditions-manage:focus-visible {
+.tidy5e-sheet.application.ddb .ddb-conditions-manage:focus-visible {
   outline: none;
   box-shadow: var(--ddb-focus-ring);
 }
 
-.tidy5e-sheet.ddb .ddb-condition-picker {
+.tidy5e-sheet.application.ddb .ddb-condition-picker {
   list-style: none;
-  margin: 0.25rem 0 0;
+  margin: var(--ddb-space-1) 0 0;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem;
+  gap: var(--ddb-space-1);
   max-height: 7rem;
   overflow-y: auto;
 }
 
-.tidy5e-sheet.ddb .ddb-condition-chip {
+.tidy5e-sheet.application.ddb .ddb-condition-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--ddb-space-1);
   margin: 0;
-  padding: 0.0625rem 0.375rem;
+  /* 1px vertical keeps the chip on DDB's compact line box; no 1px scale step. */
+  padding: 0.0625rem var(--ddb-space-2);
   width: auto;
   max-width: 9rem;
   border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
@@ -227,30 +229,30 @@
   cursor: pointer;
 }
 
-.tidy5e-sheet.ddb .ddb-condition-chip dnd5e-icon {
-  --icon-size: 0.75rem;
+.tidy5e-sheet.application.ddb .ddb-condition-chip dnd5e-icon {
+  --icon-size: var(--ddb-size-label-md);
   --icon-fill: currentColor;
   flex: 0 0 auto;
 }
 
-.tidy5e-sheet.ddb .ddb-condition-chip .truncate {
+.tidy5e-sheet.application.ddb .ddb-condition-chip .truncate {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.tidy5e-sheet.ddb .ddb-condition-chip:hover {
+.tidy5e-sheet.application.ddb .ddb-condition-chip:hover {
   border-color: var(--ddb-accent);
   color: var(--ddb-text);
 }
 
-.tidy5e-sheet.ddb .ddb-condition-chip:focus-visible {
+.tidy5e-sheet.application.ddb .ddb-condition-chip:focus-visible {
   outline: none;
   box-shadow: var(--ddb-focus-ring);
 }
 
-.tidy5e-sheet.ddb .ddb-condition-chip.active {
+.tidy5e-sheet.application.ddb .ddb-condition-chip.active {
   border-color: var(--ddb-accent);
   background: var(--ddb-accent-subtle-bg);
   color: var(--ddb-text);
@@ -260,33 +262,35 @@
 /* Primary box: tab strip + content panel                             */
 /* ------------------------------------------------------------------ */
 
-.tidy5e-sheet.ddb .ddb-primary-box {
+.tidy5e-sheet.application.ddb .ddb-primary-box {
   display: flex;
   flex-direction: column;
   min-height: 0;
   min-width: 0;
   background: var(--ddb-box-bg);
   border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
-  border-radius: var(--ddb-radius-control);
+  /* Panel radius (4px), per the radii contract in ddb-tokens.css. */
+  border-radius: var(--ddb-radius-input);
   box-shadow: var(--ddb-shadow-hairline);
 }
 
 /* --- tab strip --- */
 
-.tidy5e-sheet.ddb .ddb-tab-strip {
+.tidy5e-sheet.application.ddb .ddb-tab-strip {
   flex: 0 0 auto;
   min-width: 0;
-  padding: 0 0.75rem;
+  padding: 0 var(--ddb-space-5);
   border-bottom: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: thin;
 }
 
-.tidy5e-sheet.ddb .ddb-tab-strip .tidy-tabs.ddb-tabs {
+.tidy5e-sheet.application.ddb .ddb-tab-strip .tidy-tabs.ddb-tabs {
   display: flex;
   flex-wrap: nowrap;
   justify-content: flex-start;
+  /* 14px between tab labels, measured off the capture; above the 2-12px scale. */
   gap: 0.875rem;
   min-width: max-content;
   margin: 0;
@@ -295,20 +299,22 @@
   background: none;
 }
 
-.tidy5e-sheet.ddb .ddb-tab-strip .tab-option.ddb-tab {
+.tidy5e-sheet.application.ddb .ddb-tab-strip .tab-option.ddb-tab {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--ddb-space-1);
   margin: 0;
-  padding: 0.5rem 0;
+  padding: var(--ddb-space-3) 0;
   border: none;
   border-bottom: var(--ddb-tab-indicator-width) solid transparent;
   border-radius: 0;
   background: none;
   font-family: var(--ddb-font-condensed);
+  /* --ddb-tab-font-size aliases --ddb-size-label-md (12px). */
   font-size: var(--ddb-tab-font-size);
   font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
   text-transform: var(--ddb-transform-label);
   text-decoration: none;
   white-space: nowrap;
@@ -320,29 +326,29 @@
  * (other Tidy surfaces, e.g. tab-selection settings, render it), so the icon is
  * hidden here rather than removed from the registry. `icon-start` is the class
  * Tabs.svelte adds whenever a tab has an icon; neutralize its inset too. */
-.tidy5e-sheet.ddb .ddb-tab-strip .tab-option.ddb-tab .tab-icon {
+.tidy5e-sheet.application.ddb .ddb-tab-strip .tab-option.ddb-tab .tab-icon {
   display: none;
 }
 
-.tidy5e-sheet.ddb .ddb-tab-strip .tab-option.ddb-tab.icon-start {
+.tidy5e-sheet.application.ddb .ddb-tab-strip .tab-option.ddb-tab.icon-start {
   padding-left: 0;
 }
 
-.tidy5e-sheet.ddb .ddb-tab-strip .tab-option.ddb-tab:hover {
+.tidy5e-sheet.application.ddb .ddb-tab-strip .tab-option.ddb-tab:hover {
   color: var(--ddb-tab-active-color);
 }
 
-.tidy5e-sheet.ddb .ddb-tab-strip .tab-option.ddb-tab:focus-visible {
+.tidy5e-sheet.application.ddb .ddb-tab-strip .tab-option.ddb-tab:focus-visible {
   outline: none;
   box-shadow: var(--ddb-focus-ring);
 }
 
-.tidy5e-sheet.ddb .ddb-tab-strip .tab-option.ddb-tab.active {
+.tidy5e-sheet.application.ddb .ddb-tab-strip .tab-option.ddb-tab.active {
   border-bottom-color: var(--ddb-tab-active-indicator);
   color: var(--ddb-tab-active-color);
 }
 
-.tidy5e-sheet.ddb .ddb-tab-strip .tab-option.ddb-tab .tab-title-count {
+.tidy5e-sheet.application.ddb .ddb-tab-strip .tab-option.ddb-tab .tab-title-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -357,7 +363,7 @@
 
 /* --- tab content panel --- */
 
-.tidy5e-sheet.ddb .ddb-primary-box-content {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content {
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
@@ -365,14 +371,14 @@
   overflow: hidden;
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-tab {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab {
   display: none;
   height: 100%;
   min-height: 0;
   overflow: auto;
 }
 
-.tidy5e-sheet.ddb .ddb-primary-box-content .tidy-tab.active {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab.active {
   display: flex;
   flex-direction: column;
 }

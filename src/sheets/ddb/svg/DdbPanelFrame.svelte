@@ -61,7 +61,15 @@
     titleWidth = 0,
   }: Props = $props();
 
-  /** Half the stroke, so a 1px edge lands on the pixel grid instead of straddling it. */
+  /**
+   * Nudge off the viewBox edge so the stroke lands on the pixel grid instead of
+   * straddling it. Deliberately a flat 0.5 rather than half of
+   * `--ddb-border-width-panel`: the stroke width is a themeable token (1.5px at
+   * present) but this inset is the shared crispness convention across every
+   * `src/sheets/ddb/svg/` shape, so it stays a constant and the wider stroke is
+   * simply allowed to bleed a hair outside the box — `.ddb-panel-frame` sets
+   * `overflow: visible` so nothing clips.
+   */
   const inset = 0.5;
 
   /** Clear space either side of the title before the tab's angled shoulders. */

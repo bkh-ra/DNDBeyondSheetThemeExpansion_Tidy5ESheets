@@ -1,6 +1,6 @@
 /* DDB-FORK: header banner for the DDB (D&D Beyond-style) character sheet.
  *
- * Every rule is scoped under `.tidy5e-sheet.ddb`. Colours, fonts, radii and
+ * Every rule is scoped under `.tidy5e-sheet.application.ddb`. Colours, fonts, radii and
  * shadows come exclusively from the `--ddb-*` tokens in `ddb-tokens.css`;
  * only layout metrics (px sizes, flex/grid) are literal, taken from the
  * design captures in design/captures/athelstan/.
@@ -13,41 +13,54 @@
  *   src/sheets/ddb/character/parts/header/DdbHeaderControls.svelte
  */
 
-.tidy5e-sheet.ddb {
-  /* Local layout metrics for the header strip. */
+.tidy5e-sheet.application.ddb {
+  /* COMPONENT-LOCAL METRICS, not design tokens. These four exist only to keep
+   * the header strip's own geometry in one place; they are deliberately absent
+   * from ddb-tokens.css and must not be referenced outside this file. Anything
+   * shared (type scale, spacing scale, radii, borders) belongs in the tokens
+   * file instead. */
   --ddb-header-height: 4rem;
   --ddb-header-portrait-size: 3.25rem;
   --ddb-header-control-size: 1.5rem;
-  --ddb-header-gap: 0.75rem;
+  --ddb-header-gap: var(--ddb-space-5);
 
-  /* The strip sits on the sheet's own surface; in the dark theme this is
-     DDB's near-black Underdark bar, in the light theme its pale counterpart. */
-  --ddb-header-bg: var(--ddb-panel-bg-solid);
+  /* --ddb-header-bg comes from ddb-tokens.css: DDB renders the header strip
+     dark in BOTH themes (capture-verified); do not re-declare it here. */
 }
 
 /* ------------------------------------------------------------------ */
 /* Banner shell                                                        */
 /* ------------------------------------------------------------------ */
 
-.tidy5e-sheet.ddb .ddb-header-banner {
+/* The strip is dark in BOTH themes (--ddb-header-bg is declared once, in
+ * ddb-tokens.css, outside any theme fork). Re-pointing --ddb-text to
+ * --ddb-header-text for the banner subtree keeps every descendant that asks for
+ * body text legible on that fixed dark ground without a per-rule light/dark
+ * fork — the same var-re-point technique tab-content.css uses. */
+.tidy5e-sheet.application.ddb .ddb-header-banner {
+  --ddb-text: var(--ddb-header-text);
+
   display: flex;
   flex: 0 0 auto;
   align-items: center;
   gap: var(--ddb-header-gap);
   min-height: var(--ddb-header-height);
-  padding: 0.375rem 1rem;
+  /* 16px inline padding has no entry in the 2-12px spacing scale by design. */
+  padding: var(--ddb-space-2) 1rem;
   background: var(--ddb-header-bg);
   border: none;
   border-bottom: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
   box-shadow: inset 0 -0.125rem 0 0 var(--ddb-accent);
-  color: var(--ddb-text);
+  /* The banner paints its own dark ground in BOTH themes, so its text color is
+   * --ddb-header-text, not the theme-following --ddb-text. */
+  color: var(--ddb-header-text);
   font-family: var(--ddb-font-body);
   font-size: var(--ddb-size-body);
   line-height: var(--ddb-lineheight-body);
   overflow: hidden;
 }
 
-.tidy5e-sheet.ddb .ddb-header-banner .ddb-header-group {
+.tidy5e-sheet.application.ddb .ddb-header-banner .ddb-header-group {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
@@ -55,13 +68,13 @@
   min-width: 0;
 }
 
-.tidy5e-sheet.ddb .ddb-header-banner .ddb-header-group-tidbits {
+.tidy5e-sheet.application.ddb .ddb-header-banner .ddb-header-group-tidbits {
   flex: 0 1 auto;
-  gap: 0.625rem;
+  gap: var(--ddb-space-4);
 }
 
 /* DDB's `--gap` group: soaks up the space between tidbits and the actions. */
-.tidy5e-sheet.ddb .ddb-header-banner .ddb-header-group-gap {
+.tidy5e-sheet.application.ddb .ddb-header-banner .ddb-header-group-gap {
   flex: 1 1 auto;
   min-width: 0.5rem;
 }
@@ -70,20 +83,20 @@
 /* Portrait — round frame with a thin accent ring                      */
 /* ------------------------------------------------------------------ */
 
-.tidy5e-sheet.ddb .ddb-portrait {
+.tidy5e-sheet.application.ddb .ddb-portrait {
   position: relative;
   flex: 0 0 auto;
   width: var(--ddb-header-portrait-size);
   height: var(--ddb-header-portrait-size);
-  padding: 0.125rem;
-  border: 0.0625rem solid var(--ddb-accent);
+  padding: var(--ddb-space-half);
+  border: var(--ddb-border-width-panel) solid var(--ddb-accent);
   border-radius: var(--ddb-radius-pill);
   background: var(--ddb-panel-bg-solid);
 }
 
 /* Force the round DDB shape regardless of the actor's quadrone portrait
    shape preference, and neutralize the larger quadrone portrait framing. */
-.tidy5e-sheet.ddb .ddb-portrait .actor-image {
+.tidy5e-sheet.application.ddb .ddb-portrait .actor-image {
   width: 100%;
   height: 100%;
   margin: 0;
@@ -95,8 +108,8 @@
   box-shadow: none;
 }
 
-.tidy5e-sheet.ddb .ddb-portrait .actor-image img,
-.tidy5e-sheet.ddb .ddb-portrait .actor-image video {
+.tidy5e-sheet.application.ddb .ddb-portrait .actor-image img,
+.tidy5e-sheet.application.ddb .ddb-portrait .actor-image video {
   display: block;
   width: 100%;
   height: 100%;
@@ -108,14 +121,14 @@
   box-shadow: none;
 }
 
-.tidy5e-sheet.ddb .ddb-portrait .actor-image .dead-overlay {
+.tidy5e-sheet.application.ddb .ddb-portrait .actor-image .dead-overlay {
   border-radius: var(--ddb-radius-pill);
 }
 
 /* The portrait-shape cycler and the death-saves overlay belong to the large
    quadrone portrait; the DDB strip is too small to host either. */
-.tidy5e-sheet.ddb .ddb-portrait > .button-config,
-.tidy5e-sheet.ddb .ddb-portrait > .death-saves-overlay {
+.tidy5e-sheet.application.ddb .ddb-portrait > .button-config,
+.tidy5e-sheet.application.ddb .ddb-portrait > .death-saves-overlay {
   display: none;
 }
 
@@ -123,68 +136,73 @@
 /* Tidbits — name, species/class, level                                */
 /* ------------------------------------------------------------------ */
 
-.tidy5e-sheet.ddb .ddb-header-tidbits {
+.tidy5e-sheet.application.ddb .ddb-header-tidbits {
   display: flex;
   flex: 0 1 auto;
   flex-direction: column;
   justify-content: center;
-  gap: 0.125rem;
+  gap: var(--ddb-space-half);
   min-width: 0;
 }
 
-.tidy5e-sheet.ddb .ddb-header-name-row {
+.tidy5e-sheet.application.ddb .ddb-header-name-row {
   display: flex;
   align-items: center;
   min-width: 0;
 }
 
-.tidy5e-sheet.ddb .ddb-character-name {
+/* The character name is the sheet's ONE deliberate serif (user choice):
+ * Modesto Condensed display face, ~2rem, echoing DDB's serif small-caps name.
+ * Applied to BOTH the h1 (view) and the input (edit) so the font never
+ * changes when the sheet is unlocked. */
+.tidy5e-sheet.application.ddb .ddb-character-name {
   margin: 0;
   padding: 0;
   border: none;
   background: none;
   color: var(--ddb-text);
-  font-family: var(--ddb-font-body);
-  font-size: 1.25rem;
-  font-weight: var(--ddb-weight-value);
-  line-height: 1.2;
+  font-family: var(--ddb-font-name);
+  font-size: var(--ddb-size-name);
+  font-weight: 400;
+  text-transform: uppercase;
+  line-height: 1.1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 /* Editable name uses TextInputQuadrone, which renders an <input>. */
-.tidy5e-sheet.ddb input.ddb-character-name {
+.tidy5e-sheet.application.ddb input.ddb-character-name {
   width: 100%;
   min-width: 6rem;
   height: auto;
   border-radius: var(--ddb-radius-input);
 }
 
-.tidy5e-sheet.ddb input.ddb-character-name:hover,
-.tidy5e-sheet.ddb input.ddb-character-name:focus {
-  border: 0.0625rem solid var(--ddb-accent);
+.tidy5e-sheet.application.ddb input.ddb-character-name:hover,
+.tidy5e-sheet.application.ddb input.ddb-character-name:focus {
+  border: var(--ddb-border-width-panel) solid var(--ddb-accent);
   box-shadow: var(--ddb-focus-ring);
   outline: none;
 }
 
-.tidy5e-sheet.ddb .ddb-header-summary {
+.tidy5e-sheet.application.ddb .ddb-header-summary {
   display: flex;
   align-items: baseline;
   flex-wrap: nowrap;
-  gap: 0.375rem;
+  gap: var(--ddb-space-2);
   min-width: 0;
   color: var(--ddb-text-muted);
   font-family: var(--ddb-font-condensed);
-  font-size: 0.75rem;
+  font-size: var(--ddb-size-label-md);
   line-height: 1.2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.tidy5e-sheet.ddb .ddb-header-species,
-.tidy5e-sheet.ddb .ddb-header-class {
+.tidy5e-sheet.application.ddb .ddb-header-species,
+.tidy5e-sheet.application.ddb .ddb-header-class {
   display: inline-flex;
   align-items: baseline;
   gap: 0.1875rem;
@@ -193,40 +211,40 @@
   text-overflow: ellipsis;
 }
 
-.tidy5e-sheet.ddb .ddb-header-class-level {
+.tidy5e-sheet.application.ddb .ddb-header-class-level {
   color: var(--ddb-text);
   font-weight: var(--ddb-weight-value);
 }
 
-.tidy5e-sheet.ddb .ddb-header-level-row {
+.tidy5e-sheet.application.ddb .ddb-header-level-row {
   display: flex;
   align-items: baseline;
-  gap: 0.5rem;
+  gap: var(--ddb-space-3);
   min-width: 0;
 }
 
-.tidy5e-sheet.ddb .ddb-header-level,
-.tidy5e-sheet.ddb .ddb-header-xp {
+.tidy5e-sheet.application.ddb .ddb-header-level,
+.tidy5e-sheet.application.ddb .ddb-header-xp {
   display: inline-flex;
   align-items: baseline;
   gap: 0.1875rem;
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-label);
   font-weight: var(--ddb-weight-label);
-  letter-spacing: 0.03125rem;
+  letter-spacing: var(--ddb-letterspacing-label);
   text-transform: var(--ddb-transform-label);
   white-space: nowrap;
 }
 
-.tidy5e-sheet.ddb .ddb-header-level-label,
-.tidy5e-sheet.ddb .ddb-header-xp-label,
-.tidy5e-sheet.ddb .ddb-header-xp-separator,
-.tidy5e-sheet.ddb .ddb-header-xp-max {
+.tidy5e-sheet.application.ddb .ddb-header-level-label,
+.tidy5e-sheet.application.ddb .ddb-header-xp-label,
+.tidy5e-sheet.application.ddb .ddb-header-xp-separator,
+.tidy5e-sheet.application.ddb .ddb-header-xp-max {
   color: var(--ddb-label);
 }
 
-.tidy5e-sheet.ddb .ddb-header-level-value,
-.tidy5e-sheet.ddb .ddb-header-xp-value {
+.tidy5e-sheet.application.ddb .ddb-header-level-value,
+.tidy5e-sheet.application.ddb .ddb-header-xp-value {
   color: var(--ddb-text);
 }
 
@@ -234,65 +252,65 @@
 /* Rest buttons                                                        */
 /* ------------------------------------------------------------------ */
 
-.tidy5e-sheet.ddb .ddb-rest-buttons {
+.tidy5e-sheet.application.ddb .ddb-rest-buttons {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--ddb-space-3);
 }
 
-.tidy5e-sheet.ddb .ddb-rest-button {
+.tidy5e-sheet.application.ddb .ddb-rest-button {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  gap: 0.375rem;
+  gap: var(--ddb-space-2);
   width: auto;
   height: 1.625rem;
   margin: 0;
-  padding: 0 0.625rem;
-  border: 0.0625rem solid var(--ddb-accent);
+  padding: 0 var(--ddb-space-4);
+  border: var(--ddb-border-width-panel) solid var(--ddb-accent);
   border-radius: var(--ddb-radius-control);
   background: transparent;
   color: var(--ddb-text);
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-label);
   font-weight: var(--ddb-weight-label);
-  letter-spacing: 0.0625rem;
+  letter-spacing: var(--ddb-letterspacing-label);
   line-height: 1;
   text-transform: var(--ddb-transform-label);
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color 0.1s ease-in-out;
+  transition: background-color var(--ddb-transition);
 }
 
-.tidy5e-sheet.ddb .ddb-rest-button-icon {
+.tidy5e-sheet.application.ddb .ddb-rest-button-icon {
   color: var(--ddb-accent);
-  font-size: 0.75rem;
+  font-size: var(--ddb-size-label-md);
 }
 
-.tidy5e-sheet.ddb .ddb-rest-button:hover:not(:disabled) {
+.tidy5e-sheet.application.ddb .ddb-rest-button:hover:not(:disabled) {
   background: var(--ddb-accent-subtle-bg);
   border-color: var(--ddb-accent-hover);
 }
 
-.tidy5e-sheet.ddb .ddb-rest-button:active:not(:disabled) {
+.tidy5e-sheet.application.ddb .ddb-rest-button:active:not(:disabled) {
   background: var(--ddb-accent-transparent);
   border-color: var(--ddb-accent-active);
 }
 
-.tidy5e-sheet.ddb .ddb-rest-button:focus-visible {
+.tidy5e-sheet.application.ddb .ddb-rest-button:focus-visible {
   outline: none;
   box-shadow: var(--ddb-focus-ring);
 }
 
-.tidy5e-sheet.ddb .ddb-rest-button:disabled {
+.tidy5e-sheet.application.ddb .ddb-rest-button:disabled {
   border-color: var(--ddb-panel-border);
   color: var(--ddb-text-disabled);
   cursor: default;
 }
 
-.tidy5e-sheet.ddb .ddb-rest-button:disabled .ddb-rest-button-icon {
+.tidy5e-sheet.application.ddb .ddb-rest-button:disabled .ddb-rest-button-icon {
   color: var(--ddb-text-disabled);
 }
 
@@ -300,37 +318,37 @@
 /* Campaign (Foundry world name)                                       */
 /* ------------------------------------------------------------------ */
 
-.tidy5e-sheet.ddb .ddb-header-campaign {
+.tidy5e-sheet.application.ddb .ddb-header-campaign {
   display: inline-flex;
   flex: 0 1 auto;
   align-items: baseline;
-  gap: 0.375rem;
+  gap: var(--ddb-space-2);
   max-width: 14rem;
   min-width: 0;
   height: 1.625rem;
-  padding: 0 0.625rem;
-  border: 0.0625rem solid var(--ddb-panel-border);
+  padding: 0 var(--ddb-space-4);
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
   border-radius: var(--ddb-radius-control);
   line-height: 1.625rem;
   white-space: nowrap;
   overflow: hidden;
 }
 
-.tidy5e-sheet.ddb .ddb-header-campaign-label {
+.tidy5e-sheet.application.ddb .ddb-header-campaign-label {
   flex: 0 0 auto;
   color: var(--ddb-label);
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-label);
   font-weight: var(--ddb-weight-label);
-  letter-spacing: 0.0625rem;
+  letter-spacing: var(--ddb-letterspacing-label);
   text-transform: var(--ddb-transform-label);
 }
 
-.tidy5e-sheet.ddb .ddb-header-campaign-name {
+.tidy5e-sheet.application.ddb .ddb-header-campaign-name {
   flex: 0 1 auto;
   min-width: 0;
   color: var(--ddb-text);
-  font-size: 0.75rem;
+  font-size: var(--ddb-size-label-md);
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -339,14 +357,14 @@
 /* Header controls (edit-mode toggle + sheet settings)                 */
 /* ------------------------------------------------------------------ */
 
-.tidy5e-sheet.ddb .ddb-header-controls {
+.tidy5e-sheet.application.ddb .ddb-header-controls {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 0.25rem;
+  gap: var(--ddb-space-1);
 }
 
-.tidy5e-sheet.ddb .ddb-header-control {
+.tidy5e-sheet.application.ddb .ddb-header-control {
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
@@ -359,25 +377,25 @@
   border-radius: var(--ddb-radius-control);
   background: transparent;
   color: var(--ddb-label);
-  font-size: 0.8125rem;
+  font-size: var(--ddb-size-body);
   line-height: 1;
   cursor: pointer;
   transition:
-    color 0.1s ease-in-out,
-    background-color 0.1s ease-in-out;
+    color var(--ddb-transition),
+    background-color var(--ddb-transition);
 }
 
-.tidy5e-sheet.ddb .ddb-header-control:hover {
+.tidy5e-sheet.application.ddb .ddb-header-control:hover {
   background: var(--ddb-accent-subtle-bg);
   color: var(--ddb-text);
 }
 
-.tidy5e-sheet.ddb .ddb-header-control:focus-visible {
+.tidy5e-sheet.application.ddb .ddb-header-control:focus-visible {
   outline: none;
   box-shadow: var(--ddb-focus-ring);
 }
 
-.tidy5e-sheet.ddb .ddb-header-control.unlocked {
+.tidy5e-sheet.application.ddb .ddb-header-control.unlocked {
   color: var(--ddb-accent);
 }
 
@@ -386,17 +404,17 @@
 /* ------------------------------------------------------------------ */
 
 @media (max-width: 62.5rem) {
-  .tidy5e-sheet.ddb .ddb-header-group-campaign {
+  .tidy5e-sheet.application.ddb .ddb-header-group-campaign {
     display: none;
   }
 }
 
 @media (max-width: 50rem) {
-  .tidy5e-sheet.ddb .ddb-rest-button-label {
+  .tidy5e-sheet.application.ddb .ddb-rest-button-label {
     display: none;
   }
 
-  .tidy5e-sheet.ddb .ddb-rest-button {
+  .tidy5e-sheet.application.ddb .ddb-rest-button {
     width: 1.625rem;
     padding: 0;
   }

@@ -22,17 +22,17 @@
   display: none;
 }
 
-.tidy5e-sheet.ddb .window-header {
+.tidy5e-sheet.application.ddb .window-header {
   background: transparent;
 }
 
 /* --- fixed-viewport sheet --- */
-.tidy5e-sheet.ddb .window-content {
+.tidy5e-sheet.application.ddb .window-content {
   padding: 0;
   overflow: hidden;
 }
 
-.tidy5e-sheet.ddb .ddb-sheet {
+.tidy5e-sheet.application.ddb .ddb-sheet {
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -48,11 +48,11 @@
     var(--ddb-page-bg);
 }
 
-.tidy5e-sheet.ddb .ddb-sheet > :not(.ddb-sheet-body) {
+.tidy5e-sheet.application.ddb .ddb-sheet > :not(.ddb-sheet-body) {
   flex: 0 0 auto;
 }
 
-.tidy5e-sheet.ddb .ddb-sheet-body {
+.tidy5e-sheet.application.ddb .ddb-sheet-body {
   flex: 1;
   min-height: 0;
   display: flex;
@@ -61,7 +61,7 @@
   padding: 6px 8px 8px;
 }
 
-.tidy5e-sheet.ddb .ddb-sheet-body > :not(.ddb-columns) {
+.tidy5e-sheet.application.ddb .ddb-sheet-body > :not(.ddb-columns) {
   flex: 0 0 auto;
 }
 
@@ -74,7 +74,7 @@
  * so a long inventory can never inflate the row; it stretches to match the
  * skills column and scrolls inside. The left column's last box stretches so
  * all three columns end on the same line. */
-.tidy5e-sheet.ddb .ddb-columns {
+.tidy5e-sheet.application.ddb .ddb-columns {
   flex: 0 0 auto;
   min-height: 0;
   display: grid;
@@ -83,7 +83,7 @@
   align-items: stretch;
 }
 
-.tidy5e-sheet.ddb .ddb-col {
+.tidy5e-sheet.application.ddb .ddb-col {
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -92,24 +92,24 @@
 }
 
 /* Bottom-align the left column with the skills column */
-.tidy5e-sheet.ddb .ddb-col-left > :last-child {
+.tidy5e-sheet.application.ddb .ddb-col-left > :last-child {
   flex: 1 1 auto;
 }
 
 /* Primary column: combat row + tab bar fixed, tab CONTENT scrolls */
-.tidy5e-sheet.ddb .ddb-col-primary {
+.tidy5e-sheet.application.ddb .ddb-col-primary {
   overflow: hidden;
 }
 
 /* Initiative + AC + Defenses/Conditions row atop the primary column */
-.tidy5e-sheet.ddb .ddb-combat-strip-row {
+.tidy5e-sheet.application.ddb .ddb-combat-strip-row {
   display: flex;
   align-items: stretch;
   gap: 6px;
   flex: 0 0 auto;
 }
 
-.tidy5e-sheet.ddb .ddb-combat-row {
+.tidy5e-sheet.application.ddb .ddb-combat-row {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -117,25 +117,25 @@
 }
 
 /* The defenses/conditions box fills the rest of the row, like DDB */
-.tidy5e-sheet.ddb .ddb-combat-strip-row .ddb-conditions-defenses {
+.tidy5e-sheet.application.ddb .ddb-combat-strip-row .ddb-conditions-defenses {
   flex: 1 1 auto;
   width: auto;
   max-width: none;
   margin-right: 0;
 }
 
-.tidy5e-sheet.ddb .ddb-col-primary .ddb-primary-box {
+.tidy5e-sheet.application.ddb .ddb-col-primary .ddb-primary-box {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
-.tidy5e-sheet.ddb .ddb-col-primary .ddb-primary-box > :not(.ddb-primary-box-content) {
+.tidy5e-sheet.application.ddb .ddb-col-primary .ddb-primary-box > :not(.ddb-primary-box-content) {
   flex: 0 0 auto;
 }
 
-.tidy5e-sheet.ddb .ddb-col-primary .ddb-primary-box-content {
+.tidy5e-sheet.application.ddb .ddb-col-primary .ddb-primary-box-content {
   /* flex-basis 0 + height 0: contributes no intrinsic height, so the grid row
    * is sized by the skills column, then this stretches to fill and scrolls. */
   flex: 1 1 0;
@@ -161,13 +161,13 @@
     min-width: 0;
     min-height: 0;
   }
-  .tidy5e-sheet.ddb .ddb-sheet-body {
+  .tidy5e-sheet.application.ddb .ddb-sheet-body {
     overflow: hidden auto;
   }
-  .tidy5e-sheet.ddb .ddb-columns {
+  .tidy5e-sheet.application.ddb .ddb-columns {
     grid-template-columns: 1fr 1fr;
   }
-  .tidy5e-sheet.ddb .ddb-col-primary {
+  .tidy5e-sheet.application.ddb .ddb-col-primary {
     grid-column: 1 / -1;
     overflow: visible;
   }

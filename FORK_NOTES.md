@@ -32,6 +32,18 @@ This repo is **local-only** — no GitHub remote of our own; `upstream` = kgar's
 | `vite.config.ts` | `s_PACKAGE_ID = 'modules/ddb5e-sheets'` |
 | `public/module.json` | id/title/description/version; conflict with `tidy5e-sheet`; `manifest`/`download` removed |
 
+## DDB layer specificity contract
+
+The DDB sheet root carries BOTH `.quadrone` and `.ddb` classes (it extends the
+quadrone sheet, and quadrone table/tab styles are reused inside the DDB layout).
+Quadrone's broad rules (`apps.css` `:is(h1,h2,h3)` at 0-3-1, `components/buttons.css`
+`:is(button,.button)` at 0-3-0 with a `font:` shorthand) therefore compete with
+DDB rules. **Every selector in `src/less/ddb/*.css` MUST start with
+`.tidy5e-sheet.application.ddb`** (0-4-0) so the DDB layer always wins. When
+adding new DDB styles or merging upstream changes that touch quadrone's broad
+selectors, preserve this contract — a bare `.ddb-foo` or `.tidy5e-sheet.ddb`
+prefix will silently lose to quadrone.
+
 ## New files (no upstream conflict surface)
 
 - `src/sheets/ddb/**` — DDB layout sheet class, root component, tabs, parts, SVG motifs
