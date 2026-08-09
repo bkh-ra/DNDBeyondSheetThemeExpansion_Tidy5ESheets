@@ -37,14 +37,48 @@
 
   let width = $state(0);
   let height = $state(0);
+
+  let element = $state<HTMLElement>();
+
+  /**
+   * The frame's geometry is generated in JS, so the panel tokens have to be read
+   * as numbers rather than used as CSS values. Reading them off this element
+   * (instead of hardcoding 10 and 4) keeps the frame in lockstep with every
+   * other panel-level surface when the tokens change.
+   *
+   * These fall back to the token defaults for the first paint, before the effect
+   * runs. The effect only reads `element`, so writing these cannot re-trigger it.
+   */
+  let radius = $state(10);
+  let doubleGap = $state(4);
+
+  $effect(() => {
+    if (!element) {
+      return;
+    }
+
+    const styles = getComputedStyle(element);
+    const nextRadius = parseFloat(styles.getPropertyValue('--ddb-radius-panel'));
+    const nextGap = parseFloat(
+      styles.getPropertyValue('--ddb-panel-double-gap'),
+    );
+
+    if (!Number.isNaN(nextRadius)) {
+      radius = nextRadius;
+    }
+    if (!Number.isNaN(nextGap)) {
+      doubleGap = nextGap;
+    }
+  });
 </script>
 
 <section
   class={['ddb-box', classValue]}
+  bind:this={element}
   bind:clientWidth={width}
   bind:clientHeight={height}
 >
-  <DdbPanelFrame {width} {height} />
+  <DdbPanelFrame {width} {height} {radius} {doubleGap} />
   <div class="ddb-box-body">
     {@render children()}
   </div>

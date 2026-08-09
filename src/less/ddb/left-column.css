@@ -476,8 +476,20 @@
   border-radius: var(--ddb-radius-control);
 }
 
+/* No border, padding or background — the passive score reads as plain text.
+ * It keeps the 30px slot and centring the chip used to provide, so removing the
+ * box does not move the number or shift the label beside it. The value
+ * typography is inlined here because the span no longer carries
+ * `.ddb-chip-value`. */
 .tidy5e-sheet.application.ddb .ddb-sense-value {
-  min-width: 30px; /* fits a 3-digit passive without the chip resizing */
+  min-width: 30px; /* fits a 3-digit passive without the column resizing */
+  text-align: center;
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  font-weight: var(--ddb-weight-value);
+  line-height: 1.2;
+  color: var(--ddb-text);
+  white-space: nowrap;
 }
 
 .tidy5e-sheet.application.ddb .ddb-sense-label {

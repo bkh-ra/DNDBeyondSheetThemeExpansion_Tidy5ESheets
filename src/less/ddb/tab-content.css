@@ -454,7 +454,9 @@
   --button-icon-hover: var(--ddb-text);
   --button-shadow: none;
   --button-focus: var(--ddb-focus-ring);
-  border-radius: var(--ddb-radius-input);
+  /* Buttons and filter pills are small controls: radius-control, not the panel
+   * radius (radii contract in ddb-tokens.css). */
+  border-radius: var(--ddb-radius-control);
   font-family: var(--ddb-font-condensed);
 }
 
@@ -494,11 +496,11 @@
   color: var(--ddb-text-disabled);
 }
 
-/* Filter dropdown menu surface. */
+/* Filter dropdown menu surface — floating panel: panel radius, single-lined. */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .button-with-options-wrapper menu {
   background: var(--ddb-panel-bg-solid);
   border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
-  border-radius: var(--ddb-radius-input);
+  border-radius: var(--ddb-radius-panel);
   box-shadow: var(--ddb-shadow-elevated);
   color: var(--ddb-text);
 }

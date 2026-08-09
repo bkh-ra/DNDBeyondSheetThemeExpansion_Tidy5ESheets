@@ -48,7 +48,10 @@
   <ul class="ddb-senses-passives">
     {#each passives as skill (skill.key)}
       <li class="ddb-sense-row">
-        <span class="ddb-sense-value ddb-chip ddb-chip-value">
+        <!-- Deliberately not a `.ddb-chip`: the passive score sits plain, framed
+             only by the panel's own outline. The chip treatment stays on the
+             skill bonuses and save modifiers. -->
+        <span class="ddb-sense-value">
           {skill.passive}
         </span>
         <span class="ddb-sense-label">

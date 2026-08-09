@@ -94,7 +94,15 @@
   --ddb-radius-pill: 50%;
   --ddb-radius-control: 3px;
   --ddb-radius-input: 4px;
-  --ddb-border-width-panel: 1.5px; /* user choice: heavier than DDB's 1px */
+  /* Every PANEL-level surface shares this radius: left-column frames, primary
+   * box, sidebar, conditions/defenses strip, HP panel. 10px measured off the
+   * captures (it is also DdbPanelFrame's default). Chips/controls stay 3px,
+   * form inputs 4px. */
+  --ddb-radius-panel: 10px;
+  /* Offset between a panel's outer silhouette and its parallel inner line.
+   * Must stay wide enough that the pair never optically merges. */
+  --ddb-panel-double-gap: 4px;
+  --ddb-border-width-panel: 1.125px; /* user choice: 25% lighter than 1.5px */
   --ddb-stroke-echo-opacity: 0.65; /* decorative second strokes (frames, shield) */
   --ddb-rarity-bar-width: 3px;
   --ddb-transition: 0.1s ease-in-out;

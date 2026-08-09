@@ -12,9 +12,9 @@
 
   Both lines are drawn at full strength on purpose. Dimming the inner one (with
   `--ddb-stroke-echo-opacity`) collapsed the pair into a single soft, thick line
-  at a 1.5px stroke — the same bug the quick-info shapes hit. `echoGap` matches
-  the 4px the stat boxes use, which is the distance at which the pair still reads
-  as a deliberate double.
+  — the same bug the quick-info shapes hit. The gap comes from
+  `--ddb-panel-double-gap` and the radius from `--ddb-radius-panel`, both read
+  off the host by `DdbBox`, so panels across the sheet stay in lockstep.
 
   The silhouette here is a ROUNDED rect rather than the stat boxes' 45-degree
   octagon: that is what the left-column panels are in the captures. The shared
@@ -41,11 +41,23 @@
     width?: number;
     /** Host height in px, measured by the parent. */
     height?: number;
-    /** Panel corner radius in px. ~10px measured off the captures. */
+    /**
+     * Panel corner radius in px. The host reads `--ddb-radius-panel` and passes
+     * it in, so every panel-level surface on the sheet stays in lockstep; the
+     * default here is only the pre-measurement fallback.
+     */
     radius?: number;
+    /** Silhouette-to-inner-line offset in px, from `--ddb-panel-double-gap`. */
+    doubleGap?: number;
   };
 
-  let { class: cssClass, width = 0, height = 0, radius = 10 }: Props = $props();
+  let {
+    class: cssClass,
+    width = 0,
+    height = 0,
+    radius = 10,
+    doubleGap = 4,
+  }: Props = $props();
 
   /**
    * Half the stroke, so an edge lands on the pixel grid instead of straddling
@@ -53,8 +65,7 @@
    */
   const inset = 0.5;
 
-  /** Gap between the two parallel lines. Matches the stat boxes' 4px. */
-  const echoGap = 4;
+  let echoGap = $derived(doubleGap);
 
   let ready = $derived(width > 0 && height > 0);
 

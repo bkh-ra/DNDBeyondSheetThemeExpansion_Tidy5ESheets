@@ -43,6 +43,8 @@
   /* `flex: 1 1 auto` fills the grid column's stretched height AND overrides
    * quadrone's `flex-basis: var(--sidebar-expanded-width)`. */
   flex: 1 1 auto;
+  /* anchors the ::after inner outline */
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -56,15 +58,45 @@
   /* the pane never scrolls; `.ddb-sidebar-content` does */
   overflow: hidden;
   background: var(--ddb-box-bg);
+  /* OUTER silhouette of the double outline; the inner line is `::after`. */
   border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
-  /* Panel radius (4px), per the radii contract in ddb-tokens.css. */
-  border-radius: var(--ddb-radius-input);
+  /* Panel-level surface, so --ddb-radius-panel (10px) — the one radius shared
+   * by the left-column boxes, quick-info boxes, primary box and conditions
+   * strip. Small controls inside stay on --ddb-radius-control. */
+  border-radius: var(--ddb-radius-panel);
   box-shadow: var(--ddb-shadow-hairline);
   color: var(--ddb-text);
   font-family: var(--ddb-font-body);
   font-size: var(--ddb-size-body);
   line-height: var(--ddb-lineheight-body);
   transition: width var(--ddb-transition);
+}
+
+/* --- the INNER line of the panel's double outline ---
+ *
+ * Every DDB panel reads as two parallel rounded outlines. The left-column and
+ * quick-info boxes draw theirs as SVG (`DdbPanelFrame.svelte`); this pane is a
+ * bordered div, so the second line is a pseudo-element inset by the shared
+ * `--ddb-panel-double-gap`.
+ *
+ * BOTH LINES ARE FULL STRENGTH. Do not borrow `--ddb-stroke-echo-opacity` here
+ * (that token is for the SVG frames' hand-drawn corner echo) and do not shrink
+ * the gap: at the 1.125px panel weight a faded or tighter second line stops
+ * reading as two outlines and blurs into a single soft edge. This has regressed
+ * twice — keep it same-color, same-weight, at the token gap.
+ *
+ * It is anchored to the PANE, not to `.ddb-sidebar-content`, so the frame holds
+ * still while the favorites list scrolls beneath it; `pointer-events: none`
+ * keeps it clear of favorite rows, the toggle and the gear. */
+.tidy5e-sheet.application.ddb .ddb-sidebar::after {
+  content: '';
+  position: absolute;
+  inset: var(--ddb-panel-double-gap);
+  z-index: 2;
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  /* Concentric with the outer silhouette: same gap taken off the radius. */
+  border-radius: calc(var(--ddb-radius-panel) - var(--ddb-panel-double-gap));
+  pointer-events: none;
 }
 
 /* Collapsed: the pane shrinks to a rail holding only the toggle. The grid
@@ -74,28 +106,46 @@
   --ddb-sidebar-width: var(--ddb-sidebar-rail-width);
 }
 
+/* The collapsed rail is 28px wide: an inner outline inset 4px leaves a 20px
+ * box, narrower than the 22px toggle it would have to enclose, so it would cut
+ * across the button and read as a doubled edge on a control rather than as a
+ * panel's second outline. The rail keeps the single silhouette. `content: none`
+ * (not `display: none`) so no box is generated at all — no stray sliver. */
+.tidy5e-sheet.application.ddb .ddb-sidebar.collapsed::after {
+  content: none;
+}
+
 /* Quadrone hangs an 8x bottom margin off the sidebar's last child to clear its
- * footer; the DDB pane has no footer. */
+ * footer; the DDB pane has no footer, and instead ends its last child flush
+ * with the inner outline so nothing crosses the frame. */
 .tidy5e-sheet.application.ddb .ddb-sidebar > :last-child {
-  margin-block-end: 0;
+  margin-block-end: var(--ddb-panel-double-gap);
 }
 
 /* ------------------------------------------------------------------ */
 /* Header: tab strip + collapse toggle + tab-config gear              */
 /* ------------------------------------------------------------------ */
 
+/* The header sits INSIDE the inner outline (margin = the double gap on the top
+ * and both sides), so the toggle and gear never collide with the frame and the
+ * header's divider terminates exactly on the frame's two vertical lines,
+ * reading as a cross-bar of the panel rather than a line crossing over it. */
 .tidy5e-sheet.application.ddb .ddb-sidebar-header {
   flex: 0 0 auto;
   display: flex;
   align-items: stretch;
   gap: var(--ddb-space-1);
   min-width: 0;
-  padding: 0 var(--ddb-space-2);
+  margin: var(--ddb-panel-double-gap) var(--ddb-panel-double-gap) 0;
+  padding: 0 var(--ddb-space-1);
   border-bottom: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
 }
 
+/* The rail drops the inner outline (see above), so the header reclaims the
+ * inset — without this the 22px toggle would not fit the 28px rail. */
 .tidy5e-sheet.application.ddb .ddb-sidebar.collapsed .ddb-sidebar-header {
   justify-content: center;
+  margin: 0;
   padding: var(--ddb-space-1) 0;
   border-bottom: none;
 }
@@ -233,7 +283,12 @@
   height: 0;
   min-height: 0;
   min-width: 0;
-  padding: var(--ddb-space-2) var(--ddb-space-3) var(--ddb-space-3);
+  /* Inset to the inner outline on both sides (the bottom inset comes from the
+   * `> :last-child` rule above), so the scrollbar and the scrolling rows stay
+   * inside the frame instead of running under it. Margins do not change the
+   * height contract: flex-basis is still 0. */
+  margin-inline: var(--ddb-panel-double-gap);
+  padding: var(--ddb-space-2) var(--ddb-space-1) var(--ddb-space-3);
   overflow: hidden auto;
   scrollbar-width: thin;
   scrollbar-color: var(--ddb-accent-transparent) transparent;

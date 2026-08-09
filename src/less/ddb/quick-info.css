@@ -52,7 +52,6 @@
 /* Only the outermost silhouette of each frame is filled; everything drawn on
  * top of it is an outline. */
 .tidy5e-sheet.application.ddb .ddb-stat-box-shape__echo,
-.tidy5e-sheet.application.ddb .ddb-stat-box-shape__well,
 .tidy5e-sheet.application.ddb .ddb-ability-box-shape__well,
 .tidy5e-sheet.application.ddb .ddb-ability-box-shape__wing,
 .tidy5e-sheet.application.ddb .ddb-ability-box-shape__flank,
@@ -64,7 +63,7 @@
 /* TWO TIERS, and only two.
  *
  * TIER 1 — the plaque itself: the silhouette AND the second edge that runs
- * inside it, plus the well the figure sits in. On DDB both lines of a
+ * inside it, plus the ability card's well. On DDB both lines of a
  * double-lined box are drawn at the SAME strength (see the stat boxes in
  * design/captures/estonia-archmage/dark/01-actions.png), and that pairing is
  * what makes a box read as an ornate plaque rather than a plain rectangle.
@@ -587,11 +586,16 @@
   height: 5rem; /* 80px */
 }
 
-/* ARMOR / value / CLASS all sit inside the inner shield outline, so the stack
- * is centred on the shield's body rather than on its full bounding box. */
+/* AC over the value, both inside the inner shield outline. The bottom inset is
+ * what does the optical centring: a shield tapers to a point, so a stack
+ * centred on the full bounding box sits too low and the figure runs into the
+ * narrowing. Because the stack is centred in this box, its centre lands at
+ * exactly half the box height: holding 16px back puts it on y 32, which is
+ * ~40% down the 2.5 .. 75.8 outline — the optical centre of a form whose lower
+ * half tapers away — and keeps the figure in the widest part of the body. */
 .tidy5e-sheet.application.ddb .ddb-ac-shield__content {
   position: absolute;
-  inset: 0 0 0.875rem 0;
+  inset: 0 0 1rem 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -653,7 +657,8 @@
   padding: var(--ddb-space-2) var(--ddb-space-4);
   /* Accent, to match the SVG frames beside it in the band. */
   border: var(--ddb-border-width-panel) solid var(--ddb-accent);
-  border-radius: var(--ddb-radius-input);
+  /* Panel-level surface, so the panel radius — not the input radius. */
+  border-radius: var(--ddb-radius-panel);
   background: var(--ddb-box-bg);
 }
 
@@ -664,9 +669,10 @@
 .tidy5e-sheet.application.ddb .ddb-hp-block::after {
   content: '';
   position: absolute;
-  inset: 3px;
+  inset: var(--ddb-panel-double-gap);
   border: var(--ddb-border-width-panel) solid var(--ddb-accent);
-  border-radius: var(--ddb-radius-input);
+  /* Concentric with the panel: the corner tightens by exactly the offset. */
+  border-radius: calc(var(--ddb-radius-panel) - var(--ddb-panel-double-gap));
   pointer-events: none;
 }
 

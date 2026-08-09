@@ -12,8 +12,8 @@
     `hex`     — a squat hexagon: flat top and bottom with the left and right
                 ends raked back to a point at mid-height, so it reads much
                 wider than it is tall. Used for INITIATIVE and HIT DICE, whose
-                caps label rides ABOVE the shape instead of inside it. The hex
-                also carries an inner rounded-rect well around the figure.
+                caps label rides ABOVE the shape instead of inside it. The
+                figure floats free inside the double outline — no inner well.
 
   Every shape is redrawn from measurements taken off the PNG captures
   (design/SVG-MOTIFS.md records the viewBoxes: initiative 70 x 45, inspiration
@@ -51,8 +51,11 @@
 
   /**
    * Gap between the two edges of the double line. Both are drawn at full
-   * strength (see quick-info.css), so this has to be wide enough that a 1.5px
-   * pair reads as a deliberate double rather than one soft, thick line.
+   * strength (see quick-info.css), so this has to be wide enough that the pair
+   * reads as a deliberate double rather than one soft, thick line — the more
+   * so now that --ddb-border-width-panel is 1.125px. Mirrors the
+   * `--ddb-panel-double-gap` token; path data cannot read a CSS variable, so
+   * the two are kept in step by hand.
    */
   const echoGap = 4;
 
@@ -121,23 +124,6 @@
       : octagon(echoGap, cut - cutTaper),
   );
 
-  /** Inner well the figure sits in — the hexagon's third, innermost line. */
-  let well = $derived.by(() => {
-    const l = inset + rake + 3;
-    const r = width - inset - rake - 3;
-    const t = inset + 7;
-    const b = height - inset - 7;
-    const rad = 3;
-
-    return [
-      `M ${l + rad} ${t}`,
-      `H ${r - rad} A ${rad} ${rad} 0 0 1 ${r} ${t + rad}`,
-      `V ${b - rad} A ${rad} ${rad} 0 0 1 ${r - rad} ${b}`,
-      `H ${l + rad} A ${rad} ${rad} 0 0 1 ${l} ${b - rad}`,
-      `V ${t + rad} A ${rad} ${rad} 0 0 1 ${l + rad} ${t}`,
-      'Z',
-    ].join(' ');
-  });
 </script>
 
 <svg
@@ -163,11 +149,4 @@
     vector-effect="non-scaling-stroke"
     d={echo}
   />
-  {#if variant === 'hex'}
-    <path
-      class="ddb-box-background__path ddb-stat-box-shape__well"
-      vector-effect="non-scaling-stroke"
-      d={well}
-    />
-  {/if}
 </svg>

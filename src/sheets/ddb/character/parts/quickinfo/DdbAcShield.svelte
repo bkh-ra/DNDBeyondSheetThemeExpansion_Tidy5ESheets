@@ -16,21 +16,12 @@
   const localize = FoundryAdapter.localize;
 
   /**
-   * DDB splits the label around the value inside the shield: "ARMOR" above,
-   * "CLASS" below. The split is derived from the localized string rather than
-   * hardcoded, so a single-word translation simply renders below the value.
+   * One short label above the value, so the shield reads "AC" over the number
+   * instead of splitting "ARMOR" / "CLASS" around it. dnd5e ships the
+   * abbreviation as `DND5E.AC` ("AC"), so this is localized, not hardcoded —
+   * and the full string stays on the attribution tooltip below.
    */
-  let acLabelWords = $derived(
-    localize('DND5E.ArmorClass').split(/\s+/).filter(Boolean),
-  );
-
-  let acLabelTop = $derived(
-    acLabelWords.length > 1 ? acLabelWords[0] : undefined,
-  );
-
-  let acLabelBottom = $derived(
-    acLabelWords.length > 1 ? acLabelWords.slice(1).join(' ') : acLabelWords[0],
-  );
+  let acLabel = $derived(localize('DND5E.AC'));
 </script>
 
 <section
@@ -41,16 +32,11 @@
 >
   <DdbShieldShape />
   <div class="ddb-ac-shield__content">
-    {#if acLabelTop}
-      <span class="ddb-ac-shield__label ddb-ac-shield__label--top">
-        {acLabelTop}
-      </span>
-    {/if}
+    <span class="ddb-ac-shield__label ddb-ac-shield__label--top">
+      {acLabel}
+    </span>
     <span class="ddb-ac-shield__value">
       {context.system.attributes.ac.value}
-    </span>
-    <span class="ddb-ac-shield__label ddb-ac-shield__label--bottom">
-      {acLabelBottom}
     </span>
   </div>
   {#if context.unlocked}

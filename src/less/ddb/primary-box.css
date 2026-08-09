@@ -17,6 +17,7 @@
  * `align-self`/`justify-self`/`margin-right: auto` trio keeps that true whether
  * the host row is a flex or a grid container. */
 .tidy5e-sheet.application.ddb .ddb-conditions-defenses {
+  position: relative; /* anchors the inner outline (::after) */
   display: inline-flex;
   align-items: stretch;
   gap: 0;
@@ -25,14 +26,37 @@
   align-self: start;
   justify-self: start;
   margin-right: auto;
+  /* Padding clears the inner line (space-3/4 minus the 4px double-gap). */
   padding: var(--ddb-space-3) var(--ddb-space-4);
   background: var(--ddb-panel-bg);
   border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
-  /* Panel, so radius-input (4px) per the radii contract; chips below stay 3px. */
-  border-radius: var(--ddb-radius-input);
-  box-shadow: var(--ddb-shadow-hairline);
+  border-radius: var(--ddb-radius-panel);
+  /* No hairline shadow: in light mode it paints a third ring just outside the
+   * border, which is exactly the "soft merged edge" the double outline avoids. */
+  box-shadow: none;
   font-family: var(--ddb-font-body);
   color: var(--ddb-text);
+}
+
+/* ---- shared double outline -------------------------------------------
+ * Panel-level surfaces carry two parallel rounded lines: the element's own
+ * border is the outer silhouette, and this pseudo-element is the inner line,
+ * inset by --ddb-panel-double-gap at the same color and weight, with the radius
+ * reduced by the gap so the two curves stay concentric.
+ *
+ * It is an overlay, never part of the box model: `pointer-events: none` keeps
+ * clicks (condition toggles, tab clicks, table rows) reaching the real
+ * elements, and being absolutely positioned it neither clips nor scrolls with
+ * the panel's content. Full-strength color on both lines — dimming or tightening
+ * the inner one makes the pair read as a single soft edge. */
+.tidy5e-sheet.application.ddb .ddb-conditions-defenses::after,
+.tidy5e-sheet.application.ddb .ddb-primary-box::after {
+  content: '';
+  position: absolute;
+  inset: var(--ddb-panel-double-gap);
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border-radius: calc(var(--ddb-radius-panel) - var(--ddb-panel-double-gap));
+  pointer-events: none;
 }
 
 .tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-group {
@@ -261,7 +285,9 @@
    * floating list must not show the sheet through itself. */
   background: var(--ddb-panel-bg-solid);
   border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
-  border-radius: var(--ddb-radius-input);
+  /* Floating panel surface — panel radius, but single-lined: it is an overlay,
+   * not part of the sheet's framed composition. */
+  border-radius: var(--ddb-radius-panel);
   box-shadow: var(--ddb-shadow-elevated);
 }
 
@@ -371,16 +397,19 @@
 /* Primary box: tab strip + content panel                             */
 /* ------------------------------------------------------------------ */
 
+/* Fixed-height pane: the height model and the inner scrolling stay exactly as
+ * they were; `position: relative` only establishes the containing block for the
+ * inner outline drawn by the shared `::after` rule above. */
 .tidy5e-sheet.application.ddb .ddb-primary-box {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-height: 0;
   min-width: 0;
   background: var(--ddb-box-bg);
   border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
-  /* Panel radius (4px), per the radii contract in ddb-tokens.css. */
-  border-radius: var(--ddb-radius-input);
-  box-shadow: var(--ddb-shadow-hairline);
+  border-radius: var(--ddb-radius-panel);
+  box-shadow: none;
 }
 
 /* --- tab strip --- */
@@ -475,7 +504,17 @@
 
 /* --- tab content panel --- */
 
+/* Square table rows would poke out of the panel's 10px bottom corners; the pane
+ * already clips (overflow: hidden), so matching its bottom radius to the panel
+ * (minus the border) keeps the silhouette clean. Cosmetic only — the height and
+ * scroll model are untouched. */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content {
+  border-bottom-left-radius: calc(
+    var(--ddb-radius-panel) - var(--ddb-border-width-panel)
+  );
+  border-bottom-right-radius: calc(
+    var(--ddb-radius-panel) - var(--ddb-border-width-panel)
+  );
   position: relative;
   flex: 1 1 auto;
   min-height: 0;
