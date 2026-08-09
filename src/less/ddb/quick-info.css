@@ -1002,3 +1002,27 @@
 .tidy5e-sheet.application.ddb .ddb-hp-block__field--tempmax .ddb-hp-block__input {
   color: var(--ddb-stat-modified);
 }
+
+/* Altered-max badge, shown in PLAY mode too (quadrone's
+ * `max-hp-override-container`): a player never unlocks the sheet, so without
+ * this a changed maximum is invisible to them. A superscript rides beside the
+ * 26px max figure without changing the readout's line box, so the fixed-height
+ * band is unaffected. */
+.tidy5e-sheet.application.ddb .ddb-hp-block__max-delta {
+  margin-left: var(--ddb-space-half);
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-value);
+  letter-spacing: var(--ddb-letterspacing-label);
+  line-height: 1;
+  vertical-align: super;
+  color: var(--ddb-stat-modified);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-block__max-delta.reduced {
+  color: var(--ddb-negative-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-block__max-delta.increased {
+  color: var(--ddb-positive-text);
+}

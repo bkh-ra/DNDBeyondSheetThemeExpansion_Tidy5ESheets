@@ -1,0 +1,425 @@
+/* DDB-FORK: the right-hand sidebar pane (DdbSidebar.svelte) — Favorites,
+ * Traits, and any sidebar tab a third-party module registered.
+ *
+ * Scoped to `.tidy5e-sheet.application.ddb` (0-4-0) per the specificity
+ * contract in FORK_NOTES.md; every color, font, radius and spacing step comes
+ * from a `--ddb-*` token. Remaining raw values are component geometry with no
+ * token (pane width, collapse rail width) and are commented where they appear.
+ *
+ * TWO THINGS THIS FILE HAS TO DO
+ * ------------------------------
+ * 1. PANE SHELL. Paint the pane like the other DDB panels (`--ddb-box-bg`,
+ *    1.5px panel border, 4px radius, hairline shadow) and honour the DDB height
+ *    model: the pane's outer height comes from the grid row, its header is
+ *    fixed, and ONLY `.ddb-sidebar-content` scrolls. See the height-model note
+ *    on `.ddb-sidebar-content` below.
+ *
+ * 2. UNDO QUADRONE'S SIDEBAR BOX MODEL. The DDB root carries `.quadrone.actor`
+ *    too, and the pane deliberately keeps the `sidebar` class so quadrone's
+ *    DESCENDANT rules (`.sidebar .traits`, `.sidebar .skills`, `.sidebar
+ *    .list-entry`, …) keep styling the reused SidebarTabTraits/SidebarTabFavorites
+ *    components for free. The price is quadrone's CONTAINER rules
+ *    (`src/less/quadrone/actors.css`, "SIDEBAR"): `flex-basis: 17.25rem`, a
+ *    negative `margin-inline-start` slide-out, `padding-inline: 4x 3x`,
+ *    `overflow-y: auto`, and `> :last-child { margin-block-end: 8x }`. Those
+ *    match at 0-3-0/0-4-0 and are explicitly neutralized here. Do not delete
+ *    the resets: without the negative-margin reset the whole pane slides out of
+ *    view, and without the overflow reset the pane double-scrolls.
+ *
+ * Import order note: must come after `ddb/ddb-tokens.css` AND after the
+ * `quadrone/*` stack, so the equal-specificity var re-points win.
+ */
+
+/* ------------------------------------------------------------------ */
+/* Pane shell                                                         */
+/* ------------------------------------------------------------------ */
+
+.tidy5e-sheet.application.ddb .ddb-sidebar {
+  /* Pane width. 230px matches DDB's right rail against the 215/210 stat
+   * columns; the rail is just wide enough for the 28px toggle button. */
+  --ddb-sidebar-width: 230px;
+  --ddb-sidebar-rail-width: 28px;
+
+  /* `flex: 1 1 auto` fills the grid column's stretched height AND overrides
+   * quadrone's `flex-basis: var(--sidebar-expanded-width)`. */
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: var(--ddb-sidebar-width);
+  max-width: var(--ddb-sidebar-width);
+  min-width: 0;
+  min-height: 0;
+  /* reset quadrone's slide-out margins + inner padding (see header note) */
+  margin: 0;
+  padding: 0;
+  /* the pane never scrolls; `.ddb-sidebar-content` does */
+  overflow: hidden;
+  background: var(--ddb-box-bg);
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  /* Panel radius (4px), per the radii contract in ddb-tokens.css. */
+  border-radius: var(--ddb-radius-input);
+  box-shadow: var(--ddb-shadow-hairline);
+  color: var(--ddb-text);
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  line-height: var(--ddb-lineheight-body);
+  transition: width var(--ddb-transition);
+}
+
+/* Collapsed: the pane shrinks to a rail holding only the toggle. The grid
+ * track is `auto`, so shrinking the pane reclaims the width for the primary
+ * column with no change needed in the grid definition. */
+.tidy5e-sheet.application.ddb .ddb-sidebar.collapsed {
+  --ddb-sidebar-width: var(--ddb-sidebar-rail-width);
+}
+
+/* Quadrone hangs an 8x bottom margin off the sidebar's last child to clear its
+ * footer; the DDB pane has no footer. */
+.tidy5e-sheet.application.ddb .ddb-sidebar > :last-child {
+  margin-block-end: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Header: tab strip + collapse toggle + tab-config gear              */
+/* ------------------------------------------------------------------ */
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-header {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: stretch;
+  gap: var(--ddb-space-1);
+  min-width: 0;
+  padding: 0 var(--ddb-space-2);
+  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+}
+
+.tidy5e-sheet.application.ddb .ddb-sidebar.collapsed .ddb-sidebar-header {
+  justify-content: center;
+  padding: var(--ddb-space-1) 0;
+  border-bottom: none;
+}
+
+/* Buttons: quadrone's `:is(button, .button)` rule still MATCHES these even
+ * though it loses on specificity, so anything left unset leaks through — most
+ * importantly `min-height: var(--t5e-field-size-default)`, which a `height`
+ * cannot beat. The explicit min-height/box-shadow resets are load-bearing.
+ * (Same trap documented at the top of `left-column.css`.) */
+.tidy5e-sheet.application.ddb .ddb-sidebar-toggle,
+.tidy5e-sheet.application.ddb .ddb-sidebar-config {
+  flex: 0 0 auto;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* 22px square: the DDB icon-button hit target used across the layout. */
+  width: 22px;
+  height: 22px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  box-shadow: none;
+  font-size: var(--ddb-size-label-md);
+  line-height: 1;
+  color: var(--ddb-text-muted);
+  cursor: pointer;
+}
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-toggle:hover,
+.tidy5e-sheet.application.ddb .ddb-sidebar-config:hover {
+  background: none;
+  color: var(--ddb-accent);
+}
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-toggle:focus-visible,
+.tidy5e-sheet.application.ddb .ddb-sidebar-config:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* --- sidebar tab strip (Favorites | Traits | …) ---
+ * Same visual language as the primary-box tab strip (condensed all-caps 12px,
+ * accent underline on the active tab), at sidebar density. */
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-tab-strip {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-tab-strip .tidy-tabs.ddb-sidebar-tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  gap: var(--ddb-space-4);
+  min-width: max-content;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-tab-strip .tab-option.ddb-sidebar-tab {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ddb-space-1);
+  margin: 0;
+  padding: var(--ddb-space-2) 0;
+  border: none;
+  border-bottom: var(--ddb-tab-indicator-width) solid transparent;
+  border-radius: 0;
+  background: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-tab-font-size);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  text-decoration: none;
+  white-space: nowrap;
+  color: var(--ddb-tab-inactive-color);
+  cursor: pointer;
+}
+
+/* DDB tab strips are text-only; the registry still carries `iconClass` because
+ * other Tidy surfaces (tab configuration) render it. */
+.tidy5e-sheet.application.ddb .ddb-sidebar-tab-strip .tab-option.ddb-sidebar-tab .tab-icon {
+  display: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-tab-strip .tab-option.ddb-sidebar-tab:hover {
+  color: var(--ddb-tab-active-color);
+}
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-tab-strip .tab-option.ddb-sidebar-tab:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-tab-strip .tab-option.ddb-sidebar-tab.active {
+  border-bottom-color: var(--ddb-tab-active-indicator);
+  color: var(--ddb-tab-active-color);
+}
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-tab-strip .tab-option.ddb-sidebar-tab .tab-title-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1rem;
+  padding: 0 0.1875rem;
+  border-radius: var(--ddb-radius-control);
+  background: var(--ddb-accent);
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  color: var(--ddb-accent-chip-contrast);
+}
+
+/* ------------------------------------------------------------------ */
+/* Scroll region                                                      */
+/* ------------------------------------------------------------------ */
+
+/* HEIGHT MODEL (see the matching note in `ddb-layout.css`): `flex: 1 1 0` plus
+ * `height: 0` means this element contributes ZERO intrinsic height, so a long
+ * favorites list can never inflate the grid row — the row is still sized by the
+ * skills column, and this stretches into whatever is left and scrolls. This is
+ * the exact contract `.ddb-primary-box-content` uses. */
+.tidy5e-sheet.application.ddb .ddb-sidebar-content {
+  flex: 1 1 0;
+  height: 0;
+  min-height: 0;
+  min-width: 0;
+  padding: var(--ddb-space-2) var(--ddb-space-3) var(--ddb-space-3);
+  overflow: hidden auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ddb-accent-transparent) transparent;
+
+  /* --- variable re-points ---
+   * Same technique as `tab-content.css`: re-point Tidy's own `--t5e-*` vars
+   * inside the DDB scope rather than chasing quadrone selectors, so the reused
+   * favorites/traits components survive upstream markup churn. The second
+   * selector is not a dark fork — it is the identical block at one extra class
+   * of specificity so it outranks `variables-quadrone.css`'s
+   * `.tidy5e-sheet.quadrone.theme-dark` block (also 0-3-0). Values are the same
+   * because the `--ddb-*` tokens are already theme-aware. */
+  --ddb-panel-border: var(--ddb-list-border);
+
+  --t5e-table-row-divider: var(--ddb-list-border);
+  --t5e-table-row-border-image: none;
+  --t5e-table-row-background-default: transparent;
+  --t5e-table-row-background-expanded: var(--ddb-table-row-alt-bg);
+
+  --t5e-component-card-default: var(--ddb-table-row-alt-bg);
+  --t5e-component-card-darker: var(--ddb-table-row-bg);
+  --t5e-component-card-lighter: var(--ddb-table-row-alt-bg);
+  --t5e-component-card-default-lighter: var(--ddb-table-row-alt-bg);
+  --t5e-component-card-foreground: var(--ddb-text);
+  --t5e-component-card-foreground-diminished: var(--ddb-text-muted);
+  --t5e-component-card-foreground-disabled: var(--ddb-text-disabled);
+
+  --t5e-color-text-default: var(--ddb-text);
+  --t5e-color-text-lighter: var(--ddb-text-muted);
+  --t5e-color-text-lightest: var(--ddb-text-disabled);
+  --t5e-color-text-disabled: var(--ddb-text-disabled);
+  --t5e-color-text-gold: var(--ddb-text-muted);
+  --t5e-color-text-gold-emphasis: var(--ddb-text-muted);
+  --t5e-color-text-gold-light: var(--ddb-text);
+  --t5e-color-gold: var(--ddb-list-border);
+  /* Quadrone points link color at the sheet accent, which renders every
+   * favorite name red-on-red. DDB names rest neutral and shift on hover. */
+  --t5e-color-link-default: var(--ddb-text);
+  --t5e-color-link-hover: var(--ddb-accent);
+
+  --t5e-color-icon-default: var(--ddb-text);
+  --t5e-color-icon-button: var(--ddb-text-muted);
+  --t5e-color-icon-diminished: var(--ddb-text-muted);
+  --t5e-color-icon-disabled: var(--ddb-text-disabled);
+
+  --t5e-component-field-background: var(--ddb-panel-bg);
+  --t5e-component-field-background-hover: var(--ddb-table-row-alt-bg);
+  --t5e-component-field-background-active: var(--ddb-table-row-alt-bg);
+  --t5e-component-field-border: var(--ddb-list-border);
+  --t5e-component-field-border-hover: var(--ddb-accent);
+  --t5e-component-field-focus: var(--ddb-accent);
+  --t5e-component-pill-background: var(--ddb-panel-bg);
+  --t5e-component-pill-border: var(--ddb-list-border);
+  --t5e-component-pill-border-interactive: var(--ddb-accent);
+
+  --t5e-drop-shadow-field: none;
+  --t5e-drop-shadow-field-hover: none;
+  --t5e-drop-shadow-field-focus: var(--ddb-focus-ring);
+  --t5e-drop-shadow-card: none;
+  --t5e-outline-field-focus: var(--ddb-border-width-panel) solid var(--ddb-accent);
+
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  line-height: var(--ddb-lineheight-body);
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb.theme-dark .ddb-sidebar-content {
+  --ddb-panel-border: var(--ddb-list-border);
+  --t5e-color-link-default: var(--ddb-text);
+  --t5e-color-link-hover: var(--ddb-accent);
+  --t5e-color-text-gold: var(--ddb-text-muted);
+  --t5e-color-text-gold-emphasis: var(--ddb-text-muted);
+  --t5e-color-gold: var(--ddb-list-border);
+}
+
+/* Only the selected sidebar tab is visible, exactly as the primary box does
+ * it — `TabContents` renders one panel per tab and toggles `.active`. */
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .tidy-tab {
+  display: none;
+  min-height: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .tidy-tab.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Neutralize quadrone's `.sidebar .sidebar-tab-contents` gutter math (a
+ * negative inline-end margin plus a 6x bottom pad, both sized for quadrone's
+ * padded sidebar column). 0-5-0 beats quadrone's 0-4-0. */
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .tidy-tab.sidebar-tab-contents {
+  gap: var(--ddb-space-3);
+  margin: 0;
+  padding: 0;
+}
+
+/* ------------------------------------------------------------------ */
+/* Reused tab content: favorites + traits at DDB density              */
+/* ------------------------------------------------------------------ */
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .list-label {
+  border-bottom-color: var(--ddb-list-border);
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite {
+  border-bottom-color: var(--ddb-list-border);
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite:hover {
+  background: var(--ddb-table-row-hover-bg);
+}
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .subtitle,
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .secondary,
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .item-context {
+  font-size: var(--ddb-size-label);
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-content h3,
+.tidy5e-sheet.application.ddb .ddb-sidebar-content h4,
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .h4 {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-heading);
+}
+
+/* ------------------------------------------------------------------ */
+/* Empty state                                                        */
+/* ------------------------------------------------------------------ */
+
+/* A character with no favorites still gets a quiet DDB-styled hint rather than
+ * a blank pane. `.empty-state-container` is the element `SidebarTabFavorites`
+ * already renders around `TIDY5E.EmptyFavorites`; `.ddb-sidebar-empty` is the
+ * shell's own fallback for when every sidebar tab has been configured off. */
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .empty-state-container,
+.tidy5e-sheet.application.ddb
+  .ddb-sidebar-content
+  .empty-state-container.empty-state-description,
+.tidy5e-sheet.application.ddb .ddb-sidebar-empty {
+  display: block;
+  margin: 0;
+  padding: var(--ddb-space-5) var(--ddb-space-3);
+  border: none;
+  background: none;
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-label-md);
+  font-style: italic;
+  line-height: var(--ddb-lineheight-body);
+  text-align: center;
+  text-wrap: balance;
+  color: var(--ddb-text-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/* Narrow-window fallback                                             */
+/* ------------------------------------------------------------------ */
+
+/* Below 900px the grid stacks (see `ddb-layout.css`); the sidebar becomes a
+ * full-width block that grows with its content and lets the sheet body scroll,
+ * so nothing is clipped on a small popped-out window. */
+@media (max-width: 900px) {
+  .tidy5e-sheet.application.ddb .ddb-sidebar {
+    width: auto;
+    max-width: none;
+  }
+
+  .tidy5e-sheet.application.ddb .ddb-sidebar.collapsed {
+    width: auto;
+    max-width: none;
+  }
+
+  .tidy5e-sheet.application.ddb .ddb-sidebar-content {
+    flex: 0 0 auto;
+    height: auto;
+    /* Keeps a stacked sidebar from crowding out the primary column. */
+    max-height: 24rem;
+  }
+}

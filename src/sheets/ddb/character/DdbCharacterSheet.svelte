@@ -4,7 +4,10 @@
   Grid, matching the DDB desktop sheet (design/captures/*):
     header banner (portrait, name, species/class/level, rests, controls)
     quick-info band (abilities | prof/speed/inspiration | init/AC | HP)
-    [ saves+senses+proficiencies | skills | primary box (tabs) ]
+    [ saves+senses+proficiencies | skills | primary box (tabs) | sidebar ]
+
+  The sidebar is the DDB right-hand pane (Favorites / Traits / third-party
+  sidebar tabs). It is collapsible; see `parts/sidebar/DdbSidebar.svelte`.
 -->
 <script lang="ts">
   import DdbHeaderBanner from './parts/header/DdbHeaderBanner.svelte';
@@ -16,6 +19,7 @@
   import DdbProficienciesBox from './parts/leftcol/DdbProficienciesBox.svelte';
   import DdbConditionsDefensesStrip from './parts/primary/DdbConditionsDefensesStrip.svelte';
   import DdbPrimaryBox from './parts/primary/DdbPrimaryBox.svelte';
+  import DdbSidebar from './parts/sidebar/DdbSidebar.svelte';
 </script>
 
 <div class="ddb-sheet" data-tidy-sheet-part="ddb-sheet">
@@ -42,6 +46,10 @@
         </div>
         <DdbPrimaryBox showConditionsDefenses={false} />
       </main>
+
+      <aside class="ddb-col ddb-col-sidebar">
+        <DdbSidebar />
+      </aside>
     </div>
   </div>
 </div>

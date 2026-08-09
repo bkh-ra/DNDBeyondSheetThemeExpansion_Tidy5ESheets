@@ -216,7 +216,34 @@
   font-weight: var(--ddb-weight-value);
 }
 
+/* Per-class spell save DC, riding inside the class span so the summary line
+ * keeps its single-row height. `--ddb-size-label` (10px) is the smallest step
+ * on the scale, which keeps the DC subordinate to the class name beside it. */
+.tidy5e-sheet.application.ddb .ddb-header-class-dc {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.1875rem;
+  margin-left: var(--ddb-space-half);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  white-space: nowrap;
+}
+
+.tidy5e-sheet.application.ddb .ddb-header-class-dc-label {
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.application.ddb .ddb-header-class-dc-value {
+  color: var(--ddb-text);
+  font-weight: var(--ddb-weight-value);
+}
+
+/* `position: relative` anchors the XP meter, which is taken out of flow so the
+ * fixed-height banner does not grow by a row. */
 .tidy5e-sheet.application.ddb .ddb-header-level-row {
+  position: relative;
   display: flex;
   align-items: baseline;
   gap: var(--ddb-space-3);
@@ -246,6 +273,56 @@
 .tidy5e-sheet.application.ddb .ddb-header-level-value,
 .tidy5e-sheet.application.ddb .ddb-header-xp-value {
   color: var(--ddb-text);
+}
+
+/* Editable XP (unlocked mode). TextInputQuadrone renders an <input>, which
+ * quadrone sizes with --t5e-field-size-default (28px) — far taller than this
+ * 12px row. Every box metric is pinned so the strip cannot grow, and the field
+ * is sized in `ch` so it fits a five-figure XP total without measuring. */
+.tidy5e-sheet.application.ddb input.ddb-header-xp-input {
+  width: 5ch;
+  height: auto;
+  min-height: 0;
+  padding: 0 var(--ddb-space-half);
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  box-shadow: none;
+  color: var(--ddb-text);
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-value);
+  line-height: 1.2;
+  text-align: right;
+}
+
+.tidy5e-sheet.application.ddb input.ddb-header-xp-input:hover,
+.tidy5e-sheet.application.ddb input.ddb-header-xp-input:focus {
+  border-color: var(--ddb-accent);
+  box-shadow: var(--ddb-focus-ring);
+  outline: none;
+}
+
+/* DDB's thin XP rule under the level line (design/captures/athelstan). Out of
+ * flow — it sits in the banner's 6px bottom padding — so the fixed-height strip
+ * is unchanged. 2px is deliberately below the spacing scale's 2px step being
+ * used as a gap; it is a hairline meter, not spacing. */
+.tidy5e-sheet.application.ddb .ddb-header-xp-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(-1 * var(--ddb-space-1));
+  height: var(--ddb-space-half);
+  border-radius: var(--ddb-radius-control);
+  background: var(--ddb-panel-border);
+  overflow: hidden;
+}
+
+.tidy5e-sheet.application.ddb .ddb-header-xp-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ddb-accent);
 }
 
 /* ------------------------------------------------------------------ */

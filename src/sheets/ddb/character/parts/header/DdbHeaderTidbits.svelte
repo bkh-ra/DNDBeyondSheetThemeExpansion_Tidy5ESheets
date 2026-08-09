@@ -8,9 +8,15 @@
 
   Data prep is copied from the quadrone subtitle component
   (src/sheets/quadrone/actor/character-parts/CharacterSubtitle.svelte):
-  the species fallback chain and the `context.classes` entries (name + levels).
-  The editable name input reuses TextInputQuadrone exactly as the quadrone
-  character sheet header does.
+  the species fallback chain, the `context.classes` entries (name + levels +
+  spellcasting ability/DC) and the XP block with its editable value and meter.
+  The editable name and XP inputs reuse TextInputQuadrone exactly as the
+  quadrone character sheet header does.
+
+  Height budget: the banner is a fixed strip, so both additions are
+  height-neutral. The spellcasting DC rides inside the existing class span, and
+  the XP meter is a 2px track absolutely positioned under the level row (it
+  lives in the banner's own bottom padding rather than adding a flow row).
 -->
 <script lang="ts">
   import TextInputQuadrone from 'src/components/inputs/TextInputQuadrone.svelte';
@@ -39,6 +45,11 @@
   let showXp = $derived(
     context.enableXp && !!xp && Number.isFinite(xp.max) && xp.max > 0,
   );
+
+  /** Clamped so a fractional/overflowing pct can never widen the track. */
+  let xpPct = $derived(Math.clamp(xp?.pct ?? 0, 0, 100));
+
+  let appId = $derived(context.actor.uuid.slugify());
 </script>
 
 <div class="ddb-header-tidbits" data-tidy-sheet-part="ddb-header-tidbits">
@@ -67,10 +78,26 @@
     {#if species}
       <span class="ddb-header-species">{species}</span>
     {/if}
-    {#each context.classes as entry}
+    {#each context.classes as entry (entry.uuid)}
       <span class="ddb-header-class">
         <span class="ddb-header-class-name">{entry.name}</span>
         <span class="ddb-header-class-level">{entry.levels}</span>
+        <!--
+          Per-class spell save DC, as quadrone's subtitle renders it. `ability`
+          is already the localized uppercase abbreviation
+          (Tidy5eActorSheetQuadroneBase._getClassesAndOrphanedSubclasses).
+        -->
+        {#if entry.spellcasting?.ability}
+          <span class="ddb-header-class-dc">
+            <span class="ddb-header-class-dc-label">
+              {entry.spellcasting.ability}
+              {localize('DND5E.AbbreviationDC')}
+            </span>
+            <span class="ddb-header-class-dc-value">
+              {entry.spellcasting.dc}
+            </span>
+          </span>
+        {/if}
       </span>
     {/each}
   </div>
@@ -85,14 +112,51 @@
         <span class="ddb-header-xp-label">
           {localize('DND5E.ExperiencePoints.Abbreviation')}
         </span>
-        <span class="ddb-header-xp-value">
-          {FoundryAdapter.formatNumber(xp.value)}
-        </span>
+        <!--
+          Editable in unlocked mode, exactly as the quadrone subtitle does it:
+          same component, same field, same delta/select-on-focus behaviour.
+        -->
+        {#if context.unlocked}
+          <TextInputQuadrone
+            id="{appId}-ddb-header-xp"
+            document={context.actor}
+            field="system.details.xp.value"
+            value={xp.value}
+            class="ddb-header-xp-input"
+            enableDeltaChanges={true}
+            selectOnFocus={true}
+            blurAfterChange={true}
+            aria-label={localize('DND5E.ExperiencePoints.Label')}
+          />
+        {:else}
+          <span class="ddb-header-xp-value">
+            {FoundryAdapter.formatNumber(xp.value)}
+          </span>
+        {/if}
         <span class="ddb-header-xp-separator">/</span>
         <span class="ddb-header-xp-max">
           {FoundryAdapter.formatNumber(xp.max)}
         </span>
       </span>
+
+      <!--
+        DDB's thin progress rule under the level line. Absolutely positioned so
+        it costs the fixed-height banner no vertical space; hidden while
+        unlocked, matching quadrone (the meter would fight the input row).
+      -->
+      {#if !context.unlocked}
+        <div
+          class="ddb-header-xp-bar"
+          data-tidy-sheet-part="xp-bar"
+          role="progressbar"
+          aria-label={localize('DND5E.ExperiencePoints.Progress')}
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow={xpPct}
+        >
+          <span class="ddb-header-xp-bar-fill" style="width: {xpPct}%"></span>
+        </div>
+      {/if}
     {/if}
   </div>
 </div>

@@ -469,6 +469,24 @@
   font-weight: var(--ddb-weight-value);
 }
 
+/* A parenthetical qualifier on a speed row ("(Hover)"). */
+.tidy5e-sheet.application.ddb .ddb-sense-special-note {
+  color: var(--ddb-text-muted);
+}
+
+/* The extra movement modes the quick-info band has no room for. Same centred
+ * prose run as the special senses above it; `.ddb-box-body`'s own flex gap
+ * supplies the separation, so this block adds no margin of its own. */
+.tidy5e-sheet.application.ddb .ddb-speeds-special {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddb-space-half);
+  text-align: center;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label-md);
+  color: var(--ddb-text-prose);
+}
+
 /* ------------------------------------------------------------------ */
 /* PROFICIENCIES & TRAINING box                                       */
 /* ------------------------------------------------------------------ */
@@ -518,6 +536,11 @@
 
 .tidy5e-sheet.application.ddb .ddb-prof-sep {
   color: var(--ddb-text-muted);
+}
+
+/* The value half of a Special Traits entry (Number/String character flags). */
+.tidy5e-sheet.application.ddb .ddb-prof-item-value {
+  font-weight: var(--ddb-weight-value);
 }
 
 /* `display: inline` so a rollable tool sits in the wrapped prose run exactly

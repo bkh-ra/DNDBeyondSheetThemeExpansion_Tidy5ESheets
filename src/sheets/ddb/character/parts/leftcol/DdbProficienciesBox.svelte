@@ -1,7 +1,9 @@
 <!--
   DDB-FORK: PROFICIENCIES & TRAINING box (left column, bottom).
 
-  Four labelled groups in DDB's order: ARMOR / WEAPONS / TOOLS / LANGUAGES.
+  Four labelled groups in DDB's order: ARMOR / WEAPONS / TOOLS / LANGUAGES,
+  plus SPECIAL TRAITS (the dnd5e character flags) which DDB has no slot for and
+  quadrone shows in its traits sidebar tab.
   Armor, weapon and language entries come off `context.traits.*`, prepared the
   same way `character-parts/traits/CharacterTraitPills.svelte` consumes them.
   Tools reuse the `context.tools` entries and the roll wiring from
@@ -13,6 +15,7 @@
   import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
   import { CONSTANTS } from 'src/constants';
   import type { ActorTraitContext } from 'src/types/types';
+  import { isNil } from 'src/utils/data';
   import SelectQuadrone from 'src/components/inputs/SelectQuadrone.svelte';
   import SelectOptions from 'src/components/inputs/SelectOptions.svelte';
   import DdbBox from './DdbBox.svelte';
@@ -25,6 +28,16 @@
   let armor = $derived(context.traits.armor ?? []);
   let weapons = $derived(context.traits.weapon ?? []);
   let languages = $derived(context.traits.languages ?? []);
+
+  /**
+   * Special Traits = the dnd5e character flags, prepared by
+   * `Tidy5eActorSheetQuadroneBase._getSpecialTraits()`. Each entry is a label
+   * plus, for Number/String flags, the flag's value. Quadrone renders them in
+   * `actor/tabs/SidebarTabTraits.svelte`; the config control there opens the
+   * sheet-settings special-traits pane rather than a trait config app, so this
+   * group cannot reuse the `data-trait` gear below.
+   */
+  let specialTraits = $derived(context.specialTraits ?? []);
 </script>
 
 <!--
@@ -185,5 +198,45 @@
       languages,
       'languages',
     )}
+
+    <!--
+      Special Traits. Hidden entirely when empty and locked, the way quadrone's
+      ActorTraitConfigurableListEntry hides an empty trait list in play mode —
+      the left column is a fixed-height pane and most characters have none.
+    -->
+    {#if context.unlocked || specialTraits.length}
+      <div class="ddb-prof-group">
+        <div class="ddb-prof-group-header">
+          <span class="ddb-prof-group-label">
+            {localize('DND5E.SpecialTraits')}
+          </span>
+          {#if context.unlocked}
+            <button
+              type="button"
+              class="ddb-gear"
+              aria-label={localize('DND5E.SpecialTraits')}
+              data-tooltip={localize('DND5E.SpecialTraits')}
+              data-action="configureTab"
+              data-tab-id={CONSTANTS.TAB_CHARACTER_ATTRIBUTES}
+            >
+              <i class="fa-solid fa-cog"></i>
+            </button>
+          {/if}
+        </div>
+        <div class="ddb-prof-group-items">
+          {#each specialTraits as entry, i (entry.key ?? entry.label)}
+            <span class="ddb-prof-item">
+              {entry.label}{#if !isNil(entry.value, '')}&nbsp;<span
+                  class="ddb-prof-item-value">{String(entry.value)}</span
+                >{/if}{#if i < specialTraits.length - 1}<span class="ddb-prof-sep"
+                  >,</span
+                >{/if}
+            </span>
+          {:else}
+            <span class="ddb-prof-item ddb-empty">&mdash;</span>
+          {/each}
+        </div>
+      </div>
+    {/if}
   </div>
 </DdbBox>

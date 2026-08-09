@@ -4,7 +4,7 @@
 
   Layout mirrors D&D Beyond's `ct-conditions-defenses` component: two labelled
   groups side by side inside one bordered box. Defenses come from the actor's
-  damage/condition trait sets (dr/di/ci/dv); conditions come from
+  damage/condition trait sets (dr/di/ci/dv/dm); conditions come from
   `context.conditions`, with exhaustion rendered as "Exhaustion (Level N)".
 
   Toggling a condition uses the same handler as
@@ -16,6 +16,7 @@
   import type { Dnd5eActorCondition } from 'src/foundry/foundry-and-system';
   import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
   import type { ActorTraitContext } from 'src/types/types';
+  import { isNil } from 'src/utils/data';
   import { debug, error } from 'src/utils/logging';
 
   let context = $derived(getCharacterSheetQuadroneContext());
@@ -67,23 +68,26 @@
       cssClass: 'vulnerability',
       label: localizeOr('DND5E.Vulnerabilities', 'Vulnerabilities'),
     },
+    /**
+     * Damage modification (flat +/- per damage type). Quadrone renders these as
+     * pills alongside the other defenses in `CharacterTraitPills.svelte`; the
+     * icon is the same one that component uses. Entries carry `sign`/`value`
+     * from `Tidy5eActorSheetQuadroneBase._prepareTraits`, and their own
+     * `cssClass` ('negative' for extra damage taken, 'positive' for less).
+     */
+    {
+      key: 'dm',
+      iconClass: 'fa-solid fa-heart-circle-plus',
+      cssClass: 'modification',
+      label: localizeOr('DND5E.DamageModification.Label', 'Damage Modification'),
+    },
   ]);
 
   /**
-   * Edit-mode configuration targets. Mirrors the defense entries of
-   * `character-parts/traits/CharacterTraitPills.svelte`, which offers one
-   * config control per damage/condition trait — including damage modification,
-   * which has no chips of its own on this strip.
+   * Edit-mode configuration targets: one config control per damage/condition
+   * trait, matching `character-parts/traits/CharacterTraitPills.svelte`.
    */
-  let defenseConfigs = $derived<DefenseGroup[]>([
-    ...defenseGroups,
-    {
-      key: 'dm',
-      iconClass: 'fa-solid fa-shield-plus',
-      cssClass: 'modification',
-      label: localizeOr('DND5E.TraitDMPlural.other', 'Damage Modifications'),
-    },
-  ]);
+  let defenseConfigs = $derived<DefenseGroup[]>(defenseGroups);
 
   let defenses = $derived<DefenseChip[]>(
     defenseGroups.flatMap((group) =>
@@ -147,12 +151,21 @@
     }
   }
 
+  /** `sign` + `value`, present on damage-modification entries only. */
+  function defenseAmount(entry: ActorTraitContext): string {
+    return isNil(entry.value, '')
+      ? ''
+      : `${entry.sign ?? ''}${String(entry.value)}`;
+  }
+
   function defenseTooltip(chip: DefenseChip): string {
     const parenthetical = chip.entry.parenthetical
       ? ` (${chip.entry.parenthetical})`
       : '';
 
-    return `${chip.label}: ${chip.entry.label}${parenthetical}`;
+    const amount = defenseAmount(chip.entry);
+
+    return `${chip.label}: ${chip.entry.label}${amount ? ` ${amount}` : ''}${parenthetical}`;
   }
 
   let noneLabel = $derived(localizeOr('DND5E.None', 'None'));
@@ -209,6 +222,9 @@
               {chip.entry.label}{#if chip.entry.parenthetical}&nbsp;({chip.entry
                   .parenthetical}){/if}
             </span>
+            {#if defenseAmount(chip.entry)}
+              <span class="ddb-defense-value">{defenseAmount(chip.entry)}</span>
+            {/if}
           </li>
         {/each}
       </ul>

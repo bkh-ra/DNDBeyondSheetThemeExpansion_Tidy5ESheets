@@ -123,6 +123,27 @@
   white-space: nowrap;
 }
 
+/* Damage modification: the entry itself carries `positive`/`negative` (less /
+ * more damage taken), so both the icon and the amount follow the entry rather
+ * than the group. */
+.tidy5e-sheet.application.ddb .ddb-defense.modification.positive .ddb-defense-icon,
+.tidy5e-sheet.application.ddb .ddb-defense.modification.positive .ddb-defense-value {
+  color: var(--ddb-positive-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-defense.modification.negative .ddb-defense-icon,
+.tidy5e-sheet.application.ddb .ddb-defense.modification.negative .ddb-defense-value {
+  color: var(--ddb-negative-text);
+}
+
+/* The signed amount never truncates — it is the whole point of a dm chip. */
+.tidy5e-sheet.application.ddb .ddb-defense .ddb-defense-value {
+  flex: 0 0 auto;
+  font-family: var(--ddb-font-condensed);
+  font-weight: var(--ddb-weight-value);
+  white-space: nowrap;
+}
+
 /* --- conditions --- */
 
 .tidy5e-sheet.application.ddb .ddb-condition-list {

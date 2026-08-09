@@ -28,12 +28,13 @@
   let saveBonus = $derived(context.system?.bonuses?.abilities?.save ?? '');
 
   /**
-   * Concentration is a save on the quadrone sheet too (SavingThrowsCard shows
-   * it for spellcasters, with its own roll and its own config). Same gate.
+   * Concentration is a save on the quadrone sheet too, and quadrone shows it
+   * for EVERY character (CharacterSheet.svelte gates only on the save existing,
+   * not on spellcasting). Non-casters can still be made to concentrate by an
+   * effect — e.g. a Battle Master under a concentration-tagged buff — so the
+   * row must not be hidden behind a spellcasting check.
    */
-  let concentration = $derived(
-    context.spellcasting?.length > 0 ? context.saves.concentration : undefined,
-  );
+  let concentration = $derived(context.saves.concentration);
 
   let concentrationConfigTooltip = $derived(
     localize('DND5E.AbilityConfigure', {

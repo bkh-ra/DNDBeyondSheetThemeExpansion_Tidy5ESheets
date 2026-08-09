@@ -65,20 +65,26 @@
   flex: 0 0 auto;
 }
 
-/* --- three FIXED columns (DDB parity: panes are fixed size and position;
+/* --- four FIXED columns (DDB parity: panes are fixed size and position;
  * only the tabbed list content scrolls) ---
  *
  * Height model: the row's height comes from the tallest INTRINSIC column —
- * the skills column (fixed content: 18 rows). The primary column contributes
- * ZERO intrinsic height (its scrollable content uses flex-basis 0 / height 0)
- * so a long inventory can never inflate the row; it stretches to match the
- * skills column and scrolls inside. The left column's last box stretches so
- * all three columns end on the same line. */
+ * the skills column (fixed content: 18 rows). The primary column and the
+ * sidebar both contribute ZERO intrinsic height (their scrollable content uses
+ * flex-basis 0 / height 0) so a long inventory or favorites list can never
+ * inflate the row; they stretch to match the skills column and scroll inside.
+ * The left column's last box stretches so all four columns end on the same
+ * line.
+ *
+ * The sidebar track is `auto` rather than a fixed px width on purpose: the
+ * pane declares its own width (`--ddb-sidebar-width` in `sidebar.css`) and
+ * shrinks itself to a rail when collapsed, so the reclaimed width flows to the
+ * `1fr` primary column with no state needed here. */
 .tidy5e-sheet.application.ddb .ddb-columns {
   flex: 0 0 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: 215px 210px minmax(0, 1fr);
+  grid-template-columns: 215px 210px minmax(0, 1fr) auto;
   gap: 6px;
   align-items: stretch;
 }
@@ -98,6 +104,12 @@
 
 /* Primary column: combat row + tab bar fixed, tab CONTENT scrolls */
 .tidy5e-sheet.application.ddb .ddb-col-primary {
+  overflow: hidden;
+}
+
+/* Sidebar column: same deal — the pane's header is fixed and only
+ * `.ddb-sidebar-content` scrolls (see `sidebar.css`). */
+.tidy5e-sheet.application.ddb .ddb-col-sidebar {
   overflow: hidden;
 }
 
@@ -147,9 +159,17 @@
 }
 
 /* Keep the fixed layout intact: the window cannot shrink below the size the
- * fixed panes need (Foundry resize is clamped by these). */
+ * fixed panes need (Foundry resize is clamped by these).
+ *
+ * Budget: 215 (left) + 210 (skills) + 230 (sidebar) + 3x6 gap + 2x8 body
+ * padding = 689px of fixed width; the rest is the primary column. The sidebar
+ * added 236px to that budget, so the floor moved 1080 -> 1320 to keep the
+ * primary column at the same ~627px it had before (and the default position in
+ * `Tidy5eCharacterSheetDdb.svelte.ts` moved 1150 -> 1390 for the same reason).
+ * Users who collapse the sidebar get those 236px back for the primary column
+ * without resizing. */
 .tidy5e-sheet.application.ddb {
-  min-width: 1080px;
+  min-width: 1320px;
   min-height: 860px;
 }
 
@@ -167,7 +187,8 @@
   .tidy5e-sheet.application.ddb .ddb-columns {
     grid-template-columns: 1fr 1fr;
   }
-  .tidy5e-sheet.application.ddb .ddb-col-primary {
+  .tidy5e-sheet.application.ddb .ddb-col-primary,
+  .tidy5e-sheet.application.ddb .ddb-col-sidebar {
     grid-column: 1 / -1;
     overflow: visible;
   }

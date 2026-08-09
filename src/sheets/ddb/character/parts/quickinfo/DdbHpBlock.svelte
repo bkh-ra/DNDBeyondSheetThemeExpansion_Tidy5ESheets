@@ -39,6 +39,17 @@
   let hpTemp = $derived(context.system.attributes?.hp?.temp ?? 0);
   let hpTempMax = $derived(context.system.attributes?.hp?.tempmax ?? 0);
 
+  /**
+   * Quadrone badges the HP readout whenever the effective max differs from the
+   * rolled/derived max (CharacterSheet.svelte `max-hp-override-container`).
+   * Derived from the two maxima rather than from `tempmax` so any other source
+   * of an altered max still shows, and so a player — who never unlocks the
+   * sheet — can see that their maximum has been changed.
+   */
+  let maxHpAltered = $derived(effectiveMaxHp !== hpMax);
+
+  let maxHpDelta = $derived(effectiveMaxHp - hpMax);
+
   /** Amount typed into the quick-adjust field. Empty means "do nothing". */
   let amount = $state<number | null>(null);
 
@@ -146,7 +157,18 @@
               aria-label={localize('DND5E.HitPointsMax')}
             />
           {:else}
-            <span class="ddb-hp-block__value">{effectiveMaxHp}</span>
+            <span class="ddb-hp-block__value">
+              {effectiveMaxHp}{#if maxHpAltered}<sup
+                  class={[
+                    'ddb-hp-block__max-delta',
+                    maxHpDelta < 0 ? 'reduced' : 'increased',
+                  ]}
+                  data-tooltip="DND5E.HitPointsTempMax"
+                  >{maxHpDelta < 0 ? '-' : '+'}{Math.abs(
+                    maxHpDelta,
+                  )}</sup
+                >{/if}
+            </span>
           {/if}
         </div>
 
