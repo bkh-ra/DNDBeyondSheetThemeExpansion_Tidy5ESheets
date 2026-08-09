@@ -64,15 +64,13 @@
   }
 </script>
 
+<!--
+  Save proficiency is intentionally not signalled here: DDB marks it on the
+  SAVING THROWS pip (which the left column renders), not on the ability box, and
+  marking it here made the proficient abilities read as a different component.
+-->
 <div
-  class={[
-    'ddb-ability-box',
-    ability.key,
-    {
-      'has-proficiency':
-        ability.proficient === CONSTANTS.PROFICIENCY_PROFICIENT,
-    },
-  ]}
+  class={['ddb-ability-box', ability.key]}
   data-ability={ability.key}
   data-tidy-sheet-part={CONSTANTS.SHEET_PARTS.ABILITY_CONTAINER}
 >

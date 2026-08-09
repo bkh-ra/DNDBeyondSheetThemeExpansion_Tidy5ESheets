@@ -14,9 +14,9 @@
  * measurements off the captures — an octagon for the stat boxes, a raked hex
  * for initiative and hit dice, a studded heater shield for armor class, and a
  * winged card with side flanks and a laurel for the ability boxes — and every
- * one of them is double-lined: one hard silhouette plus ornament strokes at
- * --ddb-stroke-echo-opacity. The one exception is `.ddb-hp-block`, whose root
- * is a flex container and paints its own surface — see DdbHpBlock.svelte.
+ * one of them is double-lined at FULL accent, so the whole band reads as one
+ * family. The one exception is `.ddb-hp-block`, whose root is a flex container
+ * and paints its own surface — see DdbHpBlock.svelte.
  *
  * BAND BASELINE: every band frame bottom lands on 79.5 in its own SVG space
  * (ability 81x95 frame, 70x80 stat boxes, 70x52 inspiration frame + label, and
@@ -49,17 +49,37 @@
   stroke-width: var(--ddb-border-width-panel);
 }
 
-/* Only the outermost silhouette of each frame is filled. Every ornament drawn
- * on top of it — the second edge, the wings, the flanks, the laurels, the
- * wells — is an outline, and rides at the decorative-stroke opacity so the
- * frame keeps ONE hard edge at 1.5px however much is drawn around it. */
+/* Only the outermost silhouette of each frame is filled; everything drawn on
+ * top of it is an outline. */
 .tidy5e-sheet.application.ddb .ddb-stat-box-shape__echo,
 .tidy5e-sheet.application.ddb .ddb-stat-box-shape__well,
 .tidy5e-sheet.application.ddb .ddb-ability-box-shape__well,
 .tidy5e-sheet.application.ddb .ddb-ability-box-shape__wing,
 .tidy5e-sheet.application.ddb .ddb-ability-box-shape__flank,
-.tidy5e-sheet.application.ddb .ddb-ability-box-shape__laurel {
+.tidy5e-sheet.application.ddb .ddb-ability-box-shape__laurel,
+.tidy5e-sheet.application.ddb .ddb-shield-shape__inner {
   fill: none;
+}
+
+/* TWO TIERS, and only two.
+ *
+ * TIER 1 — the plaque itself: the silhouette AND the second edge that runs
+ * inside it, plus the well the figure sits in. On DDB both lines of a
+ * double-lined box are drawn at the SAME strength (see the stat boxes in
+ * design/captures/estonia-archmage/dark/01-actions.png), and that pairing is
+ * what makes a box read as an ornate plaque rather than a plain rectangle.
+ * Dimming the second edge is what used to make PROFICIENCY / SPEED / the hexes
+ * / the shield look unstyled next to the ability cards: their primary stroke
+ * was already full accent and identical, but with only ~1.5 accent lines each
+ * against the ability card's five, the pair merged into one soft line and the
+ * whole box read flat. These stay at full accent.
+ *
+ * TIER 2 — the ability card's flourishes (corner wings, side flanks, bottom
+ * laurel). These are genuinely secondary: they frame the plaque instead of
+ * bounding it, and at full strength they compete with the card edge. */
+.tidy5e-sheet.application.ddb .ddb-ability-box-shape__wing,
+.tidy5e-sheet.application.ddb .ddb-ability-box-shape__flank,
+.tidy5e-sheet.application.ddb .ddb-ability-box-shape__laurel {
   opacity: var(--ddb-stroke-echo-opacity);
 }
 
@@ -271,15 +291,10 @@
   box-shadow: var(--ddb-focus-ring);
 }
 
-/* Proficiency in a save is signalled by TINTING the card, not by recolouring
- * its stroke: now that every band frame is accent-stroked, an accent outline no
- * longer distinguishes anything. The tint goes on the card body alone so the
- * ornament around it is unaffected. */
-.tidy5e-sheet.application.ddb
-  .ddb-ability-box.has-proficiency
-  .ddb-ability-box-shape__frame {
-  fill: var(--ddb-accent-subtle-bg);
-}
+/* NOTE: save proficiency is deliberately NOT marked on the ability box. DDB
+ * does not mark it here either — it lives on the pip in the SAVING THROWS box,
+ * which the left column already renders — and a tinted card only made two of
+ * the six read as a different component. All six cards are identical. */
 
 /* ------------------------------------------------------------------ *
  * Generic stat box (proficiency bonus, speed, initiative)
@@ -572,13 +587,6 @@
   height: 5rem; /* 80px */
 }
 
-/* The echo outline is decorative — it must not double the fill, nor read as a
- * second hard edge at 1.5px. */
-.tidy5e-sheet.application.ddb .ddb-shield-shape__inner {
-  fill: none;
-  opacity: var(--ddb-stroke-echo-opacity);
-}
-
 /* ARMOR / value / CLASS all sit inside the inner shield outline, so the stack
  * is centred on the shield's body rather than on its full bounding box. */
 .tidy5e-sheet.application.ddb .ddb-ac-shield__content {
@@ -647,6 +655,19 @@
   border: var(--ddb-border-width-panel) solid var(--ddb-accent);
   border-radius: var(--ddb-radius-input);
   background: var(--ddb-box-bg);
+}
+
+/* The panel's second edge. Every SVG frame in the band is double-lined, and
+ * without this the largest surface in the band would be the only single-lined
+ * one. It is inert decoration behind the interior (which carries `z-index: 1`),
+ * inset far enough that the applicator still clears it. */
+.tidy5e-sheet.application.ddb .ddb-hp-block::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: var(--ddb-border-width-panel) solid var(--ddb-accent);
+  border-radius: var(--ddb-radius-input);
+  pointer-events: none;
 }
 
 /* Both interiors sit above the panel surface. */

@@ -9,8 +9,9 @@
                    card and folds back down onto its top edge,
     3. `flank`   - a second line running down the outside of each side, pinched
                    into a narrow lens at mid-height, so the sides read double,
-    4. `well`    - the inner rounded rect the big modifier sits in (an echo
-                   stroke, so it does not compete with the card at 1.5px),
+    4. `well`    - the inner rounded rect the big modifier sits in, drawn at
+                   the card's own strength so the card + well pair matches the
+                   double line every other box in the band carries,
     5. `laurel`  - a closed leaf sweeping off the bottom of each flank, inward
                    and down, the pair meeting under the score badge and
                    cradling it,

@@ -2,8 +2,9 @@
   DDB-FORK: Ornamental frame for the quick-info stat boxes.
 
   Two variants, both drawn as a DOUBLE line (an outer edge plus a second edge
-  ~3.5px inside it that follows the same silhouette), which is the treatment
-  D&D Beyond gives these boxes:
+  4px inside it that follows the same silhouette, BOTH at full strength — DDB
+  draws the pair evenly, and dimming one collapses the pair into a single soft
+  line), which is the treatment D&D Beyond gives these boxes:
 
     `octagon` — a rectangle with all four corners cut at 45 degrees. Used for
                 PROFICIENCY BONUS, WALKING SPEED and HEROIC INSPIRATION, whose
@@ -48,8 +49,12 @@
   /** Half the stroke, so an edge lands on the pixel grid instead of straddling it. */
   const inset = 0.5;
 
-  /** Gap between the outer edge and the second, decorative edge. */
-  const echoGap = 3.5;
+  /**
+   * Gap between the two edges of the double line. Both are drawn at full
+   * strength (see quick-info.css), so this has to be wide enough that a 1.5px
+   * pair reads as a deliberate double rather than one soft, thick line.
+   */
+  const echoGap = 4;
 
   /**
    * A 45-degree corner cut moves inward by `gap * sqrt(2)` when the box shrinks

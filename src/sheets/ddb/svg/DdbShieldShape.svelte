@@ -8,10 +8,11 @@
                  shoulders and then taper in, and a ROUNDED point at bottom
                  centre (a short quadratic across the tip rather than a cusp),
     2. `inner` - a second outline ~5px inside the first and following it, so
-                 the shield reads as a double line. It also marks the safe area
-                 for the ARMOR / value / CLASS stack, which sits wholly inside
-                 it, and is stroked at --ddb-stroke-echo-opacity so it reads as
-                 an echo rather than a second hard edge at 1.5px,
+                 the shield reads as a double line. Drawn at full strength like
+                 the outer one: the pair IS the treatment, and dimming half of
+                 it made the shield read flat beside the ability cards. It also
+                 marks the safe area for the ARMOR / value / CLASS stack, which
+                 sits wholly inside it,
     3. `stud`  - four small filled dots riding on the outer outline: one at
                  each top corner, one on the peak, one on the bottom point.
 
