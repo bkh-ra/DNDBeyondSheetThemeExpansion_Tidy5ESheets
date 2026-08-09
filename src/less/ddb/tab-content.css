@@ -659,6 +659,20 @@
   background: var(--ddb-accent);
 }
 
+/* Chromium still draws the native increment/decrement arrow buttons at both
+ * ends of a webkit-styled bar (they were just inheriting the accent tint) —
+ * the panel only reads as a custom thin thumb once they are removed. */
+.tidy5e-sheet.application.ddb
+  :is(
+    .ddb-primary-box-content,
+    .ddb-primary-box-content
+      :is(.tidy-tab, .tidy-tab-contents, .tab-content, .scroll-container, .tidy-scrollable)
+  )::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 /* The bar paints at the scroller's own border box, flush against the ring, so
  * the inset goes on the scroller (.tidy-tab); the block-end padding on the
  * content inside it lets the last row clear the rounded corner instead of being

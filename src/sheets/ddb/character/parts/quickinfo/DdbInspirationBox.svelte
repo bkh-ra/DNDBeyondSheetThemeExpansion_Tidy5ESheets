@@ -41,8 +41,13 @@
     neighbours and made it the only box whose label was not inside its own
     outline (live design review). The label is now pinned inside the frame; see
     quick-info.css.
+
+    80 wide rather than the neighbours' 70: measured in Roboto Condensed at
+    --ddb-size-label, "INSPIRATION" sets 63.7px, and a 70px octagon only clears
+    59.3px at the caption's line. This is the one box whose caption cannot be
+    shortened or split further, so the frame is sized to it.
   -->
-  <DdbStatBoxShape width={70} height={80} />
+  <DdbStatBoxShape width={80} height={80} />
   {#if banked}
     <div class="ddb-inspiration-box__content">
       <button

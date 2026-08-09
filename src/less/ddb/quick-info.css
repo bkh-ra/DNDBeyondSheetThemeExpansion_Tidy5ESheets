@@ -419,13 +419,37 @@
  * Colour comes from the shared label typography block at the top of this file
  * (--ddb-label) and is NOT restated: the inspiration caption used to override
  * it to --ddb-heading-box and rendered pure white against its siblings'
- * --ddb-label grey. */
+ * --ddb-label grey.
+ *
+ * THE OFFSET IS MEASURED FROM THE FRAME, AND THAT IS THE WHOLE TRICK. A first
+ * attempt reserved the caption by shrinking the interior layer to
+ * `inset: 0 0 2rem 0`. But `.ddb-stat-box__content` is itself absolutely
+ * positioned, so it is the CONTAINING BLOCK for the caption inside it — the
+ * offset then measured up from y 48 instead of from the frame's bottom edge,
+ * which drove the caption up into the value (live capture: "+4" at y 123-140
+ * under a caption at y 137-143) and left the whole interior top-anchored in an
+ * 80px frame. The inspiration caption, which is a SIBLING of its interior and
+ * so resolves against the section, did not move — and the band ended up
+ * further apart than it started.
+ *
+ * So the interior layer keeps `inset: 0` and reserves the caption with PADDING
+ * instead. Both captions now resolve against a box that is exactly the frame,
+ * whether they sit inside the interior (stat boxes) or beside it
+ * (inspiration), and the reserve is the same custom property the padding uses,
+ * so the two can never drift apart. */
+.tidy5e-sheet.application.ddb .ddb-quick-info .ddb-stat-box,
+.tidy5e-sheet.application.ddb .ddb-inspiration-box {
+  /* 32px = the caption's two 10px line boxes (22px) + its 10px offset. */
+  --ddb-band-caption-reserve: 2rem;
+  --ddb-band-caption-offset: var(--ddb-space-4);
+}
+
 .tidy5e-sheet.application.ddb .ddb-quick-info .ddb-stat-box__label,
 .tidy5e-sheet.application.ddb .ddb-inspiration-box__label {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: var(--ddb-space-4);
+  bottom: var(--ddb-band-caption-offset);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -433,12 +457,13 @@
   padding: 0 var(--ddb-space-1);
 }
 
-/* The 32px the caption block occupies (22px of text + its 10px offset), kept
- * clear of every band interior. Stated once for both the figure stacks and the
- * inspiration token so the caption can never be overprinted. */
-.tidy5e-sheet.application.ddb .ddb-quick-info .ddb-stat-box__content,
-.tidy5e-sheet.application.ddb .ddb-inspiration-box__content {
-  inset: 0 0 2rem 0;
+/* Interior spans the FULL frame — it has to, because it is the caption's
+ * containing block — and holds the caption's band clear with padding, so the
+ * figure optically centres in what is left above it. */
+.tidy5e-sheet.application.ddb .ddb-quick-info .ddb-stat-box__content {
+  inset: 0;
+  padding: var(--ddb-space-1) var(--ddb-space-half)
+    var(--ddb-band-caption-reserve);
 }
 
 /* The proficiency-bonus figure is the one documented exception to
@@ -555,22 +580,36 @@
 .tidy5e-sheet.application.ddb .ddb-inspiration-box {
   position: relative;
   flex: 0 0 auto;
-  width: 4.375rem; /* 70px */
+  /* 80px, not the neighbours' 70. Its caption is the one in the band that
+   * cannot be shortened, split or abbreviated: "INSPIRATION" measures 63.7px
+   * in Roboto Condensed at --ddb-size-label / --ddb-weight-label, and a 70px
+   * octagon clears only 59.3px at the caption's line (the echo runs x
+   * 4.5 .. 65.5 and its bottom corner cuts have already started by then). No
+   * vertical position fixes that — the frame has to be wider. At 80 the clear
+   * width is 67.3px. The 10px comes out of the HP panel, which is the band's
+   * only flexible item (`flex: 0 1 25rem`, floor 21rem). */
+  width: 5rem; /* 80px */
   height: 5rem; /* 80px */
   color: var(--ddb-label);
 }
 
-/* The token stack owns the frame's upper 48px; the caption owns the rest (the
- * bottom inset comes from the BAND CAPTION BASELINE block). Both interior
- * modes — toggle button, and banked value + steppers — use this layer. */
+/* The token stack owns the frame above the caption's band, exactly as the stat
+ * boxes' figures do — same reserve custom property, so the two stay locked.
+ * `inset: 0` is REQUIRED, not decoration: without it this absolutely
+ * positioned layer keeps its static position and shrink-wraps the token, which
+ * parks it against the frame's top edge instead of centring it in the
+ * interior. Both interior modes — toggle button, and banked value + steppers —
+ * use this layer. */
 .tidy5e-sheet.application.ddb .ddb-inspiration-box__content {
   position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--ddb-space-half);
   width: 100%;
-  padding: var(--ddb-space-1);
+  padding: var(--ddb-space-1) var(--ddb-space-1)
+    var(--ddb-band-caption-reserve);
   border: none;
   border-radius: 0;
   background: none;
@@ -769,6 +808,10 @@
  * (see DdbHpBlock.svelte) — painting it on the root guarantees it spans the
  * whole block in both interior modes, whatever the children measure. */
 .tidy5e-sheet.application.ddb .ddb-hp-block {
+  /* The one hairline CURRENT / MAX / TEMP share — see the colour note on
+   * `.ddb-hp-block.editable .ddb-hp-block__value` below. */
+  --ddb-hp-field-rule: color-mix(in srgb, var(--ddb-text-muted) 55%, transparent);
+
   position: relative;
   box-sizing: border-box;
   display: flex;
@@ -1027,8 +1070,18 @@
   color: var(--ddb-text);
 }
 
+/* HAIRLINE COLOUR — one value, and it has to read in BOTH themes.
+ *
+ * --ddb-panel-border was the obvious token and it is the wrong one: in light
+ * it is #eaeaea, which measured (244,244,244) on a (254,254,254) panel = a
+ * 1.08:1 hairline, i.e. the three fields were consistently invisible rather
+ * than consistently underlined (round-3 review). Mixing --ddb-text-muted —
+ * which the integrator pass darkened for light-theme contrast — down to 55%
+ * lands near 2.3:1 against the panel in EITHER theme, because the token
+ * already flips with the theme while the mix ratio does not. A hairline wants
+ * to be quiet, not absent; the focus ring still carries the active state. */
 .tidy5e-sheet.application.ddb .ddb-hp-block.editable .ddb-hp-block__value {
-  border-bottom-color: var(--ddb-panel-border);
+  border-bottom-color: var(--ddb-hp-field-rule);
 }
 
 /* Transparent field, and the only rule is a hairline under the figure itself —
@@ -1051,7 +1104,7 @@
   max-width: 3rem;
   padding: 0;
   border: none;
-  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-hp-field-rule);
   border-radius: 0;
   background: none;
   box-shadow: none;

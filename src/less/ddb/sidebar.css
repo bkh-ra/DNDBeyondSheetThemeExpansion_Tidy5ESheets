@@ -480,48 +480,97 @@
   background: var(--ddb-table-row-hover-bg);
 }
 
-/* --- NAME TRUNCATION ---
+/* --- FAVORITE ROW CONTRACT: icon | name (the only flexible track) | value ---
  *
  * At quadrone's ~276px sidebar a favorite name rarely runs out of room; in this
  * 230px pane it does constantly, and quadrone's markup HARD-CLIPS mid-glyph
  * ("Breath Weapon (Fire)" -> "Breath Weapon (Fire"). Root cause: quadrone gives
  * `.stacked > span` `display: flex` together with `text-overflow: ellipsis`,
  * and `text-overflow` has no effect on a flex container — it only applies to a
- * block container's inline content. So the ellipsis silently never fires and
- * the overflow is chopped instead.
+ * block container's inline content, so the ellipsis silently never fires.
  *
- * Fix = the full truncation chain:
- *   1. `min-width: 0` on EVERY flex ancestor between the row and the text.
- *      Flex items default to `min-width: auto`, which refuses to shrink below
- *      content size and defeats ellipsis no matter what the text node says.
- *      (`.favorite-button` already ships `min-width: 0`; the two containers
- *      inside it do not.)
- *   2. the text node itself becomes a BLOCK container with nowrap + hidden +
- *      ellipsis, which is the only combination that renders "…".
+ * THE USES-PILL TRAP (this regressed once; do not undo the width cap).
+ * `FavoriteItemUses` renders a bare `<input type="text">` for the current-uses
+ * value. An input with no `size` and no width has a browser-default intrinsic
+ * width of ~20 characters (~170px). Pinning the trailing cell `flex: 0 0 auto`
+ * therefore froze it at ~170px on the 23 of 34 rows that carry a pill, leaving
+ * almost nothing for the rest of the row: the 28px icon crushed to 4-7px and
+ * the name ellipsized to a single glyph ("Breath Weapon (Fire)" -> "B…").
+ * Quadrone never hit this because its trailing cell was `flex: 2` and simply
+ * shrank. The trailing cell may only be pinned once the input's intrinsic width
+ * is capped, which is what `.inline-uses .uses-value` below does.
  *
- * Only the name flexes. The trailing value chips (uses, modifiers, save DC,
- * quantity) are pinned `flex: 0 0 auto` so they always stay fully visible —
- * truncating a "+7" or "3/3" would be worse than truncating a long name. */
+ * Every track is therefore declared EXPLICITLY rather than inherited:
+ *   icon           flex: 0 0 auto  — never shrinks
+ *   name container flex: 1 1 0     — the only flexible track; ellipsizes
+ *   value cell     flex: 0 0 auto  — always fully visible, width now bounded
+ *
+ * `min-width: 0` is on every flex ancestor between the row and the text: flex
+ * items default to `min-width: auto`, which refuses to shrink below content
+ * size and defeats ellipsis no matter what the text node declares. */
+
 .tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite > .favorite-button {
   flex: 1 1 auto;
   min-width: 0;
 }
 
+/* Trailing value cell (uses pill / modifier / save DC / quantity). */
 .tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite > div:not(.favorite-button) {
   flex: 0 0 auto;
   min-width: 0;
 }
 
-.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .item-name-container,
-.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .item-name {
-  flex: 1 1 auto;
+/* Icon: fixed track, never crushed. */
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .tidy-table-row-use-button,
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .item-image,
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .effect-use-icon {
+  flex: 0 0 auto;
+}
+
+/* Cap the uses input so the trailing cell has a sane intrinsic width. 3ch fits
+ * a 3-digit value; the input is right-aligned so shorter values still sit
+ * against the divider. Without this the row collapses — see the note above. */
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .inline-uses {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .inline-uses .uses-value {
+  flex: 0 0 auto;
+  width: 3ch;
+  min-width: 0;
+  max-width: 3ch;
+  text-align: right;
+}
+
+/* Name track: the only one that flexes, so it is the only one that truncates.
+ * `.item-name-container` is an item of the ROW-direction `.favorite-button`, so
+ * `flex-basis: 0` here means zero WIDTH — correct, it then grows into whatever
+ * the icon and value cell leave. */
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .item-name-container {
+  flex: 1 1 0;
   min-width: 0;
   max-width: 100%;
 }
 
-/* The name. `display: block` is the load-bearing part — as a flex item it
- * would clip instead of ellipsizing. */
-.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .item-name > .title {
+/* `.item-name` is an item of the COLUMN-direction `.item-name-container`, where
+ * flex-basis applies to HEIGHT. `flex: 1 1 0` here collapses the name and
+ * subtitle to zero height and the row renders as an icon and a value with an
+ * empty gap between them — do not "unify" this with the rule above. The
+ * horizontal constraint that drives the ellipsis comes from `width: 100%`
+ * instead, which is needed because the container aligns its children to the
+ * start rather than stretching them. */
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .item-name {
+  flex: 0 1 auto;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Name and subtitle both ellipsize. `display: block` is the load-bearing part —
+ * as flex containers (quadrone's `.stacked > span`) they clip instead. */
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .item-name > .title,
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .item-name > .subtitle {
   display: block;
   min-width: 0;
   max-width: 100%;
@@ -530,20 +579,11 @@
   text-overflow: ellipsis;
 }
 
-/* The subtitle stays a flex row (it can contain `.divider-dot` elements that
- * would stack if this became a block), but it must still be allowed to shrink,
- * and its own text runs get the ellipsis treatment. */
-.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .item-name > .subtitle {
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
-}
-
+/* The subtitle's separator dots are `div`s, which would each take their own
+ * line now that the subtitle is a block container. */
 .tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .item-name > .subtitle > * {
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .subtitle,
