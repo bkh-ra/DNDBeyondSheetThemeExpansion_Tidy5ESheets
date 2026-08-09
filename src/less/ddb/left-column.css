@@ -61,44 +61,22 @@
   overflow: visible;
 }
 
-/* The panel body: fill plus the thin full-perimeter line. */
+/* The double outline, matching the quick-info stat boxes: the silhouette (which
+ * also carries the panel fill) plus one parallel line 4px inside it. BOTH at
+ * full accent — dimming the inner one merges the pair into a single soft line
+ * at a 1.5px stroke. */
 .tidy5e-sheet.application.ddb .ddb-panel-frame__panel {
   fill: var(--ddb-panel-bg);
-  stroke: var(--ddb-panel-border);
-  stroke-width: var(--ddb-border-width-panel);
-}
-
-/* The heavy L-brackets at the four corners — the ornament that reads first.
- * Accent-coloured, so the per-character theme drives the frame exactly as the
- * captures do (they are drawn in each character's accent, not a neutral grey). */
-.tidy5e-sheet.application.ddb .ddb-panel-frame__bracket {
-  fill: none;
   stroke: var(--ddb-accent);
-  stroke-width: calc(var(--ddb-border-width-panel) * 2);
-  stroke-linecap: round;
+  stroke-width: var(--ddb-border-width-panel);
   stroke-linejoin: round;
 }
 
-/* The doubled line down each side is part of the frame's SILHOUETTE, not an
- * echo, so it takes full accent. Dimming it made it merge optically with the
- * perimeter line a few px away into one soft edge at 1.5px, which is a large
- * part of why these boxes read as plain rectangles. */
-.tidy5e-sheet.application.ddb .ddb-panel-frame__side {
+.tidy5e-sheet.application.ddb .ddb-panel-frame__echo {
   fill: none;
   stroke: var(--ddb-accent);
   stroke-width: var(--ddb-border-width-panel);
-  stroke-linecap: round;
   stroke-linejoin: round;
-}
-
-/* Genuine secondary ornament — the corner scrollwork — and only this, is dimmed. */
-.tidy5e-sheet.application.ddb .ddb-panel-frame__flourish {
-  fill: none;
-  stroke: var(--ddb-accent);
-  stroke-width: var(--ddb-border-width-panel);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  opacity: var(--ddb-stroke-echo-opacity);
 }
 
 /* Content sits above the frame; both need a stacking context of their own so

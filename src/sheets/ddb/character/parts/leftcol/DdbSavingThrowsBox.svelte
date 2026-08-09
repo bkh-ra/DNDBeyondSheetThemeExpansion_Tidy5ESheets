@@ -61,11 +61,7 @@
   );
 </script>
 
-<DdbBox
-  class="ddb-saving-throws-box"
-  title={localize('DND5E.ClassSaves')}
-  variant="ornate"
->
+<DdbBox class="ddb-saving-throws-box" title={localize('DND5E.ClassSaves')}>
   <div
     class="ddb-saves-grid"
     style="--ddb-save-gutter: {saveGutter}px; --ddb-save-circle: {saveCircle}px;"
