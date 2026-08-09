@@ -37,6 +37,7 @@
     context.system.attributes?.hp?.effectiveMax ?? hpMax,
   );
   let hpTemp = $derived(context.system.attributes?.hp?.temp ?? 0);
+  let hpTempMax = $derived(context.system.attributes?.hp?.tempmax ?? 0);
 
   /** Amount typed into the quick-adjust field. Empty means "do nothing". */
   let amount = $state<number | null>(null);
@@ -167,6 +168,32 @@
             <span class="ddb-hp-block__value">{hpTemp}</span>
           {/if}
         </div>
+
+        <!--
+          Temp max is an edit-mode-only override, matching the quadrone HP
+          overlay's "Max" field (system.attributes.hp.tempmax). Hidden in play
+          mode so the readout keeps DDB's three-figure shape.
+        -->
+        {#if context.editable && context.unlocked}
+          <div
+            class="ddb-hp-block__field ddb-hp-block__field--tempmax"
+            data-tooltip="DND5E.HitPointsTempMax"
+          >
+            <!-- Abbreviated so the four figures still fit the fixed panel;
+                 the full string stays on the tooltip and the aria-label. -->
+            <span class="ddb-hp-block__label">+{localize('DND5E.Max')}</span>
+            <TextInputQuadrone
+              id="{appId}-ddb-hp-tempmax"
+              document={context.actor}
+              field="system.attributes.hp.tempmax"
+              class="ddb-hp-block__input"
+              value={hpTempMax}
+              selectOnFocus={true}
+              blurAfterChange={true}
+              aria-label={localize('DND5E.HitPointsTempMax')}
+            />
+          </div>
+        {/if}
       </div>
     {/if}
 
@@ -177,16 +204,62 @@
     </h2>
   </div>
 
-  {#if context.unlocked}
-    <button
-      type="button"
-      class="ddb-hp-block__config"
-      aria-label={localize('DND5E.HitPointsConfig')}
-      data-tooltip="DND5E.HitPointsConfig"
-      data-action="showConfiguration"
-      data-config="hitPoints"
-    >
-      <i class="fas fa-cog"></i>
-    </button>
-  {/if}
+  <!--
+    Controls stacked in the panel's top-right corner. Mirrors the quadrone
+    vitals row: the skull reveals/hides the death-save tray (and right-click
+    resets the tallies), and edit mode swaps in the hit-point and death-save
+    config cogs.
+  -->
+  <div class="ddb-hp-block__controls">
+    {#if context.editable && !context.unlocked}
+      <button
+        type="button"
+        class={[
+          'ddb-hp-block__config',
+          'ddb-hp-block__death-toggle',
+          { active: context.showDeathSaves },
+        ]}
+        aria-label={localize(
+          context.showDeathSaves ? 'DND5E.DeathSaveHide' : 'DND5E.DeathSaveShow',
+        )}
+        data-tooltip={context.showDeathSaves
+          ? 'DND5E.DeathSaveHide'
+          : 'DND5E.DeathSaveShow'}
+        onclick={() => context.actor.sheet.toggleDeathSaves()}
+        oncontextmenu={(ev) => {
+          ev.preventDefault();
+          (async () => {
+            await context.actor.update({
+              'system.attributes.death.success': 0,
+              'system.attributes.death.failure': 0,
+            });
+          })();
+        }}
+      >
+        <i class="fas fa-skull"></i>
+      </button>
+    {/if}
+    {#if context.unlocked}
+      <button
+        type="button"
+        class="ddb-hp-block__config"
+        aria-label={localize('DND5E.HitPointsConfig')}
+        data-tooltip="DND5E.HitPointsConfig"
+        data-action="showConfiguration"
+        data-config="hitPoints"
+      >
+        <i class="fas fa-cog"></i>
+      </button>
+      <button
+        type="button"
+        class="ddb-hp-block__config"
+        aria-label={localize('DND5E.DeathSaveConfigure')}
+        data-tooltip="DND5E.DeathSaveConfigure"
+        data-action="showConfiguration"
+        data-config="death"
+      >
+        <i class="fas fa-skull"></i>
+      </button>
+    {/if}
+  </div>
 </section>

@@ -36,7 +36,10 @@
   );
 </script>
 
-<DdbBox class="ddb-skills-box" title={localize('DND5E.Skills')}>
+<DdbBox
+  class={['ddb-skills-box', { unlocked: context.unlocked }]}
+  title={localize('DND5E.Skills')}
+>
   <div class="ddb-skills-header">
     <span class="ddb-skills-col-prof">{localize('TIDY5E.AbbrProficiency')}</span>
     <!-- Abbreviated, like DDB's own "MOD": the ability column is only wide
@@ -44,6 +47,9 @@
     <span class="ddb-skills-col-mod">{localize('TIDY5E.AbbrMod')}</span>
     <span class="ddb-skills-col-skill">{localize('DND5E.Skill')}</span>
     <span class="ddb-skills-col-bonus">{localize('DND5E.Bonus')}</span>
+    {#if context.unlocked}
+      <span class="ddb-skills-col-config" aria-hidden="true"></span>
+    {/if}
   </div>
 
   <ul
@@ -84,7 +90,19 @@
               />
             </SelectQuadrone>
           {:else}
-            <span class="ddb-skill-ability">{skill.abbreviation}</span>
+            <!--
+              Locked mode: the abbreviation opens the skill-roll context menu
+              (roll with a different ability), exactly as SkillsCard does.
+            -->
+            <button
+              type="button"
+              class="ddb-skill-ability ddb-skill-ability-button"
+              data-action="showContextMenu"
+              data-target-selector="[data-context-menu]"
+              data-context-menu={CONSTANTS.CONTEXT_MENU_TYPE_SKILL_ROLL}
+            >
+              {skill.abbreviation}
+            </button>
           {/if}
         </span>
 
@@ -108,6 +126,22 @@
             <span class="ddb-sign">{modifier.sign}</span>{modifier.value}
           </span>
         </span>
+
+        {#if context.unlocked}
+          <span class="ddb-skills-col-config">
+            <button
+              type="button"
+              class="ddb-gear"
+              aria-label={localize('DND5E.SkillConfigure')}
+              data-tooltip="DND5E.SkillConfigure"
+              data-action="showConfiguration"
+              data-config="skill"
+              data-key={skill.key}
+            >
+              <i class="fa-solid fa-cog"></i>
+            </button>
+          </span>
+        {/if}
       </li>
     {/each}
   </ul>

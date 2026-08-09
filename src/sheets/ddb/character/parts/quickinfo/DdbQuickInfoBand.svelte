@@ -73,7 +73,24 @@
         unit={walkSpeed.units}
         label={speedLabel}
         tooltip="DND5E.Speed"
-      />
+      >
+        <!--
+          Movement config, as quadrone's traits sidebar offers in edit mode
+          (CharacterTraitPills -> data-config="movement").
+        -->
+        {#if context.unlocked}
+          <button
+            type="button"
+            class="ddb-stat-box__config"
+            aria-label={speedLabel}
+            data-tooltip="DND5E.Speed"
+            data-action="showConfiguration"
+            data-config="movement"
+          >
+            <i class="fas fa-cog"></i>
+          </button>
+        {/if}
+      </DdbStatBox>
     {/if}
 
     <DdbInspirationBox />

@@ -13,7 +13,10 @@
   import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
   import { CONSTANTS } from 'src/constants';
   import type { ActorTraitContext } from 'src/types/types';
+  import SelectQuadrone from 'src/components/inputs/SelectQuadrone.svelte';
+  import SelectOptions from 'src/components/inputs/SelectOptions.svelte';
   import DdbBox from './DdbBox.svelte';
+  import DdbProficiencyPip from './DdbProficiencyPip.svelte';
 
   let context = $derived(getCharacterSheetQuadroneContext());
 
@@ -88,30 +91,93 @@
           </button>
         {/if}
       </div>
-      <div class="ddb-prof-group-items">
-        {#each context.tools as tool, i (tool.key)}
-          <button
-            type="button"
-            class="ddb-prof-item ddb-prof-item-rollable"
-            data-action="roll"
-            data-type="tool"
-            data-key={tool.key}
-            data-tidy-sheet-part={CONSTANTS.SHEET_PARTS.TOOL_ROLLER}
-            data-tidy-draggable
-            data-context-menu={CONSTANTS.CONTEXT_MENU_TYPE_KEYED_FAVORITE}
-            data-has-roll-modes
-            disabled={!context.owner}
-          >
-            {tool.label}{#if i < context.tools.length - 1}<span
-                class="ddb-prof-sep">,</span
-              >{/if}
-          </button>
-        {:else}
-          <span class="ddb-prof-item ddb-empty">
-            {localize('TIDY5E.EmptyTools')}
-          </span>
-        {/each}
-      </div>
+      <!--
+        Play mode keeps DDB's inline, comma-separated list. Edit mode expands
+        to one row per tool so the quadrone ToolsCard affordances all fit:
+        proficiency cycling, the roll ability override, and per-tool config.
+      -->
+      {#if context.unlocked}
+        <ul class="ddb-tool-rows">
+          {#each context.tools as tool (tool.key)}
+            <li class="ddb-tool-row" data-key={tool.key}>
+              <DdbProficiencyPip
+                actor={context.actor}
+                aria-label={localize(tool.hover)}
+                data-tooltip=""
+                disabled={!context.unlocked}
+                path="system.tools.{tool.key}.value"
+                type="tool"
+                value={tool.source?.value ?? 0}
+              />
+              <SelectQuadrone
+                document={context.actor}
+                field="system.tools.{tool.key}.ability"
+                value={tool.baseAbility}
+                class="ddb-tool-ability-select"
+              >
+                <SelectOptions
+                  data={context.config.abilities}
+                  labelProp="abbreviation"
+                />
+              </SelectQuadrone>
+              <button
+                type="button"
+                class="ddb-prof-item ddb-prof-item-rollable ddb-tool-name"
+                data-action="roll"
+                data-type="tool"
+                data-key={tool.key}
+                data-tidy-sheet-part={CONSTANTS.SHEET_PARTS.TOOL_ROLLER}
+                data-tidy-draggable
+                data-context-menu={CONSTANTS.CONTEXT_MENU_TYPE_KEYED_FAVORITE}
+                data-has-roll-modes
+                disabled={!context.owner}
+              >
+                {tool.label}
+              </button>
+              <button
+                type="button"
+                class="ddb-gear"
+                aria-label={localize('DND5E.ToolConfigure')}
+                data-tooltip="DND5E.ToolConfigure"
+                data-action="showConfiguration"
+                data-config="tool"
+                data-key={tool.key}
+              >
+                <i class="fa-solid fa-cog"></i>
+              </button>
+            </li>
+          {:else}
+            <li class="ddb-prof-item ddb-empty">
+              {localize('TIDY5E.EmptyTools')}
+            </li>
+          {/each}
+        </ul>
+      {:else}
+        <div class="ddb-prof-group-items">
+          {#each context.tools as tool, i (tool.key)}
+            <button
+              type="button"
+              class="ddb-prof-item ddb-prof-item-rollable"
+              data-action="roll"
+              data-type="tool"
+              data-key={tool.key}
+              data-tidy-sheet-part={CONSTANTS.SHEET_PARTS.TOOL_ROLLER}
+              data-tidy-draggable
+              data-context-menu={CONSTANTS.CONTEXT_MENU_TYPE_KEYED_FAVORITE}
+              data-has-roll-modes
+              disabled={!context.owner}
+            >
+              {tool.label}{#if i < context.tools.length - 1}<span
+                  class="ddb-prof-sep">,</span
+                >{/if}
+            </button>
+          {:else}
+            <span class="ddb-prof-item ddb-empty">
+              {localize('TIDY5E.EmptyTools')}
+            </span>
+          {/each}
+        </div>
+      {/if}
     </div>
 
     {@render traitGroup(

@@ -382,3 +382,110 @@
   display: flex;
   flex-direction: column;
 }
+
+/* ------------------------------------------------------------------ */
+/* P2 parity controls (defenses config + exhaustion)                   */
+/* ------------------------------------------------------------------ */
+
+/* One config control per damage/condition trait, matching the per-category
+ * gears quadrone's traits sidebar offers in edit mode. Icons stand in for the
+ * category names, which are already on the tooltip and the aria-label. */
+.tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-configs {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--ddb-space-half);
+}
+
+.tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-config {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 1rem;
+  height: 1rem;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  box-shadow: none;
+  font-size: var(--ddb-size-label);
+  line-height: 1;
+  color: var(--ddb-text-muted);
+  cursor: pointer;
+  transition: color var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-config:hover {
+  color: var(--ddb-accent);
+  box-shadow: none;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-conditions-defenses
+  .ddb-cd-config:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* Exhaustion is a level, not a toggle: a 0..N track under the condition list. */
+.tidy5e-sheet.application.ddb .ddb-exhaustion-track {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ddb-space-half);
+  margin-top: var(--ddb-space-1);
+}
+
+.tidy5e-sheet.application.ddb .ddb-exhaustion-label {
+  margin-right: var(--ddb-space-half);
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.application.ddb .ddb-exhaustion-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 1.125rem;
+  height: 1.125rem;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border-radius: var(--ddb-radius-control);
+  background: var(--ddb-box-bg);
+  box-shadow: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  line-height: 1;
+  color: var(--ddb-text-muted);
+  cursor: pointer;
+  transition: var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-exhaustion-step:hover {
+  border-color: var(--ddb-accent);
+  box-shadow: none;
+  color: var(--ddb-accent);
+}
+
+.tidy5e-sheet.application.ddb .ddb-exhaustion-step.active {
+  border-color: var(--ddb-accent);
+  background: var(--ddb-accent);
+  color: var(--ddb-accent-chip-contrast);
+}
+
+.tidy5e-sheet.application.ddb .ddb-exhaustion-step:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}

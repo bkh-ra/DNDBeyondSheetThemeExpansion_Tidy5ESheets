@@ -859,3 +859,146 @@
   outline: none;
   box-shadow: var(--ddb-focus-ring);
 }
+
+/* ------------------------------------------------------------------ *
+ * P2 parity controls
+ * ------------------------------------------------------------------ */
+
+/* Per-ability config, pinned to the frame's top-right corner so it never
+ * displaces the label / modifier / score stack inside the box. */
+.tidy5e-sheet.application.ddb .ddb-ability-box__config {
+  position: absolute;
+  top: var(--ddb-space-half);
+  right: var(--ddb-space-half);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  box-shadow: none;
+  font-size: var(--ddb-size-label);
+  line-height: 1;
+  color: var(--ddb-label);
+  cursor: pointer;
+  transition: color var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-ability-box__config:hover {
+  color: var(--ddb-accent);
+  box-shadow: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-ability-box__config:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* Generic stat-box config (movement). Same corner treatment; the stat box is
+ * the positioning context because DdbStatBox renders children inside it. */
+.tidy5e-sheet.application.ddb .ddb-stat-box__config {
+  position: absolute;
+  top: var(--ddb-space-half);
+  right: var(--ddb-space-half);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  box-shadow: none;
+  font-size: var(--ddb-size-label);
+  line-height: 1;
+  color: var(--ddb-label);
+  cursor: pointer;
+  transition: color var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-stat-box__config:hover {
+  color: var(--ddb-accent);
+  box-shadow: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-stat-box__config:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* Hit dice is a second initiative-shaped box in the combat row: same 60 x 48
+ * frame with the caps label riding above it. The current/max figure is a step
+ * down from --ddb-size-value-lg because it holds two numbers and a slash. */
+.tidy5e-sheet.application.ddb .ddb-quick-info__box--hit-dice {
+  width: 3.75rem; /* 60px */
+  height: 3.875rem; /* 62px = 14px label + 48px frame */
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-quick-info__box--hit-dice
+  .ddb-box-background {
+  inset: 0.875rem 0 0 0;
+  width: auto;
+  height: auto;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-quick-info__box--hit-dice
+  .ddb-stat-box__content {
+  inset: 0.875rem 0 0 0;
+  padding: 0 var(--ddb-space-half);
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-quick-info__box--hit-dice
+  .ddb-stat-box__label {
+  position: absolute;
+  top: -0.875rem;
+  left: 0;
+  right: 0;
+  color: var(--ddb-heading-box);
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-quick-info__box--hit-dice
+  .ddb-stat-box__value {
+  font-size: var(--ddb-size-value-md);
+  letter-spacing: normal;
+}
+
+/* Stacked controls in the HP panel's top-right corner (death-save reveal in
+ * play mode; hit-point + death-save config in edit mode). */
+.tidy5e-sheet.application.ddb .ddb-hp-block__controls {
+  position: absolute;
+  top: var(--ddb-space-half);
+  right: var(--ddb-space-half);
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--ddb-space-half);
+}
+
+/* The corner stack owns the positioning now, so the cogs inside it are static. */
+.tidy5e-sheet.application.ddb .ddb-hp-block__controls .ddb-hp-block__config {
+  position: static;
+  align-self: center;
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-block__death-toggle.active {
+  color: var(--ddb-accent);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-block__field--tempmax .ddb-hp-block__value,
+.tidy5e-sheet.application.ddb .ddb-hp-block__field--tempmax .ddb-hp-block__input {
+  color: var(--ddb-stat-modified);
+}

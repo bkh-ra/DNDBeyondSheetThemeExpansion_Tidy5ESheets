@@ -69,6 +69,22 @@
     },
   ]);
 
+  /**
+   * Edit-mode configuration targets. Mirrors the defense entries of
+   * `character-parts/traits/CharacterTraitPills.svelte`, which offers one
+   * config control per damage/condition trait — including damage modification,
+   * which has no chips of its own on this strip.
+   */
+  let defenseConfigs = $derived<DefenseGroup[]>([
+    ...defenseGroups,
+    {
+      key: 'dm',
+      iconClass: 'fa-solid fa-shield-plus',
+      cssClass: 'modification',
+      label: localizeOr('DND5E.TraitDMPlural.other', 'Damage Modifications'),
+    },
+  ]);
+
   let defenses = $derived<DefenseChip[]>(
     defenseGroups.flatMap((group) =>
       (context.traits?.[group.key] ?? []).map((entry) => ({
@@ -103,6 +119,21 @@
 
   let managingConditions = $state(false);
 
+  /**
+   * Exhaustion is a level, not a toggle. Quadrone sets it from the vitals row
+   * (ActorExhaustionBar -> `system.attributes.exhaustion`); the DDB strip owns
+   * the equivalent track because exhaustion reads as a condition here.
+   */
+  let exhaustionLevels = $derived(
+    (context.config.conditionTypes?.exhaustion?.levels ?? 6) + 1,
+  );
+
+  async function setExhaustionLevel(level: number) {
+    await context.actor.update({
+      'system.attributes.exhaustion': level,
+    });
+  }
+
   // Copied from ConditionToggleQuadrone.svelte so both sheets behave identically.
   async function handleConditionToggle(condition: Dnd5eActorCondition) {
     try {
@@ -132,9 +163,31 @@
   data-tidy-sheet-part="ddb-conditions-defenses"
 >
   <section class="ddb-cd-group ddb-defenses">
-    <h3 class="ddb-cd-label">
-      {localizeOr('DND5E.Defenses', 'Defenses')}
-    </h3>
+    <div class="ddb-cd-header">
+      <h3 class="ddb-cd-label">
+        {localizeOr('DND5E.Defenses', 'Defenses')}
+      </h3>
+      {#if context.unlocked}
+        <div class="ddb-cd-configs">
+          {#each defenseConfigs as group (group.key)}
+            {@const tooltip = localize('DND5E.ProficiencyConfigureTitle', {
+              label: group.label,
+            })}
+            <button
+              type="button"
+              class="ddb-cd-config"
+              aria-label={tooltip}
+              data-tooltip={tooltip}
+              data-tooltip-direction="UP"
+              data-action="showConfiguration"
+              data-trait={group.key}
+            >
+              <i class={group.iconClass}></i>
+            </button>
+          {/each}
+        </div>
+      {/if}
+    </div>
     {#if defenses.length}
       <ul class="ddb-defense-list">
         {#each defenses as chip (`${chip.key}-${chip.entry.key ?? chip.entry.label}`)}
@@ -216,6 +269,32 @@
       </ul>
     {:else}
       <span class="ddb-cd-empty">{noneLabel}</span>
+    {/if}
+
+    {#if context.editable && (managingConditions || exhaustionLevel > 0)}
+      <div
+        class="ddb-exhaustion-track"
+        role="group"
+        aria-label={localize('DND5E.Exhaustion')}
+      >
+        <span class="ddb-exhaustion-label">
+          {localize('DND5E.Exhaustion')}
+        </span>
+        {#each Array(exhaustionLevels) as _, i}
+          {@const tooltip = localize('DND5E.ExhaustionLevel', { n: i })}
+          <button
+            type="button"
+            class={['ddb-exhaustion-step', { active: i === exhaustionLevel }]}
+            aria-label={tooltip}
+            aria-pressed={i === exhaustionLevel}
+            data-tooltip={tooltip}
+            data-tooltip-direction="UP"
+            onclick={() => setExhaustionLevel(i)}
+          >
+            {i}
+          </button>
+        {/each}
+      </div>
     {/if}
 
     {#if managingConditions && context.editable}

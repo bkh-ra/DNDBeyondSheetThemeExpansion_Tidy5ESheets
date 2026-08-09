@@ -49,6 +49,10 @@
     localize('DND5E.ABILITY.SECTIONS.Score', { ability: ability.label }),
   );
 
+  let configTooltip = $derived(
+    localize('DND5E.AbilityConfigure', { ability: ability.label }),
+  );
+
   function onRollSavingThrow(event: MouseEvent) {
     event.preventDefault();
 
@@ -120,4 +124,23 @@
       </span>
     {/if}
   </div>
+  <!--
+    Per-ability configuration, as quadrone's AbilityScore offers in edit mode.
+    The `data-ability` on the root element is what `#showConfiguration` reads
+    via `closest('[data-ability]')`.
+  -->
+  {#if context.unlocked}
+    <button
+      type="button"
+      class="ddb-ability-box__config"
+      aria-label={configTooltip}
+      data-tooltip={configTooltip}
+      data-action="showConfiguration"
+      data-config="ability"
+      data-tidy-sheet-part={CONSTANTS.SHEET_PARTS
+        .ABILITY_CONFIGURATION_CONTROL}
+    >
+      <i class="fas fa-cog"></i>
+    </button>
+  {/if}
 </div>

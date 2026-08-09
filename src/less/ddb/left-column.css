@@ -700,3 +700,168 @@
 .tidy5e-sheet.application.ddb .ddb-skill-bonus {
   min-width: 34px;
 }
+
+/* ------------------------------------------------------------------ */
+/* P2 parity controls                                                  */
+/* ------------------------------------------------------------------ */
+
+/* Edit mode adds a per-skill config column to THE shared grid template above,
+ * so the header labels and the rows stay aligned. */
+.tidy5e-sheet.application.ddb .ddb-skills-box.unlocked .ddb-skills-header,
+.tidy5e-sheet.application.ddb .ddb-skills-box.unlocked .ddb-skill-row {
+  grid-template-columns: 26px 28px minmax(0, 1fr) 38px 16px;
+}
+
+.tidy5e-sheet.application.ddb .ddb-skills-col-config {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+/* The hairline under a row must run to the new right edge in edit mode. */
+.tidy5e-sheet.application.ddb .ddb-skill-row .ddb-skills-col-config {
+  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+}
+
+/* Play mode: the ability abbreviation opens the skill-roll context menu, so it
+ * is a real button — but it must look exactly like the span it replaced. */
+.tidy5e-sheet.application.ddb .ddb-skill-ability-button {
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  box-shadow: none;
+  line-height: 1;
+  cursor: pointer;
+  transition: color var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-skill-ability-button:hover {
+  color: var(--ddb-accent);
+  box-shadow: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-skill-ability-button:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* --- concentration (saving throws box) --- */
+
+.tidy5e-sheet.application.ddb .ddb-concentration-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ddb-space-1);
+  margin-top: var(--ddb-space-2);
+  padding-top: var(--ddb-space-2);
+  border-top: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+}
+
+.tidy5e-sheet.application.ddb .ddb-concentration-roll {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--ddb-space-2);
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label-md);
+  color: var(--ddb-text);
+  cursor: pointer;
+  transition: color var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-concentration-roll:disabled {
+  cursor: default;
+  color: var(--ddb-text-disabled);
+}
+
+.tidy5e-sheet.application.ddb .ddb-concentration-roll:hover:not(:disabled) {
+  box-shadow: none;
+  color: var(--ddb-link);
+}
+
+.tidy5e-sheet.application.ddb .ddb-concentration-roll:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+.tidy5e-sheet.application.ddb .ddb-concentration-icon {
+  flex: 0 0 auto;
+  font-size: var(--ddb-size-label-md);
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.application.ddb .ddb-concentration-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  text-transform: var(--ddb-transform-label);
+  font-weight: var(--ddb-weight-label);
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.application.ddb .ddb-concentration-modifier {
+  flex: 0 0 auto;
+  font-weight: var(--ddb-weight-value);
+}
+
+/* --- tools, edit mode (proficiencies box) --- */
+
+/* One row per tool so the pip, the roll-ability override and the per-tool
+ * config all have somewhere to live; play mode keeps the inline list. */
+.tidy5e-sheet.application.ddb .ddb-tool-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddb-space-half);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-tool-row {
+  display: grid;
+  grid-template-columns: 16px 34px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: var(--ddb-space-1);
+  min-height: 22px;
+}
+
+.tidy5e-sheet.application.ddb .ddb-tool-row .ddb-tool-ability-select {
+  width: 100%;
+  min-height: 0;
+  height: 20px;
+  padding: 0 var(--ddb-space-half);
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label-md);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.application.ddb .ddb-tool-row .ddb-tool-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+/* Edit mode expands the tool list into rows and the saves box grows a
+ * concentration line, so the last (flex: 1) box in the column can be squeezed
+ * below its content height. Let it scroll rather than spill past the frame. */
+.tidy5e-sheet.application.ddb .ddb-proficiencies-box .ddb-box-body {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ddb-accent-transparent) transparent;
+}

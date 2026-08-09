@@ -5,6 +5,10 @@
   DEFENSES/CONDITIONS box and above the tabbed primary box — not inside the
   quick-info band. Extracted from DdbQuickInfoBand so the root layout can place
   it there.
+
+  The HIT DICE box is Foundry-only (DDB surfaces hit dice inside its rest
+  flow). It mirrors the quadrone `.hd-row` block: a current/max readout that is
+  itself the hit-dice config control, plus an explicit cog in edit mode.
 -->
 <script lang="ts">
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
@@ -18,6 +22,9 @@
   const localize = FoundryAdapter.localize;
 
   let ini = $derived(getModifierData(context.system.attributes.init.total));
+
+  let hdValue = $derived(context.system.attributes?.hd?.value ?? 0);
+  let hdMax = $derived(context.system.attributes?.hd?.max ?? 0);
 </script>
 
 <div class="ddb-combat-row" data-tidy-sheet-part="ddb-combat-row">
@@ -48,4 +55,28 @@
   {/if}
 
   <DdbAcShield />
+
+  <DdbStatBox
+    class="ddb-quick-info__box--hit-dice"
+    value="{hdValue}/{hdMax}"
+    label={localize('TIDY5E.HitDice.Abbreviation')}
+    width={60}
+    height={48}
+    data-action="showConfiguration"
+    data-config="hitDice"
+    data-tooltip="DND5E.HitDiceConfig"
+    aria-label={localize('DND5E.HitDiceConfig')}
+  />
+  {#if context.unlocked}
+    <button
+      type="button"
+      class="ddb-quick-info__initiative-config"
+      aria-label={localize('DND5E.HitDiceConfig')}
+      data-tooltip="DND5E.HitDiceConfig"
+      data-action="showConfiguration"
+      data-config="hitDice"
+    >
+      <i class="fas fa-cog"></i>
+    </button>
+  {/if}
 </div>

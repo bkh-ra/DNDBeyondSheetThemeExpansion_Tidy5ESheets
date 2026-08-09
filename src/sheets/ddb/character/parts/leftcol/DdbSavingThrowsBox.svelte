@@ -26,6 +26,20 @@
    * closest true analogue we can render without inventing actor API calls.
    */
   let saveBonus = $derived(context.system?.bonuses?.abilities?.save ?? '');
+
+  /**
+   * Concentration is a save on the quadrone sheet too (SavingThrowsCard shows
+   * it for spellcasters, with its own roll and its own config). Same gate.
+   */
+  let concentration = $derived(
+    context.spellcasting?.length > 0 ? context.saves.concentration : undefined,
+  );
+
+  let concentrationConfigTooltip = $derived(
+    localize('DND5E.AbilityConfigure', {
+      ability: concentration?.label ?? '',
+    }),
+  );
 </script>
 
 <DdbBox class="ddb-saving-throws-box" title={localize('DND5E.ClassSaves')}>
@@ -69,24 +83,51 @@
     {/each}
   </div>
 
+  {#if concentration}
+    <div class="ddb-concentration-row" data-ability="concentration">
+      <button
+        type="button"
+        class="ddb-concentration-roll"
+        onclick={(event) =>
+          context.actor.rollConcentration({ event, legacy: false })}
+        data-tidy-sheet-part={CONSTANTS.SHEET_PARTS.ABILITY_SAVE_ROLLER}
+        data-has-roll-modes
+        disabled={!context.owner}
+      >
+        <i
+          class={[
+            'ddb-concentration-icon',
+            context.isConcentrating
+              ? 'fas fa-arrow-rotate-left fa-spin fa-spin-reverse'
+              : 'fas fa-head-side-brain',
+          ]}
+        ></i>
+        <span class="ddb-concentration-label">
+          {localize(concentration.label)}
+        </span>
+        <span class="ddb-concentration-modifier">
+          <span class="ddb-sign">{concentration.sign}</span>{concentration.mod}
+        </span>
+      </button>
+      {#if context.unlocked}
+        <button
+          type="button"
+          class="ddb-gear"
+          aria-label={concentrationConfigTooltip}
+          data-tooltip={concentrationConfigTooltip}
+          data-action="showConfiguration"
+          data-config="ability"
+        >
+          <i class="fa-solid fa-cog"></i>
+        </button>
+      {/if}
+    </div>
+  {/if}
+
   {#if !isNil(saveBonus, '')}
     <div class="ddb-saves-note">
       <span class="ddb-saves-note-label">{localize('DND5E.Bonus')}</span>
       <span class="ddb-saves-note-text">{saveBonus}</span>
     </div>
   {/if}
-
-  {#snippet gear()}
-    {#if context.unlocked}
-      <button
-        type="button"
-        class="ddb-gear"
-        aria-label={localize('DND5E.ClassSaves')}
-        data-action="showConfiguration"
-        data-config="ability"
-      >
-        <i class="fa-solid fa-cog"></i>
-      </button>
-    {/if}
-  {/snippet}
 </DdbBox>
