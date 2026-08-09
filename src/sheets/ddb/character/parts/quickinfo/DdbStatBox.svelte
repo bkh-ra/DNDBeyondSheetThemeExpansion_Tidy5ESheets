@@ -49,7 +49,10 @@
     unit,
     label,
     tooltip,
-    width = 70,
+    /* 80 matches the widened HEROIC INSPIRATION octagon so the band trio reads
+     * as one equal set (round-4 eval finding: 70/70/80 looked mismatched). The
+     * combat-row hexes pass their own explicit 60x48. */
+    width = 80,
     height = 80,
     variant = 'octagon',
     children,

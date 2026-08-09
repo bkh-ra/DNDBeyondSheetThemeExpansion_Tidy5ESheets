@@ -201,6 +201,19 @@
   display: none;
 }
 
+/* Kill native scrollbar ARROW BUTTONS on every scroller inside the DDB sheet.
+ * Foundry v14 styles scrollbars with global ::-webkit-scrollbar-* rules, which
+ * makes Chromium IGNORE the standard scrollbar-width/scrollbar-color on any
+ * matching element — so this must be a webkit pseudo too, and universal
+ * (scoped :is() lists missed the actual arrow-bearing scrollers; round-4 eval
+ * measured the arrows byte-identical). */
+.tidy5e-sheet.application.ddb ::-webkit-scrollbar-button,
+.tidy5e-sheet.application.ddb::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 /* Narrow-window fallback (e.g. popped out on a small screen): stack the two
  * stat columns beside each other above primary; the sheet body becomes the
  * scroll region. */

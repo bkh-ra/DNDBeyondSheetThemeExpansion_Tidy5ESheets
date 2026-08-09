@@ -304,7 +304,10 @@
 .tidy5e-sheet.application.ddb .ddb-stat-box {
   position: relative;
   flex: 0 0 auto;
-  width: 4.375rem; /* 70px */
+  /* 80px matches the widened HEROIC INSPIRATION octagon so the band trio is
+   * one equal set (round-4 eval). Must stay in lockstep with DdbStatBox's
+   * width prop default; the combat-row hexes override via their own classes. */
+  width: 5rem; /* 80px */
   height: 5rem; /* 80px */
 }
 
@@ -810,7 +813,9 @@
 .tidy5e-sheet.application.ddb .ddb-hp-block {
   /* The one hairline CURRENT / MAX / TEMP share — see the colour note on
    * `.ddb-hp-block.editable .ddb-hp-block__value` below. */
-  --ddb-hp-field-rule: color-mix(in srgb, var(--ddb-text-muted) 55%, transparent);
+  /* 55% measured only 1.53:1 on the light panel (round-4 eval); 85% lands
+   * the hairline near 3:1 in light while staying subtle in dark. */
+  --ddb-hp-field-rule: color-mix(in srgb, var(--ddb-text-muted) 85%, transparent);
 
   position: relative;
   box-sizing: border-box;
