@@ -774,7 +774,7 @@
 
 .tidy5e-sheet.application.ddb .ddb-hp-block__field--temp .ddb-hp-block__value,
 .tidy5e-sheet.application.ddb .ddb-hp-block__field--temp .ddb-hp-block__input {
-  color: var(--ddb-positive);
+  color: var(--ddb-positive-text);
 }
 
 /* ------------------------------------------------------------------ *
@@ -825,14 +825,14 @@
   .ddb-death-saves__group--failures
   .ddb-death-saves__pip.checked {
   background: var(--ddb-negative);
-  border-color: var(--ddb-negative);
+  border-color: var(--ddb-negative-text);
 }
 
 .tidy5e-sheet.application.ddb
   .ddb-death-saves__group--successes
   .ddb-death-saves__pip.checked {
   background: var(--ddb-positive);
-  border-color: var(--ddb-positive);
+  border-color: var(--ddb-positive-text);
 }
 
 .tidy5e-sheet.application.ddb .ddb-death-saves__roll {

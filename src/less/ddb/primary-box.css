@@ -108,12 +108,12 @@
 }
 
 .tidy5e-sheet.application.ddb .ddb-defense.vulnerability .ddb-defense-icon {
-  color: var(--ddb-negative);
+  color: var(--ddb-negative-text);
 }
 
 .tidy5e-sheet.application.ddb .ddb-defense.immunity .ddb-defense-icon,
 .tidy5e-sheet.application.ddb .ddb-defense.condition-immunity .ddb-defense-icon {
-  color: var(--ddb-positive);
+  color: var(--ddb-positive-text);
 }
 
 .tidy5e-sheet.application.ddb .ddb-defense .ddb-defense-label {

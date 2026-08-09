@@ -124,6 +124,11 @@
   --ddb-heading: #75838b;
   --ddb-heading-box: #000;
   --ddb-positive: #40d250;
+  /* Text-safe variants: DDB's bright green is only 1.97:1 on a white panel,
+   * so TEXT uses a hue-preserving darkened green (4.6:1) while FILLS keep
+   * DDB's original color. Red already passes, kept identical. */
+  --ddb-positive-text: #298633;
+  --ddb-negative-text: #d24040;
   --ddb-positive-bg: #40d250;
   --ddb-positive-bg-hover: #2bb43a;
   --ddb-negative: #d24040;
@@ -160,6 +165,9 @@
   --ddb-label: #a2acb2;
   --ddb-heading: #a2acb2;
   --ddb-heading-box: #fff;
+  /* Dark theme: the bright values already pass on the dark panel (9.2:1) */
+  --ddb-positive-text: var(--ddb-positive);
+  --ddb-negative-text: #e06868;
   --ddb-positive-bg: #00c797;
   --ddb-positive-bg-hover: #009470;
   --ddb-negative-bg: #c53131;
