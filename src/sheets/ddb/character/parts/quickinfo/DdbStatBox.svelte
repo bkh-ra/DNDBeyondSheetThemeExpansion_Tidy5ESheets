@@ -32,6 +32,12 @@
     width?: number;
     /** Intrinsic frame height, in px. */
     height?: number;
+    /**
+     * Frame silhouette. `octagon` is the band treatment (label inside the
+     * frame); `hex` is the squat, raked-end shape the combat row uses for the
+     * boxes whose label rides above the frame. See DdbStatBoxShape.
+     */
+    variant?: 'octagon' | 'hex';
     /** Extra content rendered inside the frame (e.g. a config button). */
     children?: Snippet;
   } & HTMLButtonAttributes;
@@ -45,6 +51,7 @@
     tooltip,
     width = 70,
     height = 80,
+    variant = 'octagon',
     children,
     ...rest
   }: Props = $props();
@@ -53,7 +60,7 @@
 </script>
 
 <section class={['ddb-stat-box', cssClass]} data-tooltip={tooltip}>
-  <DdbStatBoxShape {width} {height} />
+  <DdbStatBoxShape {width} {height} {variant} />
   {#if interactive}
     <button type="button" class="ddb-stat-box__content" {...rest}>
       {#if heading}

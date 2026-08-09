@@ -97,8 +97,10 @@
   min-height: 0;
 }
 
-/* Bottom-align the left column with the skills column */
-.tidy5e-sheet.application.ddb .ddb-col-left > :last-child {
+/* Keep the grid rectangular: the last box in each stat column stretches to the
+ * row height so all columns end on the same line. */
+.tidy5e-sheet.application.ddb .ddb-col-left > :last-child,
+.tidy5e-sheet.application.ddb .ddb-col-skills > :last-child {
   flex: 1 1 auto;
 }
 

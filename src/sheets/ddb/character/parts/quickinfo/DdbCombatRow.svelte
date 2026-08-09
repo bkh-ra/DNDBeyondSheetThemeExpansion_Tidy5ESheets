@@ -34,6 +34,7 @@
     label={localize('DND5E.Initiative')}
     width={60}
     height={48}
+    variant="hex"
     data-action="roll"
     data-type="initiative"
     data-has-roll-modes
@@ -62,6 +63,7 @@
     label={localize('TIDY5E.HitDice.Abbreviation')}
     width={60}
     height={48}
+    variant="hex"
     data-action="showConfiguration"
     data-config="hitDice"
     data-tooltip="DND5E.HitDiceConfig"

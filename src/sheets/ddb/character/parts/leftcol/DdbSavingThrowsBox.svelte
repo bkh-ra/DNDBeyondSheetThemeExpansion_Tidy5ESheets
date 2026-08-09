@@ -15,6 +15,24 @@
   import { isNil } from 'src/utils/data';
   import DdbBox from './DdbBox.svelte';
   import DdbProficiencyPip from './DdbProficiencyPip.svelte';
+  import DdbSaveEntryShape from './DdbSaveEntryShape.svelte';
+
+  /**
+   * Entry shape geometry, in px. Declared here as the single source of truth and
+   * handed to the CSS as custom properties on the grid, so the text columns and
+   * the drawn shape can never drift apart:
+   *   `gutter` — where the hexagon's left point starts; the pip floats before it.
+   *   `circle` — diameter of the modifier cap on the right end.
+   */
+  const saveGutter = 16;
+  const saveCircle = 28;
+
+  /**
+   * All six entries are the same size by construction (a fixed-track grid), so
+   * one shared measurement drives every shape rather than six observers.
+   */
+  let entryWidth = $state(0);
+  let entryHeight = $state(0);
 
   let context = $derived(getCharacterSheetQuadroneContext());
 
@@ -43,8 +61,15 @@
   );
 </script>
 
-<DdbBox class="ddb-saving-throws-box" title={localize('DND5E.ClassSaves')}>
-  <div class="ddb-saves-grid">
+<DdbBox
+  class="ddb-saving-throws-box"
+  title={localize('DND5E.ClassSaves')}
+  variant="ornate"
+>
+  <div
+    class="ddb-saves-grid"
+    style="--ddb-save-gutter: {saveGutter}px; --ddb-save-circle: {saveCircle}px;"
+  >
     {#each context.abilities as ability (ability.key)}
       {@const modifier = getModifierData(ability.save.value)}
       <!--
@@ -53,7 +78,12 @@
         cannot legally nest inside another button and the pip needs to stay
         independently clickable for proficiency cycling in edit mode.
       -->
-      <div class="ddb-save-entry" data-ability={ability.key}>
+      <div
+        class="ddb-save-entry"
+        data-ability={ability.key}
+        bind:clientWidth={entryWidth}
+        bind:clientHeight={entryHeight}
+      >
         <button
           type="button"
           class="ddb-save-roll"
@@ -63,6 +93,12 @@
           data-has-roll-modes
           disabled={!context.owner}
         >
+          <DdbSaveEntryShape
+            width={entryWidth}
+            height={entryHeight}
+            gutter={saveGutter}
+            circle={saveCircle}
+          />
           <span class="ddb-save-abbr">{ability.abbr}</span>
           <span class="ddb-save-modifier">
             <span class="ddb-sign">{modifier.sign}</span>{modifier.value}

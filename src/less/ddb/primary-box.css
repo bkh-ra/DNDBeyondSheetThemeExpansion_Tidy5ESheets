@@ -44,15 +44,22 @@
   gap: var(--ddb-space-half);
 }
 
-.tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-group:first-child {
+.tidy5e-sheet.application.ddb
+  .ddb-conditions-defenses
+  .ddb-cd-group:first-child {
   padding-left: 0;
 }
 
-.tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-group:last-child {
+.tidy5e-sheet.application.ddb
+  .ddb-conditions-defenses
+  .ddb-cd-group:last-child {
   padding-right: 0;
 }
 
-.tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-group + .ddb-cd-group {
+.tidy5e-sheet.application.ddb
+  .ddb-conditions-defenses
+  .ddb-cd-group
+  + .ddb-cd-group {
   border-left: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
 }
 
@@ -112,7 +119,9 @@
 }
 
 .tidy5e-sheet.application.ddb .ddb-defense.immunity .ddb-defense-icon,
-.tidy5e-sheet.application.ddb .ddb-defense.condition-immunity .ddb-defense-icon {
+.tidy5e-sheet.application.ddb
+  .ddb-defense.condition-immunity
+  .ddb-defense-icon {
   color: var(--ddb-positive-text);
 }
 
@@ -126,13 +135,21 @@
 /* Damage modification: the entry itself carries `positive`/`negative` (less /
  * more damage taken), so both the icon and the amount follow the entry rather
  * than the group. */
-.tidy5e-sheet.application.ddb .ddb-defense.modification.positive .ddb-defense-icon,
-.tidy5e-sheet.application.ddb .ddb-defense.modification.positive .ddb-defense-value {
+.tidy5e-sheet.application.ddb
+  .ddb-defense.modification.positive
+  .ddb-defense-icon,
+.tidy5e-sheet.application.ddb
+  .ddb-defense.modification.positive
+  .ddb-defense-value {
   color: var(--ddb-positive-text);
 }
 
-.tidy5e-sheet.application.ddb .ddb-defense.modification.negative .ddb-defense-icon,
-.tidy5e-sheet.application.ddb .ddb-defense.modification.negative .ddb-defense-value {
+.tidy5e-sheet.application.ddb
+  .ddb-defense.modification.negative
+  .ddb-defense-icon,
+.tidy5e-sheet.application.ddb
+  .ddb-defense.modification.negative
+  .ddb-defense-value {
   color: var(--ddb-negative-text);
 }
 
@@ -190,7 +207,9 @@
   text-decoration: line-through;
 }
 
-.tidy5e-sheet.application.ddb .ddb-condition .ddb-condition-toggle:focus-visible {
+.tidy5e-sheet.application.ddb
+  .ddb-condition
+  .ddb-condition-toggle:focus-visible {
   outline: none;
   box-shadow: var(--ddb-focus-ring);
 }
@@ -218,62 +237,131 @@
   box-shadow: var(--ddb-focus-ring);
 }
 
+/* The condition picker is a popover: the strip sits in a fixed-height row, and
+ * the world can register far more statuses than the strip could ever host, so
+ * the list floats above the layout and scrolls inside itself. */
+.tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-conditions {
+  position: relative;
+}
+
 .tidy5e-sheet.application.ddb .ddb-condition-picker {
-  list-style: none;
-  margin: var(--ddb-space-1) 0 0;
-  padding: 0;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 10;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: var(--ddb-space-1);
-  max-height: 7rem;
+  box-sizing: border-box;
+  margin-top: var(--ddb-space-1);
+  padding: var(--ddb-space-2);
+  width: 15rem;
+  max-height: 18rem;
+  /* Solid, not --ddb-box-bg: that token is translucent in Underdark mode and a
+   * floating list must not show the sheet through itself. */
+  background: var(--ddb-panel-bg-solid);
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border-radius: var(--ddb-radius-input);
+  box-shadow: var(--ddb-shadow-elevated);
+}
+
+.tidy5e-sheet.application.ddb .ddb-condition-search {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  margin: 0;
+  padding: var(--ddb-space-half) var(--ddb-space-2);
+  width: 100%;
+  height: auto;
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border-radius: var(--ddb-radius-control);
+  background: var(--ddb-box-bg);
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-label-md);
+  line-height: 1.4;
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-condition-search:focus-visible {
+  outline: none;
+  border-color: var(--ddb-accent);
+  box-shadow: var(--ddb-focus-ring);
+}
+
+.tidy5e-sheet.application.ddb .ddb-condition-options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  flex: 1 1 auto;
   overflow-y: auto;
 }
 
-.tidy5e-sheet.application.ddb .ddb-condition-chip {
-  display: inline-flex;
+.tidy5e-sheet.application.ddb .ddb-condition-empty {
+  padding: var(--ddb-space-1) var(--ddb-space-2);
+  font-size: var(--ddb-size-label-md);
+  color: var(--ddb-condition-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-condition-option {
+  display: flex;
   align-items: center;
-  gap: var(--ddb-space-1);
+  gap: var(--ddb-space-2);
+  box-sizing: border-box;
   margin: 0;
-  /* 1px vertical keeps the chip on DDB's compact line box; no 1px scale step. */
+  /* 1px vertical keeps the row on DDB's compact line box; no 1px scale step. */
   padding: 0.0625rem var(--ddb-space-2);
-  width: auto;
-  max-width: 9rem;
-  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  width: 100%;
+  min-height: 0;
+  border: var(--ddb-border-width-panel) solid transparent;
   border-radius: var(--ddb-radius-control);
   background: none;
+  box-shadow: none;
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-label);
   font-weight: var(--ddb-weight-label);
   text-transform: var(--ddb-transform-label);
-  line-height: 1.4;
+  line-height: 1.6;
+  text-align: left;
   color: var(--ddb-condition-muted);
   cursor: pointer;
 }
 
-.tidy5e-sheet.application.ddb .ddb-condition-chip dnd5e-icon {
+.tidy5e-sheet.application.ddb .ddb-condition-option .ddb-condition-check {
+  flex: 0 0 auto;
+  width: var(--ddb-size-label-md);
+  font-size: var(--ddb-size-label-md);
+  text-align: center;
+}
+
+.tidy5e-sheet.application.ddb .ddb-condition-option .ddb-condition-option-icon {
   --icon-size: var(--ddb-size-label-md);
   --icon-fill: currentColor;
   flex: 0 0 auto;
+  width: var(--ddb-size-label-md);
+  height: var(--ddb-size-label-md);
+  border: none;
+  object-fit: contain;
 }
 
-.tidy5e-sheet.application.ddb .ddb-condition-chip .truncate {
+.tidy5e-sheet.application.ddb .ddb-condition-option .truncate {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.tidy5e-sheet.application.ddb .ddb-condition-chip:hover {
+.tidy5e-sheet.application.ddb .ddb-condition-option:hover {
   border-color: var(--ddb-accent);
+  box-shadow: none;
   color: var(--ddb-text);
 }
 
-.tidy5e-sheet.application.ddb .ddb-condition-chip:focus-visible {
+.tidy5e-sheet.application.ddb .ddb-condition-option:focus-visible {
   outline: none;
   box-shadow: var(--ddb-focus-ring);
 }
 
-.tidy5e-sheet.application.ddb .ddb-condition-chip.active {
+.tidy5e-sheet.application.ddb .ddb-condition-option.active {
   border-color: var(--ddb-accent);
   background: var(--ddb-accent-subtle-bg);
   color: var(--ddb-text);
@@ -369,7 +457,10 @@
   color: var(--ddb-tab-active-color);
 }
 
-.tidy5e-sheet.application.ddb .ddb-tab-strip .tab-option.ddb-tab .tab-title-count {
+.tidy5e-sheet.application.ddb
+  .ddb-tab-strip
+  .tab-option.ddb-tab
+  .tab-title-count {
   display: inline-flex;
   align-items: center;
   justify-content: center;

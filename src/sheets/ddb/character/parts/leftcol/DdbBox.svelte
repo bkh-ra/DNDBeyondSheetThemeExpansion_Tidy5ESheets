@@ -27,13 +27,21 @@
     /** Box title. Rendered all-caps at the bottom of the frame. */
     title: string;
     class?: ClassValue;
+    /** Frame ornamentation. `ornate` is reserved for SAVING THROWS. */
+    variant?: 'plain' | 'ornate';
     /** Box contents. */
     children: Snippet;
     /** Optional control (conventionally a gear button) beside the bottom title. */
     gear?: Snippet;
   };
 
-  let { title, class: classValue, children, gear }: Props = $props();
+  let {
+    title,
+    class: classValue,
+    variant = 'plain',
+    children,
+    gear,
+  }: Props = $props();
 
   let width = $state(0);
   let height = $state(0);
@@ -44,7 +52,7 @@
   bind:clientWidth={width}
   bind:clientHeight={height}
 >
-  <DdbPanelFrame {width} {height} />
+  <DdbPanelFrame {width} {height} {variant} />
   <div class="ddb-box-body">
     {@render children()}
   </div>

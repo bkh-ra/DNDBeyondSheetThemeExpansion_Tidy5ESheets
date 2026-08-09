@@ -4,14 +4,17 @@
 
   Layout mirrors D&D Beyond's `ct-conditions-defenses` component: two labelled
   groups side by side inside one bordered box. Defenses come from the actor's
-  damage/condition trait sets (dr/di/ci/dv/dm); conditions come from
-  `context.conditions`, with exhaustion rendered as "Exhaustion (Level N)".
+  damage/condition trait sets (dr/di/ci/dv/dm); conditions come from the union of
+  `context.conditions` and `CONFIG.statusEffects`, with exhaustion rendered as
+  "Exhaustion (Level N)".
 
-  Toggling a condition uses the same handler as
-  `src/sheets/quadrone/actor/parts/ConditionToggleQuadrone.svelte`.
+  Toggling a dnd5e condition uses the same handler as
+  `src/sheets/quadrone/actor/parts/ConditionToggleQuadrone.svelte`; everything
+  else routes through `Actor#toggleStatusEffect`.
 -->
 <script lang="ts">
   import Dnd5eIcon from 'src/components/icon/Dnd5eIcon.svelte';
+  import { clickOutside } from 'src/events/clickOutside.svelte';
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
   import type { Dnd5eActorCondition } from 'src/foundry/foundry-and-system';
   import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
@@ -79,7 +82,10 @@
       key: 'dm',
       iconClass: 'fa-solid fa-heart-circle-plus',
       cssClass: 'modification',
-      label: localizeOr('DND5E.DamageModification.Label', 'Damage Modification'),
+      label: localizeOr(
+        'DND5E.DamageModification.Label',
+        'Damage Modification',
+      ),
     },
   ]);
 
@@ -109,19 +115,150 @@
     );
   }
 
-  function conditionLabel(condition: Dnd5eActorCondition): string {
-    if (condition.id === 'exhaustion' && exhaustionLevel > 0) {
-      return `${condition.name} (${localizeOr('DND5E.Level', 'Level')} ${exhaustionLevel})`;
+  function conditionLabel(entry: { statusId: string; name: string }): string {
+    if (entry.statusId === 'exhaustion' && exhaustionLevel > 0) {
+      return `${entry.name} (${localizeOr('DND5E.Level', 'Level')} ${exhaustionLevel})`;
     }
 
-    return condition.name;
+    return entry.name;
   }
 
-  let activeConditions = $derived(
-    (context.conditions ?? []).filter(isConditionActive),
+  /**
+   * A single toggleable entry in the CONDITIONS control.
+   *
+   * `condition` is present only for entries that came from `context.conditions`
+   * (i.e. `CONFIG.DND5E.conditionTypes`); those keep going through
+   * `FoundryAdapter.toggleCondition` so exhaustion and dnd5e's static effect ids
+   * behave exactly as before. Everything else is a bare `CONFIG.statusEffects`
+   * entry — core statuses plus anything modules or the user registered — and is
+   * toggled with `Actor#toggleStatusEffect`.
+   */
+  type ToggleableCondition = {
+    key: string;
+    statusId: string;
+    name: string;
+    icon: string | undefined;
+    active: boolean;
+    condition?: Dnd5eActorCondition;
+  };
+
+  /**
+   * Shape of a `CONFIG.statusEffects` entry, widened past `config.types.ts`:
+   * Foundry v14 allows `hud` to be an object, and third-party statuses may omit
+   * `_id`. In v14 `CONFIG.statusEffects` is a Proxy over an array (it answers to
+   * both numeric indices and status ids), so it must be walked as an array —
+   * `Object.entries()` would be ambiguous.
+   */
+  type StatusEffectConfig = {
+    id: string;
+    name: string;
+    img?: string;
+    _id?: string;
+    pseudo?: boolean;
+    hud?: boolean | { actorTypes?: string[] };
+  };
+
+  /**
+   * `Actor#statuses` is the Set of status ids contributed by *active* (enabled,
+   * unsuppressed) effects; Foundry rebuilds it during `applyActiveEffects`.
+   * It is the reliable active check for statuses that dnd5e knows nothing about.
+   */
+  let actorStatuses = $derived<Set<string>>(
+    context.actor?.statuses ?? new Set<string>(),
   );
 
+  /**
+   * Mirrors Foundry's own Token HUD filter: `hud: false` hides system-managed
+   * statuses (dnd5e flags the encumbrance effects that way), and `hud.actorTypes`
+   * restricts a status to specific actor sub-types.
+   */
+  function isHudVisible(status: StatusEffectConfig): boolean {
+    if (status.hud === false) {
+      return false;
+    }
+
+    const actorTypes =
+      typeof status.hud === 'object' ? status.hud?.actorTypes : undefined;
+
+    return (
+      !Array.isArray(actorTypes) || actorTypes.includes(context.actor.type)
+    );
+  }
+
+  let allConditions = $derived.by<ToggleableCondition[]>(() => {
+    const entries: ToggleableCondition[] = [];
+
+    // dnd5e condition types (already pseudo-filtered by ConditionsAndEffects).
+    const seenStatusIds = new Set<string>();
+    const seenEffectIds = new Set<string>();
+
+    for (const condition of context.conditions ?? []) {
+      seenStatusIds.add(condition.id);
+      seenEffectIds.add(dnd5e.utils.staticID(`dnd5e${condition.id}`));
+
+      entries.push({
+        key: `dnd5e:${condition.id}`,
+        statusId: condition.id,
+        name: condition.name,
+        icon: condition.icon,
+        active: isConditionActive(condition),
+        condition,
+      });
+    }
+
+    // Everything else registered in the world: core statuses, module statuses,
+    // and user-defined ones. dnd5e re-registers its own condition types here
+    // with the same `id` and `_id = staticID('dnd5e' + id)`, so dedupe on both.
+    const statusEffects = Array.from(
+      CONFIG.statusEffects ?? [],
+    ) as unknown as StatusEffectConfig[];
+
+    for (const status of statusEffects) {
+      if (!status?.id || status.pseudo || !isHudVisible(status)) {
+        continue;
+      }
+
+      if (
+        seenStatusIds.has(status.id) ||
+        (!!status._id && seenEffectIds.has(status._id))
+      ) {
+        continue;
+      }
+
+      seenStatusIds.add(status.id);
+
+      entries.push({
+        key: `status:${status.id}`,
+        statusId: status.id,
+        // dnd5e localizes these at i18nInit, but modules that register later
+        // may still hand us a raw key; localize() is a no-op on plain text.
+        name: localize(status.name ?? status.id),
+        icon: status.img,
+        active: actorStatuses.has(status.id),
+      });
+    }
+
+    return entries.sort((a, b) => a.name.localeCompare(b.name));
+  });
+
+  let activeConditions = $derived(allConditions.filter((c) => c.active));
+
   let managingConditions = $state(false);
+  let conditionFilter = $state('');
+
+  let filteredConditions = $derived.by(() => {
+    const needle = conditionFilter.trim().toLocaleLowerCase();
+
+    return needle === ''
+      ? allConditions
+      : allConditions.filter((c) =>
+          c.name.toLocaleLowerCase().includes(needle),
+        );
+  });
+
+  function closeConditionMenu() {
+    managingConditions = false;
+  }
 
   /**
    * Exhaustion is a level, not a toggle. Quadrone sets it from the vitals row
@@ -138,14 +275,24 @@
     });
   }
 
-  // Copied from ConditionToggleQuadrone.svelte so both sheets behave identically.
-  async function handleConditionToggle(condition: Dnd5eActorCondition) {
+  /**
+   * dnd5e conditions keep Tidy's handler (copied from
+   * ConditionToggleQuadrone.svelte) so both sheets behave identically. Anything
+   * that only exists in `CONFIG.statusEffects` goes through Foundry's
+   * `Actor#toggleStatusEffect(statusId, {active, overlay})`, which dnd5e
+   * overrides to honor `exclusiveGroup` (e.g. the cover statuses).
+   */
+  async function handleConditionToggle(entry: ToggleableCondition) {
     try {
-      await FoundryAdapter.toggleCondition(context.actor, condition);
+      if (entry.condition) {
+        await FoundryAdapter.toggleCondition(context.actor, entry.condition);
+      } else {
+        await context.actor.toggleStatusEffect(entry.statusId);
+      }
     } catch (e) {
       error('An error occurred while toggling a condition', false, e);
       debug('Condition toggle error troubleshooting info', {
-        condition,
+        condition: entry,
       });
       context.actor.sheet.render();
     }
@@ -243,6 +390,7 @@
           type="button"
           class="ddb-conditions-manage"
           aria-expanded={managingConditions}
+          aria-haspopup="true"
           aria-label={localize('DND5E.Conditions')}
           data-tooltip={localize('DND5E.Conditions')}
           onclick={() => (managingConditions = !managingConditions)}
@@ -258,26 +406,26 @@
 
     {#if activeConditions.length}
       <ul class="ddb-condition-list">
-        {#each activeConditions as condition (condition.id)}
+        {#each activeConditions as entry (entry.key)}
           <li class="ddb-condition active">
             {#if context.editable}
               <button
                 type="button"
                 class="ddb-condition-toggle"
-                data-tooltip={condition.name}
+                data-tooltip={entry.name}
                 data-tooltip-direction="UP"
                 aria-pressed="true"
-                onclick={() => handleConditionToggle(condition)}
+                onclick={() => handleConditionToggle(entry)}
               >
-                {conditionLabel(condition)}
+                {conditionLabel(entry)}
               </button>
             {:else}
               <span
                 class="ddb-condition-name"
-                data-tooltip={condition.name}
+                data-tooltip={entry.name}
                 data-tooltip-direction="UP"
               >
-                {conditionLabel(condition)}
+                {conditionLabel(entry)}
               </span>
             {/if}
           </li>
@@ -313,26 +461,71 @@
       </div>
     {/if}
 
+    <!--
+      The strip lives in a fixed-height row, so the full condition list is a
+      popover (absolutely positioned, scrolls internally) rather than inline
+      content that would grow the strip.
+    -->
     {#if managingConditions && context.editable}
-      <ul class="ddb-condition-picker">
-        {#each context.conditions ?? [] as condition (condition.id)}
-          {@const active = isConditionActive(condition)}
-          <li>
-            <button
-              type="button"
-              class={['ddb-condition-chip', { active }]}
-              aria-pressed={active}
-              data-condition-id={condition.id}
-              data-tooltip={condition.name}
-              data-tooltip-direction="UP"
-              onclick={() => handleConditionToggle(condition)}
-            >
-              <Dnd5eIcon src={condition.icon} />
-              <span class="truncate">{conditionLabel(condition)}</span>
-            </button>
-          </li>
-        {/each}
-      </ul>
+      <div
+        class="ddb-condition-picker"
+        role="menu"
+        tabindex="-1"
+        aria-label={localize('DND5E.Conditions')}
+        use:clickOutside={{ callback: closeConditionMenu }}
+        onkeydown={(ev) => {
+          if (ev.key === 'Escape') {
+            ev.stopPropagation();
+            closeConditionMenu();
+          }
+        }}
+      >
+        <input
+          type="search"
+          class="ddb-condition-search"
+          placeholder={localize('TIDY5E.Search')}
+          aria-label={localize('TIDY5E.Search')}
+          bind:value={conditionFilter}
+        />
+        <ul class="ddb-condition-options">
+          {#each filteredConditions as entry (entry.key)}
+            <li>
+              <button
+                type="button"
+                role="menuitemcheckbox"
+                class={['ddb-condition-option', { active: entry.active }]}
+                aria-checked={entry.active}
+                data-condition-id={entry.statusId}
+                onclick={() => handleConditionToggle(entry)}
+              >
+                <i
+                  class={[
+                    'ddb-condition-check',
+                    entry.active
+                      ? 'fa-solid fa-square-check'
+                      : 'fa-regular fa-square',
+                  ]}
+                ></i>
+                {#if entry.icon?.endsWith('.svg')}
+                  <Dnd5eIcon
+                    class="ddb-condition-option-icon"
+                    src={entry.icon}
+                  />
+                {:else if entry.icon}
+                  <img
+                    class="ddb-condition-option-icon"
+                    src={entry.icon}
+                    alt=""
+                  />
+                {/if}
+                <span class="truncate">{conditionLabel(entry)}</span>
+              </button>
+            </li>
+          {:else}
+            <li class="ddb-condition-empty">{noneLabel}</li>
+          {/each}
+        </ul>
+      </div>
     {/if}
   </section>
 </div>

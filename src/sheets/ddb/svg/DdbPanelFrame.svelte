@@ -1,36 +1,45 @@
 <!--
   DDB-FORK: Decorative panel frame for the left-column boxes.
 
-  Drawn from scratch off hand measurements taken from the athelstan 01-actions
-  captures (both themes), zoomed to 12-20x. No DDB path data is used, copied or
-  referenced — see the standing rule at the top of design/SVG-MOTIFS.md.
+  Drawn from scratch off hand measurements taken from the local captures, zoomed
+  to 6-14x. Every coordinate below is produced by the arithmetic in this file.
+  No DDB path data is used, copied or referenced — see the IP hygiene rule in
+  design/README.md.
 
-  WHAT THE CAPTURES ACTUALLY SHOW
-  -------------------------------
-  * All four corners are 45-degree CHAMFERS (~8px), not radii.
-  * Each corner carries a second, shorter stroke running parallel to the
-    chamfer and offset ~3px inward, extending a few px along both adjoining
-    edges. That doubled line is what gives DDB's panels their hand-drawn look.
-  * The bottom border is CONTINUOUS. The box title ("SAVING THROWS", "SKILLS")
-    sits *above* it, inside the panel, on the panel fill — it does not interrupt
-    the border and there is no plaque tab. Verified on the SAVING THROWS box and
-    the tall SKILLS box, in dark and light. The `plaque` prop below implements a
-    notched title tab anyway, because the shape is cheap to generate and other
-    DDB surfaces may want it, but it defaults OFF to match the captures.
+  WHAT THE CAPTURES SHOW
+  ----------------------
+  The ornamental frame is an accent-coloured "plaque":
+
+  * A rounded-rect panel (~10px radius) holding the fill.
+  * A thin full-perimeter line around it.
+  * Heavy L-shaped BRACKETS at all four corners, following the rounded corner and
+    running roughly an eighth of each edge. These are what read as "ornamental"
+    at a glance.
+  * A second line inset a few px down the LEFT and RIGHT edges only — never the
+    top or bottom — spanning the gap between the brackets.
+  * The bottom border is unbroken; the box title sits inside it, over the fill.
+    (Verified on every left-column box, both themes. There is no plaque notch;
+    the opt-in `plaque` prop below implements one anyway, defaulted off.)
+
+  Two variants:
+  * `plain`  — the above. Used by SENSES and PROFICIENCIES & TRAINING.
+  * `ornate` — adds a curved scroll sweep inside each corner, and gives the side
+    lines a pinched "waist" at mid-height instead of running straight. Used by
+    SAVING THROWS, which the captures draw distinctly fancier than its siblings.
 
   Geometry is generated for the host's REAL pixel size (viewBox = 0 0 w h, no
-  preserveAspectRatio scaling), so chamfers and corner details stay square on
-  boxes of any proportion — the senses box is short and wide, the skills box is
-  tall and narrow, and both must get identical 8px corners.
+  preserveAspectRatio scaling), so brackets and corner radii stay square on boxes
+  of any proportion — the senses box is short and wide, the skills box is tall
+  and narrow, and both must get identical corners.
 
   The host measures itself with `bind:clientWidth/clientHeight` and passes the
   result down. Because this svg is `position: absolute; inset: 0` it contributes
-  nothing to the host's layout, so the measurement cannot feed back into the
-  size that produced it — no resize loop.
+  nothing to the host's layout, so the measurement cannot feed back into the size
+  that produced it — no resize loop.
 
   Fill and stroke come entirely from CSS custom properties (see
   src/less/ddb/left-column.css), which is what keeps both themes and the
-  per-character accent working: `--ddb-panel-border` is accent-tinted in dark.
+  per-character accent working.
 -->
 <script lang="ts">
   import type { ClassValue } from 'svelte/elements';
@@ -41,8 +50,10 @@
     width?: number;
     /** Host height in px, measured by the parent. */
     height?: number;
-    /** Corner chamfer length in px. ~8px measured off the captures. */
-    chamfer?: number;
+    /** `ornate` adds corner scrollwork and a pinched waist to the side lines. */
+    variant?: 'plain' | 'ornate';
+    /** Panel corner radius in px. ~10px measured off the captures. */
+    radius?: number;
     /**
      * Draw a notched title tab in the bottom border. Defaults to `false`: the
      * captures show an unbroken bottom edge on every left-column box.
@@ -56,7 +67,8 @@
     class: cssClass,
     width = 0,
     height = 0,
-    chamfer = 8,
+    variant = 'plain',
+    radius = 10,
     plaque = false,
     titleWidth = 0,
   }: Props = $props();
@@ -77,39 +89,47 @@
   /** Horizontal run of each angled shoulder. */
   const plaqueShoulder = 5;
 
-  /** Offset of the companion stroke, inward from the chamfer. */
-  const accentOffset = 3;
-  /** How far the companion stroke runs along each adjoining edge. */
-  const accentRun = 5;
+  /** Inset of the doubled side line from the perimeter. */
+  const sideOffset = 4;
+  /** How far the side line's waist pinches inward, in the ornate variant. */
+  const waist = 3;
 
   let ready = $derived(width > 0 && height > 0);
 
-  /** Never let the chamfers meet in the middle of a very small box. */
-  let c = $derived(
-    Math.max(0, Math.min(chamfer, Math.min(width, height) / 2 - inset)),
+  let l = $derived(inset);
+  let t = $derived(inset);
+  let rt = $derived(width - inset);
+  let b = $derived(height - inset);
+
+  /** Corner radius, clamped so it can never exceed half the shorter side. */
+  let r = $derived(
+    Math.max(0, Math.min(radius, Math.min(width, height) / 2 - inset)),
+  );
+
+  /** Bracket runs: about an eighth of each edge, bounded to stay sane. */
+  let bx = $derived(
+    Math.max(6, Math.min(28, (width - 2 * r) * 0.22, (width - 2 * r) / 2 - 2)),
+  );
+  let by = $derived(
+    Math.max(6, Math.min(28, (height - 2 * r) * 0.22, (height - 2 * r) / 2 - 2)),
   );
 
   let plaqueDepth = $derived(Math.min(10, Math.max(0, height / 4)));
 
-  /** Only notch when the tab and both chamfers genuinely fit on the bottom edge. */
+  /** Only notch when the tab and both corners genuinely fit on the bottom edge. */
   let showPlaque = $derived(
     plaque &&
       titleWidth > 0 &&
-      titleWidth + 2 * plaquePad + 2 * plaqueShoulder + 2 * c < width,
+      titleWidth + 2 * plaquePad + 2 * plaqueShoulder + 2 * r < width,
   );
 
-  let outline = $derived.by(() => {
+  /** The rounded-rect panel: fill plus the thin full perimeter line. */
+  let panel = $derived.by(() => {
     if (!ready) {
       return '';
     }
 
-    const l = inset;
-    const t = inset;
-    const r = width - inset;
-    const b = height - inset;
-
-    // Bottom edge, travelling right -> left, optionally stepping up and over
-    // the title tab on the way.
+    // Bottom edge, right -> left, optionally stepping up over the title tab.
     let bottom: string[];
     if (showPlaque) {
       const half = titleWidth / 2 + plaquePad;
@@ -120,62 +140,116 @@
         `L ${xb} ${b - plaqueDepth}`,
         `H ${xa}`,
         `L ${xa - plaqueShoulder} ${b}`,
-        `H ${l + c}`,
+        `H ${l + r}`,
       ];
     } else {
-      bottom = [`H ${l + c}`];
+      bottom = [`H ${l + r}`];
     }
 
     return [
-      `M ${l + c} ${t}`,
-      `H ${r - c}`,
-      `L ${r} ${t + c}`,
-      `V ${b - c}`,
-      `L ${r - c} ${b}`,
+      `M ${l + r} ${t}`,
+      `H ${rt - r}`,
+      `A ${r} ${r} 0 0 1 ${rt} ${t + r}`,
+      `V ${b - r}`,
+      `A ${r} ${r} 0 0 1 ${rt - r} ${b}`,
       ...bottom,
-      `L ${l} ${b - c}`,
-      `V ${t + c}`,
+      `A ${r} ${r} 0 0 1 ${l} ${b - r}`,
+      `V ${t + r}`,
+      `A ${r} ${r} 0 0 1 ${l + r} ${t}`,
       'Z',
     ].join(' ');
   });
 
   /**
-   * The four corner companion strokes: each is the chamfer shifted `accentOffset`
-   * toward the box centre, with a short tail running along both adjoining edges.
+   * The four heavy corner brackets. Each traces the rounded corner and runs
+   * `bx`/`by` along the two edges that meet there. Sweep flags differ per corner
+   * so every arc curves outward from the box centre.
    */
-  let accents = $derived.by(() => {
-    if (!ready || c <= 0) {
-      return [] as string[];
-    }
-
-    const o = accentOffset;
-    const e = accentRun;
-    const l = inset;
-    const t = inset;
-    const r = width - inset;
-    const b = height - inset;
-
-    // Bail out on boxes too small for the tails to sit inside the edges.
-    if (width < 2 * (c + o + e) || height < 2 * (c + o + e)) {
+  let brackets = $derived.by(() => {
+    if (!ready || r <= 0) {
       return [] as string[];
     }
 
     return [
       // top-left
-      `M ${l + o} ${t + c + o + e} V ${t + c + o} L ${l + c + o} ${t + o} H ${l + c + o + e}`,
+      `M ${l + r + bx} ${t} H ${l + r} A ${r} ${r} 0 0 0 ${l} ${t + r} V ${t + r + by}`,
       // top-right
-      `M ${r - o} ${t + c + o + e} V ${t + c + o} L ${r - c - o} ${t + o} H ${r - c - o - e}`,
+      `M ${rt - r - bx} ${t} H ${rt - r} A ${r} ${r} 0 0 1 ${rt} ${t + r} V ${t + r + by}`,
       // bottom-right
-      `M ${r - o} ${b - c - o - e} V ${b - c - o} L ${r - c - o} ${b - o} H ${r - c - o - e}`,
+      `M ${rt - r - bx} ${b} H ${rt - r} A ${r} ${r} 0 0 0 ${rt} ${b - r} V ${b - r - by}`,
       // bottom-left
-      `M ${l + o} ${b - c - o - e} V ${b - c - o} L ${l + c + o} ${b - o} H ${l + c + o + e}`,
+      `M ${l + r + bx} ${b} H ${l + r} A ${r} ${r} 0 0 1 ${l} ${b - r} V ${b - r - by}`,
+    ];
+  });
+
+  /**
+   * The doubled line down each side, spanning the gap the brackets leave. In the
+   * ornate variant it bows inward at mid-height (the "waist"); in the plain
+   * variant it is a straight run.
+   */
+  let sideLines = $derived.by(() => {
+    if (!ready) {
+      return [] as string[];
+    }
+
+    const y0 = t + r + by;
+    const y1 = b - r - by;
+    if (y1 - y0 < 8) {
+      return [] as string[];
+    }
+
+    const lx = l + sideOffset;
+    const rx = rt - sideOffset;
+    const my = (y0 + y1) / 2;
+
+    if (variant !== 'ornate') {
+      return [`M ${lx} ${y0} V ${y1}`, `M ${rx} ${y0} V ${y1}`];
+    }
+
+    // Two quadratics per side meeting at the waist, so the pinch is smooth.
+    return [
+      `M ${lx} ${y0} Q ${lx} ${my - (my - y0) / 2} ${lx + waist} ${my} Q ${lx} ${my + (y1 - my) / 2} ${lx} ${y1}`,
+      `M ${rx} ${y0} Q ${rx} ${my - (my - y0) / 2} ${rx - waist} ${my} Q ${rx} ${my + (y1 - my) / 2} ${rx} ${y1}`,
+    ];
+  });
+
+  /**
+   * Ornate only: a scroll sweep tucked inside each corner. Starts on the top or
+   * bottom edge just inside the bracket, curls through the corner and runs out
+   * along the side edge, echoing the bracket one step in.
+   */
+  let flourishes = $derived.by(() => {
+    if (!ready || variant !== 'ornate' || r <= 0) {
+      return [] as string[];
+    }
+
+    const g = sideOffset; // how far inside the perimeter the sweep sits
+    const run = Math.max(6, Math.min(bx, by));
+    if (width < 4 * (r + g) || height < 4 * (r + g)) {
+      return [] as string[];
+    }
+
+    const ax = l + g;
+    const bx2 = rt - g;
+    const ay = t + g;
+    const by2 = b - g;
+
+    return [
+      // top-left
+      `M ${ax + r + run} ${ay} Q ${ax + r * 0.4} ${ay} ${ax} ${ay + r + run * 0.4}`,
+      // top-right
+      `M ${bx2 - r - run} ${ay} Q ${bx2 - r * 0.4} ${ay} ${bx2} ${ay + r + run * 0.4}`,
+      // bottom-right
+      `M ${bx2 - r - run} ${by2} Q ${bx2 - r * 0.4} ${by2} ${bx2} ${by2 - r - run * 0.4}`,
+      // bottom-left
+      `M ${ax + r + run} ${by2} Q ${ax + r * 0.4} ${by2} ${ax} ${by2 - r - run * 0.4}`,
     ];
   });
 </script>
 
 {#if ready}
   <svg
-    class={['ddb-panel-frame', cssClass]}
+    class={['ddb-panel-frame', `ddb-panel-frame--${variant}`, cssClass]}
     viewBox="0 0 {width} {height}"
     xmlns="http://www.w3.org/2000/svg"
     aria-hidden="true"
@@ -184,11 +258,25 @@
     <path
       class="ddb-panel-frame__panel"
       vector-effect="non-scaling-stroke"
-      d={outline}
+      d={panel}
     />
-    {#each accents as d, i (i)}
+    {#each sideLines as d, i (i)}
       <path
-        class="ddb-panel-frame__accent"
+        class="ddb-panel-frame__side"
+        vector-effect="non-scaling-stroke"
+        {d}
+      />
+    {/each}
+    {#each flourishes as d, i (i)}
+      <path
+        class="ddb-panel-frame__flourish"
+        vector-effect="non-scaling-stroke"
+        {d}
+      />
+    {/each}
+    {#each brackets as d, i (i)}
+      <path
+        class="ddb-panel-frame__bracket"
         vector-effect="non-scaling-stroke"
         {d}
       />

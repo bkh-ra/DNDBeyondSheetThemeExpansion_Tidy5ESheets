@@ -61,17 +61,30 @@
   overflow: visible;
 }
 
+/* The panel body: fill plus the thin full-perimeter line. */
 .tidy5e-sheet.application.ddb .ddb-panel-frame__panel {
   fill: var(--ddb-panel-bg);
   stroke: var(--ddb-panel-border);
   stroke-width: var(--ddb-border-width-panel);
 }
 
-/* The companion stroke that doubles each corner — a hand-drawn echo of the
- * chamfer rather than a second hard edge. */
-.tidy5e-sheet.application.ddb .ddb-panel-frame__accent {
+/* The heavy L-brackets at the four corners — the ornament that reads first.
+ * Accent-coloured, so the per-character theme drives the frame exactly as the
+ * captures do (they are drawn in each character's accent, not a neutral grey). */
+.tidy5e-sheet.application.ddb .ddb-panel-frame__bracket {
   fill: none;
-  stroke: var(--ddb-panel-border);
+  stroke: var(--ddb-accent);
+  stroke-width: calc(var(--ddb-border-width-panel) * 2);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Secondary ornament: the doubled line down each side, and (ornate only) the
+ * corner scrollwork. Both are echoes, so they take the shared echo opacity. */
+.tidy5e-sheet.application.ddb .ddb-panel-frame__side,
+.tidy5e-sheet.application.ddb .ddb-panel-frame__flourish {
+  fill: none;
+  stroke: var(--ddb-accent);
   stroke-width: var(--ddb-border-width-panel);
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -300,35 +313,73 @@
  * derived from the pip diameter so the abbreviation never shifts between
  * proficient and non-proficient rows. */
 .tidy5e-sheet.application.ddb .ddb-save-roll {
+  position: relative;
   display: grid;
-  /* Abbreviation sized to its content, modifier takes the remaining space and
-   * right-aligns in it. The reverse (1fr abbr + fixed-width modifier) starved
-   * the abbreviation to 13px inside this 87px button and clipped it. Every
-   * abbreviation is three letters, so `auto` still lands them all on the same
-   * x — and the modifiers still share a right edge. */
-  grid-template-columns: auto minmax(0, 1fr);
+  /* Text columns pinned to the drawn geometry: the left padding is the shape's
+   * gutter (where the hexagon's left point starts) and the right column is
+   * exactly the cap diameter, so the modifier lands dead centre in the circle.
+   * Both custom properties are set inline by DdbSavingThrowsBox from the same
+   * constants it hands the shape, so text and drawing cannot drift. */
+  grid-template-columns: minmax(0, 1fr) var(--ddb-save-circle, 28px);
   align-items: center;
-  gap: var(--ddb-space-2);
+  gap: 0;
   box-sizing: border-box;
   width: 100%;
   height: 100%;
   min-height: 0;
   padding-block: 0;
-  padding-inline: calc(
-      var(--ddb-space-3) + var(--ddb-pip-size, 10px) + var(--ddb-space-2)
-    )
-    var(--ddb-space-3);
-  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
-  border-radius: var(--ddb-radius-control);
-  background: var(--ddb-box-bg);
+  padding-inline: var(--ddb-save-gutter, 16px) 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
   box-shadow: none;
   cursor: pointer;
-  transition: border-color var(--ddb-transition);
 }
 
-.tidy5e-sheet.application.ddb .ddb-save-roll:hover:not(:disabled) {
-  border-color: var(--ddb-dice-roll-border);
-  box-shadow: none;
+/* Behind the text, never swallowing the click. */
+.tidy5e-sheet.application.ddb .ddb-save-shape {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.tidy5e-sheet.application.ddb .ddb-save-shape__bar,
+.tidy5e-sheet.application.ddb .ddb-save-shape__cap {
+  stroke: var(--ddb-accent);
+  stroke-width: var(--ddb-border-width-panel);
+  stroke-linejoin: round;
+  transition: fill var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-save-shape__bar {
+  fill: var(--ddb-box-bg);
+}
+
+/* Opaque, not `--ddb-box-bg`: the bar runs on under the cap so the two read as
+ * one joined control, and the dark-theme box fill is semi-transparent — with it
+ * the bar's angled end showed through as a stray chevron inside the circle. */
+.tidy5e-sheet.application.ddb .ddb-save-shape__cap {
+  fill: var(--ddb-panel-bg-solid);
+}
+
+/* The bar reads as the quieter half of the pair, as in the captures. */
+.tidy5e-sheet.application.ddb .ddb-save-shape__bar {
+  opacity: var(--ddb-stroke-echo-opacity);
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-save-roll:hover:not(:disabled)
+  .ddb-save-shape__cap {
+  fill: var(--ddb-accent-subtle-bg);
+}
+
+/* Text rides above the shape. */
+.tidy5e-sheet.application.ddb .ddb-save-abbr,
+.tidy5e-sheet.application.ddb .ddb-save-modifier {
+  position: relative;
+  z-index: 1;
 }
 
 .tidy5e-sheet.application.ddb .ddb-save-roll:hover:not(:disabled) .ddb-save-modifier {
@@ -347,14 +398,17 @@
 /* Centred in the gutter reserved by the roll button's left padding. This rule
  * follows `.ddb-pip` in source order, which is what lets it override that
  * rule's `position: relative` at equal (0-4-0) specificity. */
+/* Floats in the clear space before the hexagon's left point, as in the captures
+ * — outside the shape rather than inside it. */
 .tidy5e-sheet.application.ddb .ddb-save-pip {
   position: absolute;
   top: 50%;
-  left: var(--ddb-space-3);
+  left: var(--ddb-space-1);
   z-index: 1;
   transform: translateY(-50%);
 }
 
+/* Centred in the hexagon, with the dotted underline the captures give it. */
 .tidy5e-sheet.application.ddb .ddb-save-abbr {
   min-width: 0;
   text-align: center;
@@ -363,15 +417,17 @@
   font-weight: var(--ddb-weight-label);
   text-transform: var(--ddb-transform-label);
   letter-spacing: var(--ddb-letterspacing-label);
+  text-decoration: underline dotted;
+  text-underline-offset: var(--ddb-space-half);
   color: var(--ddb-label);
 }
 
-/* Fills the rest of the button and right-aligns, so every modifier shares one
- * right edge regardless of digit count or sign. */
+/* Centred in the circular cap. Sized to fit a signed two-digit value inside the
+ * cap diameter — the circle, not the text, is what sets the ceiling here. */
 .tidy5e-sheet.application.ddb .ddb-save-modifier {
-  text-align: right;
+  text-align: center;
   font-family: var(--ddb-font-body);
-  font-size: var(--ddb-size-value-md);
+  font-size: var(--ddb-size-body);
   font-weight: var(--ddb-weight-value);
   line-height: 1;
   color: var(--ddb-text);
