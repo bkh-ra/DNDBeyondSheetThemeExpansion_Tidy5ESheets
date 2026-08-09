@@ -168,9 +168,23 @@
  * `Tidy5eCharacterSheetDdb.svelte.ts` moved 1150 -> 1390 for the same reason).
  * Users who collapse the sidebar get those 236px back for the primary column
  * without resizing. */
-.tidy5e-sheet.application.ddb {
+/* `:not(.minimized)` is REQUIRED: Foundry minimizes a window by shrinking it
+ * to its title bar, and an unconditional floor fights that — leaving a
+ * full-size empty box instead of a collapsed header. */
+.tidy5e-sheet.application.ddb:not(.minimized) {
   min-width: 1320px;
   min-height: 860px;
+}
+
+/* Minimized: title bar only. */
+.tidy5e-sheet.application.ddb.minimized {
+  min-width: 0;
+  min-height: 0;
+  background: var(--ddb-header-bg);
+}
+
+.tidy5e-sheet.application.ddb.minimized .window-content {
+  display: none;
 }
 
 /* Narrow-window fallback (e.g. popped out on a small screen): stack the two
