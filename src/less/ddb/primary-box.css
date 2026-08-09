@@ -456,11 +456,33 @@
 .tidy5e-sheet.application.ddb .ddb-condition-option .ddb-condition-option-icon {
   --icon-size: var(--ddb-size-label-md);
   --icon-fill: currentColor;
+  /* Two render branches share this class: <img> (raster) and <dnd5e-icon>
+   * (svg custom element). Custom elements default to display:inline, where
+   * width/height are IGNORED — that is why module-provided svg conditions
+   * rendered at intrinsic size while raster ones sat at 12px. inline-flex +
+   * hard min/max clamps both branches to one square. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 auto;
   width: var(--ddb-size-label-md);
   height: var(--ddb-size-label-md);
+  min-width: var(--ddb-size-label-md);
+  min-height: var(--ddb-size-label-md);
+  max-width: var(--ddb-size-label-md);
+  max-height: var(--ddb-size-label-md);
+  overflow: hidden;
   border: none;
   object-fit: contain;
+}
+
+/* Belt-and-braces for the custom element's shadow svg: dnd5e sizes it from
+ * --icon-size, but module-registered icons occasionally carry their own
+ * width/height attributes; the host clamp above contains those too. */
+.tidy5e-sheet.application.ddb
+  .ddb-condition-option
+  dnd5e-icon.ddb-condition-option-icon {
+  contain: strict;
 }
 
 .tidy5e-sheet.application.ddb .ddb-condition-option .truncate {
