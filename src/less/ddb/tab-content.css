@@ -588,48 +588,86 @@
 /* 9. The scroller                                                    */
 /* ------------------------------------------------------------------ */
 
-/* THE REAL SCROLLING ELEMENT IS `.tab-content`, not `.ddb-primary-box-content`.
- * Every quadrone tab renders `<div class="tab-content">` (see e.g.
- * CharacterSheetTab.svelte, which scrolls it directly via
- * `tabContent.scrollTo`), and quadrone/actors.css gives it
- * `flex: 1 1 0; overflow: auto`. So the pane's own `scrollbar-width: thin`
- * (ddb-layout.css) styles a scroller that never overflows, while the bar the
- * user sees belongs to this inner element — which nothing had styled, hence the
- * default grey Windows bar with arrow buttons in light mode (defect #12).
+/* THE SCROLLER IS `.tidy-tab`. quadrone/actors.css:1300 gives
+ * `.main-content > .tidy-tab { overflow-y: auto; --color-scrollbar:
+ * var(--t5e-color-palette-grey-40) }`, and primary-box.css declares
+ * `overflow: auto` on `.tidy-tab` for the DDB pane too. That grey-40 is the
+ * (165,165,165) thumb the reviewer measured: Foundry core paints scrollbars
+ * from the inherited `--color-scrollbar`, so re-pointing that variable is what
+ * actually changes the bar — the standard/webkit properties alone were landing
+ * on elements that never overflow (defect #12, round 1).
  *
- * `:where()` keeps this at the specificity of the surrounding rules, and the
- * webkit block is the fallback path for Chromium builds that ignore the
- * standard properties. */
-.tidy5e-sheet.application.ddb .ddb-primary-box-content :where(.tab-content, .scroll-container, .tidy-scrollable) {
+ * Every plausible scroller in the pane is listed so this cannot miss again, and
+ * the `:is()` sits inside the DDB prefix, giving 0-5-0 — above quadrone's
+ * 0-3-0 `:where(.quadrone) .main-content > .tidy-tab`. The thumb is 60% accent,
+ * not the 40% --ddb-accent-transparent, which measured ~1.6:1 on the light
+ * panel and vanished. */
+.tidy5e-sheet.application.ddb
+  :is(
+    .ddb-primary-box-content,
+    .ddb-primary-box-content
+      :is(.tidy-tab, .tidy-tab-contents, .tab-content, .scroll-container, .tidy-scrollable)
+  ) {
+  --color-scrollbar: color-mix(in srgb, var(--ddb-accent) 60%, transparent);
+  --color-scrollbar-track: transparent;
   scrollbar-width: thin;
-  scrollbar-color: var(--ddb-accent-transparent) transparent;
+  scrollbar-color: color-mix(in srgb, var(--ddb-accent) 60%, transparent)
+    transparent;
 }
 
-.tidy5e-sheet.application.ddb .ddb-primary-box-content :where(.tab-content, .scroll-container, .tidy-scrollable)::-webkit-scrollbar {
+.tidy5e-sheet.application.ddb
+  :is(
+    .ddb-primary-box-content,
+    .ddb-primary-box-content
+      :is(.tidy-tab, .tidy-tab-contents, .tab-content, .scroll-container, .tidy-scrollable)
+  )::-webkit-scrollbar {
   width: var(--ddb-space-2);
   height: var(--ddb-space-2);
 }
 
-.tidy5e-sheet.application.ddb .ddb-primary-box-content :where(.tab-content, .scroll-container, .tidy-scrollable)::-webkit-scrollbar-track,
-.tidy5e-sheet.application.ddb .ddb-primary-box-content :where(.tab-content, .scroll-container, .tidy-scrollable)::-webkit-scrollbar-corner {
+.tidy5e-sheet.application.ddb
+  :is(
+    .ddb-primary-box-content,
+    .ddb-primary-box-content
+      :is(.tidy-tab, .tidy-tab-contents, .tab-content, .scroll-container, .tidy-scrollable)
+  )::-webkit-scrollbar-track,
+.tidy5e-sheet.application.ddb
+  :is(
+    .ddb-primary-box-content,
+    .ddb-primary-box-content
+      :is(.tidy-tab, .tidy-tab-contents, .tab-content, .scroll-container, .tidy-scrollable)
+  )::-webkit-scrollbar-corner {
   background: transparent;
 }
 
-.tidy5e-sheet.application.ddb .ddb-primary-box-content :where(.tab-content, .scroll-container, .tidy-scrollable)::-webkit-scrollbar-thumb {
-  background: var(--ddb-accent-transparent);
+.tidy5e-sheet.application.ddb
+  :is(
+    .ddb-primary-box-content,
+    .ddb-primary-box-content
+      :is(.tidy-tab, .tidy-tab-contents, .tab-content, .scroll-container, .tidy-scrollable)
+  )::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--ddb-accent) 60%, transparent);
   border-radius: var(--ddb-radius-control);
 }
 
-.tidy5e-sheet.application.ddb .ddb-primary-box-content :where(.tab-content, .scroll-container, .tidy-scrollable)::-webkit-scrollbar-thumb:hover {
+.tidy5e-sheet.application.ddb
+  :is(
+    .ddb-primary-box-content,
+    .ddb-primary-box-content
+      :is(.tidy-tab, .tidy-tab-contents, .tab-content, .scroll-container, .tidy-scrollable)
+  )::-webkit-scrollbar-thumb:hover {
   background: var(--ddb-accent);
 }
 
-/* The bar is painted at the scroller's border box, which is flush against the
- * panel ring; a little inline-end padding holds it off the frame, and the
- * block-end padding lets the final row scroll clear of the rounded corner
- * instead of being guillotined against it (defects #12, #13). Padding only —
- * the flex/overflow model is quadrone's and stays untouched. */
+/* The bar paints at the scroller's own border box, flush against the ring, so
+ * the inset goes on the scroller (.tidy-tab); the block-end padding on the
+ * content inside it lets the last row clear the rounded corner instead of being
+ * guillotined against it (defects #12, #13). Padding only — the flex/overflow
+ * model is quadrone's and stays untouched. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab {
+  padding-inline-end: var(--ddb-space-1);
+}
+
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tab-content {
-  padding-inline-end: var(--ddb-space-3);
   padding-block-end: calc(var(--ddb-space-5) + var(--ddb-radius-panel));
 }

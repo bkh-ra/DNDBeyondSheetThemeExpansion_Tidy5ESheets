@@ -136,38 +136,65 @@
   gap: var(--ddb-space-half);
 }
 
-/* Interior divider — neutral hairline, not the ring token. The groups stretch
- * (align-items: stretch above) and now own the strip's vertical padding, so it
- * runs the full inner height whatever each group holds. */
+/* Interior divider — neutral hairline, not the ring token. Drawn as a
+ * pseudo-element rather than a border-left so it can be inset from the panel's
+ * inner ring at both ends: welded corner-to-corner it read as a T-junction in
+ * the frame instead of a rule between two groups. */
+.tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-group {
+  position: relative;
+}
+
 .tidy5e-sheet.application.ddb
   .ddb-conditions-defenses
   .ddb-cd-group
-  + .ddb-cd-group {
-  border-left: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  + .ddb-cd-group::before {
+  content: '';
+  position: absolute;
+  top: var(--ddb-space-1);
+  bottom: var(--ddb-space-1);
+  left: 0;
+  width: var(--ddb-border-width-panel);
+  background: var(--ddb-panel-border);
+  pointer-events: none;
 }
 
-/* Both groups' headings share a baseline, and therefore both groups' first
- * value row shares a top edge, even though only one header carries buttons
- * (the trait configs when unlocked, the + when editable) — that asymmetry was
- * defect #7's 7px heading / 14px value-row offset. The min-height is the
- * button box, so the row is the same height with or without them. */
+/* STRUCTURAL DIFFERENCE BEHIND THE OFFSET BASELINES: both headers are the same
+ * `div.ddb-cd-header > h3.ddb-cd-label + control`, but the two controls are
+ * gated on DIFFERENT conditions — the defenses' trait-config cogs render on
+ * `context.unlocked`, the conditions' + button on `context.editable`. In the
+ * ordinary locked-but-owned state one header therefore holds a 1rem button box
+ * and the other holds nothing but a 10px/1.3 label, so the rows sized
+ * differently and `align-items: center` then placed the two labels on different
+ * baselines. `min-height` alone did not fix it: the row could still be taller
+ * than the label, leaving the centring to decide the baseline.
+ *
+ * Fix: pin the row to a fixed height AND give the label a line box of exactly
+ * that height. The label's baseline is then a property of its own line box, not
+ * of whichever siblings happen to be present, so the two headings — and the
+ * value rows beneath them — are pixel-equal in every lock/edit combination. */
 .tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-header {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: var(--ddb-space-1);
-  min-height: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
 }
 
 .tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-label {
+  flex: 0 1 auto;
   margin: 0;
+  padding: 0;
   border: none;
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-label);
   font-weight: var(--ddb-weight-label);
   text-transform: var(--ddb-transform-label);
   color: var(--ddb-label);
-  line-height: 1.3;
+  /* Line box = the header row height, so the baseline is fixed by the label
+   * itself and cannot shift with the control beside it (see the header rule). */
+  line-height: 1rem;
+  white-space: nowrap;
 }
 
 .tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-empty {

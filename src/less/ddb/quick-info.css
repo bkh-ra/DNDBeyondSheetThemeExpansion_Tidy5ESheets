@@ -386,6 +386,61 @@
   text-wrap: balance;
 }
 
+/* ------------------------------------------------------------------ *
+ * BAND CAPTION BASELINE
+ * ------------------------------------------------------------------ */
+
+/* Every caption INSIDE a band frame — PROFICIENCY BONUS, WALKING SPEED,
+ * HEROIC INSPIRATION — ends on one line across the whole band.
+ *
+ * They used to ride at the end of each box's centred flex stack, so the
+ * caption's position was the sum of everything above it and no two boxes
+ * agreed: measured on live screenshots, SPEED sat at y 165, PROFICIENCY BONUS
+ * at 171 and INSPIRATION at 175 (round-2 review). Three separate causes —
+ * a one-line label reserving 11px where a two-line label reserves 22, the
+ * speed box optionally carrying a "Walking" heading above its value, and the
+ * inspiration box holding a token instead of a figure — and centring the stack
+ * turns every one of them into caption drift.
+ *
+ * Pinning the caption to the frame instead removes all three at once: the
+ * block's BOTTOM is fixed, and `min-height` of exactly two line boxes plus
+ * `justify-content: flex-end` means one line and two lines finish on the same
+ * final baseline rather than centring in the same slot. Interiors are held off
+ * it by the matching 2rem bottom inset below.
+ *
+ * 10px up from the frame's bottom edge: the octagon's second edge runs
+ * x 4.5 .. 65.5 with its bottom corner cuts starting at y 67.2, so the usable
+ * width closes fast below that. This puts the last line's glyphs around
+ * y 61 .. 68, where the narrowest point still measures 59px against the ~54px
+ * "INSPIRATION" sets at --ddb-size-label. At 8px the descender line drops to
+ * y 72, where the cuts have taken the width to 51px and the longest word would
+ * cross the echo.
+ *
+ * Colour comes from the shared label typography block at the top of this file
+ * (--ddb-label) and is NOT restated: the inspiration caption used to override
+ * it to --ddb-heading-box and rendered pure white against its siblings'
+ * --ddb-label grey. */
+.tidy5e-sheet.application.ddb .ddb-quick-info .ddb-stat-box__label,
+.tidy5e-sheet.application.ddb .ddb-inspiration-box__label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: var(--ddb-space-4);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: 2.2em; /* exactly two line boxes at the shared line-height 1.1 */
+  padding: 0 var(--ddb-space-1);
+}
+
+/* The 32px the caption block occupies (22px of text + its 10px offset), kept
+ * clear of every band interior. Stated once for both the figure stacks and the
+ * inspiration token so the caption can never be overprinted. */
+.tidy5e-sheet.application.ddb .ddb-quick-info .ddb-stat-box__content,
+.tidy5e-sheet.application.ddb .ddb-inspiration-box__content {
+  inset: 0 0 2rem 0;
+}
+
 /* The proficiency-bonus figure is the one documented exception to
  * --ddb-weight-value (DESIGN-TOKENS.md "Uncertain / caveats"). */
 .tidy5e-sheet.application.ddb
@@ -505,12 +560,11 @@
   color: var(--ddb-label);
 }
 
-/* The token stack owns the frame's upper 48px; the label owns the rest. Both
- * interior modes (toggle button / banked value + steppers) use this layer, so
- * the split is stated once here rather than inside each branch. */
+/* The token stack owns the frame's upper 48px; the caption owns the rest (the
+ * bottom inset comes from the BAND CAPTION BASELINE block). Both interior
+ * modes — toggle button, and banked value + steppers — use this layer. */
 .tidy5e-sheet.application.ddb .ddb-inspiration-box__content {
   position: absolute;
-  inset: 0 0 2rem 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -610,27 +664,15 @@
   font-size: var(--ddb-size-label);
 }
 
-/* Inside the frame now, in the 32px the token stack leaves.
- *
- * The 70 x 80 octagon's second edge runs x 4.5 .. 65.5 with its bottom corner
- * cuts starting at y 67.2, so the usable width closes up fast below that. A
- * 10px bottom offset puts the two balanced 10px lines at roughly y 49 .. 70,
- * where the narrowest point still measures 59px against the ~54px that
- * "INSPIRATION" sets at --ddb-size-label. That is the constraint that fixes
- * this offset: 8px would drop the descender line to y 72, where the cuts have
- * taken the width down to 51px and the longer word would cross the echo. */
+/* Position, colour and line-height all come from the BAND CAPTION BASELINE
+ * block above, which this caption shares with PROFICIENCY BONUS and WALKING
+ * SPEED. Only the wrapping behaviour is its own, and only because the label is
+ * not a `.ddb-stat-box__label` and so misses that rule. */
 .tidy5e-sheet.application.ddb .ddb-inspiration-box__label {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: var(--ddb-space-4);
-  display: block;
-  padding: 0 var(--ddb-space-1);
-  text-align: center;
-  line-height: 1.05;
+  max-width: 100%;
   white-space: normal;
+  text-align: center;
   text-wrap: balance;
-  color: var(--ddb-heading-box);
 }
 
 /* ------------------------------------------------------------------ *
@@ -868,6 +910,8 @@
   box-shadow: var(--ddb-focus-ring);
 }
 
+/* Same quadrone shadow reset as the readout inputs below: this field DOES keep
+ * a box, but it must be the panel's own hairline box and nothing else. */
 .tidy5e-sheet.application.ddb .ddb-hp-block .ddb-hp-block__apply-amount {
   width: 100%;
   height: 1.25rem;
@@ -875,6 +919,8 @@
   border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
   border-radius: var(--ddb-radius-input);
   background: none;
+  box-shadow: none;
+  outline: none;
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-body);
   font-weight: var(--ddb-weight-value);
@@ -986,7 +1032,20 @@
 }
 
 /* Transparent field, and the only rule is a hairline under the figure itself —
- * never a full-width bar across the panel. */
+ * never a full-width bar across the panel. Matches `.ddb-hp-block__value`
+ * above exactly, so CURRENT / MAX / TEMP read the same whichever of the two is
+ * rendering a given field.
+ *
+ * `box-shadow` and `outline` are the load-bearing resets. Quadrone normalizes
+ * every `input[type=text|number]` with a `box-shadow: var(--t5e-drop-shadow-field)`
+ * as well as a border and a background (quadrone/components/inputs.css). This
+ * rule already out-specified the border and the background, but it never
+ * SAID anything about the shadow, so the shadow survived — and because it is a
+ * black shadow at 10%, it is invisible on the dark panel and reads as a full
+ * field box on the light one. That is why CURRENT and TEMP came out as boxes
+ * in light theme while MAX (a span, which quadrone's rule cannot match) showed
+ * the bare hairline (round-2 review). Edit affordance is the hairline plus the
+ * focus ring below; nothing draws a box in either theme. */
 .tidy5e-sheet.application.ddb .ddb-hp-block .ddb-hp-block__input {
   width: 100%;
   max-width: 3rem;
@@ -995,6 +1054,8 @@
   border-bottom: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
   border-radius: 0;
   background: none;
+  box-shadow: none;
+  outline: none;
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-value-lg);
   font-weight: var(--ddb-weight-value);

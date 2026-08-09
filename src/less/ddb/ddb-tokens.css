@@ -126,9 +126,10 @@
    * ink next to the SVG frames). Live-eval defect #1. */
   --ddb-panel-ring: var(--ddb-accent);
   /* Backdrop tint strength over the character art (theme-specific: light
-   * needs a much heavier veil or the art blows out — live-eval defect #5). */
-  --ddb-backdrop-tint-top: 74%;
-  --ddb-backdrop-tint-bottom: 88%;
+   * needs a much heavier veil or the art blows out — live-eval defect #5;
+   * round-2 eval: 74/88 overshot and flattened the band, tuned down). */
+  --ddb-backdrop-tint-top: 62%;
+  --ddb-backdrop-tint-bottom: 80%;
   --ddb-box-bg: #fefefe;
   --ddb-sidebar-bg: #fff;
   --ddb-table-row-bg: #fdfdfd;

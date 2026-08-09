@@ -480,6 +480,72 @@
   background: var(--ddb-table-row-hover-bg);
 }
 
+/* --- NAME TRUNCATION ---
+ *
+ * At quadrone's ~276px sidebar a favorite name rarely runs out of room; in this
+ * 230px pane it does constantly, and quadrone's markup HARD-CLIPS mid-glyph
+ * ("Breath Weapon (Fire)" -> "Breath Weapon (Fire"). Root cause: quadrone gives
+ * `.stacked > span` `display: flex` together with `text-overflow: ellipsis`,
+ * and `text-overflow` has no effect on a flex container — it only applies to a
+ * block container's inline content. So the ellipsis silently never fires and
+ * the overflow is chopped instead.
+ *
+ * Fix = the full truncation chain:
+ *   1. `min-width: 0` on EVERY flex ancestor between the row and the text.
+ *      Flex items default to `min-width: auto`, which refuses to shrink below
+ *      content size and defeats ellipsis no matter what the text node says.
+ *      (`.favorite-button` already ships `min-width: 0`; the two containers
+ *      inside it do not.)
+ *   2. the text node itself becomes a BLOCK container with nowrap + hidden +
+ *      ellipsis, which is the only combination that renders "…".
+ *
+ * Only the name flexes. The trailing value chips (uses, modifiers, save DC,
+ * quantity) are pinned `flex: 0 0 auto` so they always stay fully visible —
+ * truncating a "+7" or "3/3" would be worse than truncating a long name. */
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite > .favorite-button {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite > div:not(.favorite-button) {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .item-name-container,
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .item-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* The name. `display: block` is the load-bearing part — as a flex item it
+ * would clip instead of ellipsizing. */
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .item-name > .title {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The subtitle stays a flex row (it can contain `.divider-dot` elements that
+ * would stack if this became a block), but it must still be allowed to shrink,
+ * and its own text runs get the ellipsis treatment. */
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .item-name > .subtitle {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .item-name > .subtitle > * {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .subtitle,
 .tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .secondary,
 .tidy5e-sheet.application.ddb .ddb-sidebar-content .favorite .item-context {

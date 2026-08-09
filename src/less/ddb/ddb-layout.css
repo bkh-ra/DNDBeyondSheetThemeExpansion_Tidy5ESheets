@@ -61,10 +61,13 @@
   padding: 6px 8px 8px;
   /* Safety valve (live-eval defect #3): normally the fixed panes fit and this
    * never scrolls, but a tall character (extra left-column groups) must scroll
-   * the body rather than slice its bottom boxes off at the window edge. */
+   * the body rather than slice its bottom boxes off at the window edge.
+   * Thumb at 60% accent — round-2 eval measured the transparent thumb at
+   * ~1.6:1 against the light backdrop, effectively undiscoverable. */
   overflow: hidden auto;
   scrollbar-width: thin;
-  scrollbar-color: var(--ddb-accent-transparent) transparent;
+  scrollbar-color: color-mix(in srgb, var(--ddb-accent) 60%, transparent)
+    transparent;
 }
 
 .tidy5e-sheet.application.ddb .ddb-sheet-body > :not(.ddb-columns) {
