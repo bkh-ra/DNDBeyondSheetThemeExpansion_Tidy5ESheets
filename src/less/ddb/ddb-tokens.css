@@ -119,6 +119,16 @@
   /* Neutral hairline for INSIDE the scrollable lists (user choice: accent
    * lines were "too much" at list density; panels keep the accent border). */
   --ddb-list-border: #eaeaea;
+  /* PANEL RING: every panel-level double outline (left column, skills, HP,
+   * primary box, conditions strip, sidebar) strokes in this — full accent in
+   * BOTH themes. Never --ddb-panel-border for panel rings: in light that is
+   * #eaeaea-on-white (invisible) and in dark it is accent@60 (a second, duller
+   * ink next to the SVG frames). Live-eval defect #1. */
+  --ddb-panel-ring: var(--ddb-accent);
+  /* Backdrop tint strength over the character art (theme-specific: light
+   * needs a much heavier veil or the art blows out — live-eval defect #5). */
+  --ddb-backdrop-tint-top: 74%;
+  --ddb-backdrop-tint-bottom: 88%;
   --ddb-box-bg: #fefefe;
   --ddb-sidebar-bg: #fff;
   --ddb-table-row-bg: #fdfdfd;
@@ -126,10 +136,11 @@
   --ddb-table-row-hover-bg: #e3f4eb;
   --ddb-text: #242528;
   --ddb-text-prose: #242528;
-  --ddb-text-muted: #75838b;
-  --ddb-text-disabled: #aaa;
-  --ddb-label: #75838b;
-  --ddb-heading: #75838b;
+  /* was #75838b (~3.4:1 on white — failed the live-eval contrast check) */
+  --ddb-text-muted: #5b6970;
+  --ddb-text-disabled: #9aa4aa;
+  --ddb-label: #5b6970;
+  --ddb-heading: #5b6970;
   --ddb-heading-box: #000;
   --ddb-positive: #40d250;
   /* Text-safe variants: DDB's bright green is only 1.97:1 on a white panel,
@@ -160,6 +171,8 @@
   /* user choice: 60% accent (was 40%) so outlines read clearly in dark */
   --ddb-panel-border: color-mix(in srgb, var(--ddb-accent) 60%, transparent);
   --ddb-list-border: rgba(255, 255, 255, 0.16);
+  --ddb-backdrop-tint-top: 34%;
+  --ddb-backdrop-tint-bottom: 44%;
   --ddb-box-bg: #10161adb;
   --ddb-sidebar-bg: #10161a;
   --ddb-table-row-bg: rgba(16, 22, 26, 0.859);

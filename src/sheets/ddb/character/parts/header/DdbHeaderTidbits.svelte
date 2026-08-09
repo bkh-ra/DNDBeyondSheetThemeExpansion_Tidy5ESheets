@@ -62,12 +62,19 @@
         class="ddb-character-name"
         data-tidy-sheet-part="actor-name"
         data-tooltip={context.actor.name}
+        data-tooltip-direction="UP"
       />
     {:else}
+      <!--
+        The tooltip carries the full name for the truncated case. Direction UP
+        so it never lands on the species/class/DC line directly beneath it —
+        hovering the name to read it was covering the very row it belongs with.
+      -->
       <h1
         class="ddb-character-name"
         data-tidy-sheet-part="actor-name"
         data-tooltip={context.actor.name}
+        data-tooltip-direction="UP"
       >
         {context.actor.name}
       </h1>

@@ -13,10 +13,10 @@
  * the fill and the frame outline. Each band frame is ORNAMENTAL, redrawn from
  * measurements off the captures — an octagon for the stat boxes, a raked hex
  * for initiative and hit dice, a studded heater shield for armor class, and a
- * winged card with side flanks and a laurel for the ability boxes — and every
- * one of them is double-lined at FULL accent, so the whole band reads as one
- * family. The one exception is `.ddb-hp-block`, whose root is a flex container
- * and paints its own surface — see DdbHpBlock.svelte.
+ * chamfered card for the ability boxes — and every one of them is double-lined
+ * at FULL --ddb-panel-ring, so the whole band reads as one family. The one
+ * exception is `.ddb-hp-block`, whose root is a flex container and paints its
+ * own surface — see DdbHpBlock.svelte.
  *
  * BAND BASELINE: every band frame bottom lands on 79.5 in its own SVG space
  * (ability 81x95 frame, 70x80 stat boxes, 70x52 inspiration frame + label, and
@@ -40,12 +40,13 @@
 /* The band frames are drawn IN the character's theme colour on DDB — the
  * captures show every quick-info silhouette (ability card, stat octagon,
  * initiative hex, armor shield, inspiration, health panel) stroked in the
- * accent, not in the neutral panel hairline the scrollable lists use. Only
- * these three SVGs and the health panel carry it; `DdbPanelFrame` (the left
- * column) has its own classes and is untouched. */
+ * accent, not in the neutral panel hairline the scrollable lists use. These
+ * are panel-level rings, so they take `--ddb-panel-ring` like every other
+ * panel outline in the sheet rather than reaching for the accent directly;
+ * `DdbPanelFrame` (the left column) has its own classes and is untouched. */
 .tidy5e-sheet.application.ddb .ddb-box-background__path {
   fill: var(--ddb-box-bg);
-  stroke: var(--ddb-accent);
+  stroke: var(--ddb-panel-ring);
   stroke-width: var(--ddb-border-width-panel);
 }
 
@@ -53,9 +54,7 @@
  * top of it is an outline. */
 .tidy5e-sheet.application.ddb .ddb-stat-box-shape__echo,
 .tidy5e-sheet.application.ddb .ddb-ability-box-shape__well,
-.tidy5e-sheet.application.ddb .ddb-ability-box-shape__wing,
-.tidy5e-sheet.application.ddb .ddb-ability-box-shape__flank,
-.tidy5e-sheet.application.ddb .ddb-ability-box-shape__laurel,
+.tidy5e-sheet.application.ddb .ddb-ability-box-shape__corner,
 .tidy5e-sheet.application.ddb .ddb-shield-shape__inner {
   fill: none;
 }
@@ -73,12 +72,12 @@
  * against the ability card's five, the pair merged into one soft line and the
  * whole box read flat. These stay at full accent.
  *
- * TIER 2 — the ability card's flourishes (corner wings, side flanks, bottom
- * laurel). These are genuinely secondary: they frame the plaque instead of
- * bounding it, and at full strength they compete with the card edge. */
-.tidy5e-sheet.application.ddb .ddb-ability-box-shape__wing,
-.tidy5e-sheet.application.ddb .ddb-ability-box-shape__flank,
-.tidy5e-sheet.application.ddb .ddb-ability-box-shape__laurel {
+ * TIER 2 — the ability card's corner chamfers. Genuinely secondary: they
+ * decorate the plaque instead of bounding it, and at full strength they read
+ * as four more structural edges competing with the card. (This tier used to
+ * hold the card's wings, flanks and laurels; those are gone — see the ornament
+ * budget note in DdbAbilityBoxShape.svelte.) */
+.tidy5e-sheet.application.ddb .ddb-ability-box-shape__corner {
   opacity: var(--ddb-stroke-echo-opacity);
 }
 
@@ -178,19 +177,17 @@
   height: 5.9375rem; /* 95px */
 }
 
-/* The score badge is painted opaque so it occludes both the card's bottom edge
- * and the laurel tips, and the three read as one silhouette. (The well, wings,
- * flanks and laurels take their decorative stroke from the shared ornament rule
- * near the top of this file.) */
+/* The score badge is painted opaque so it occludes the card's bottom edge and
+ * the two read as one silhouette. (The corner chamfers take their decorative
+ * strength from the shared ornament rule near the top of this file.) */
 .tidy5e-sheet.application.ddb .ddb-ability-box-shape__badge {
   fill: var(--ddb-panel-bg-solid);
 }
 
 /* Runs to the card's bottom edge (79.5 of the 95px footprint), not the badge.
- * The block padding clears the card's own top edge, which the ornament pulled
- * down to y 4.5 to make room for the corner wings above it — the ONLY interior
- * value the reframe moved, and it moves the label alone: the modifier and the
- * score badge are pinned to the well and the oval respectively. */
+ * The block padding clears the card's own top edge at y 4.5 — it positions the
+ * label alone: the modifier and the score badge are pinned to the well and the
+ * oval respectively. */
 .tidy5e-sheet.application.ddb .ddb-ability-box__roller {
   position: absolute;
   inset: 0 0 0.96875rem 0;
@@ -494,9 +491,12 @@
  * Inspiration
  * ------------------------------------------------------------------ */
 
-/* 70 x 52 frame holding just the token — putting its bottom edge on the band
- * baseline — with the two-line caps label beneath it. The label is wider than
- * the frame, exactly as DDB draws it. */
+/* Same 70 x 80 footprint AND the same full-height octagon as PROFICIENCY and
+ * SPEED beside it, with the caps label INSIDE the frame like theirs. It used to
+ * draw a 52px frame around the token alone and hang the label outside and
+ * below: two-thirds the height of its neighbours, and the only label in the
+ * band sitting outside its own outline. Nothing here overrides
+ * `.ddb-box-background`, so the frame fills the box. */
 .tidy5e-sheet.application.ddb .ddb-inspiration-box {
   position: relative;
   flex: 0 0 auto;
@@ -505,15 +505,12 @@
   color: var(--ddb-label);
 }
 
-.tidy5e-sheet.application.ddb .ddb-inspiration-box .ddb-box-background {
-  inset: 0 0 1.75rem 0;
-  width: auto;
-  height: auto;
-}
-
+/* The token stack owns the frame's upper 48px; the label owns the rest. Both
+ * interior modes (toggle button / banked value + steppers) use this layer, so
+ * the split is stated once here rather than inside each branch. */
 .tidy5e-sheet.application.ddb .ddb-inspiration-box__content {
   position: absolute;
-  inset: 0 0 1.75rem 0;
+  inset: 0 0 2rem 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -563,11 +560,19 @@
 }
 
 /* Tint the octagon itself, not every path in the frame — the second edge is an
- * outline and must stay one. */
+ * outline and must stay one.
+ *
+ * The tint is mixed INTO --ddb-box-bg rather than being a translucent accent
+ * laid over nothing. `--ddb-accent-subtle-bg` is accent at 20% alpha, and
+ * using it as the frame's `fill` REPLACED the opaque box surface, so in light
+ * theme the inspired tile stopped covering the character-art backdrop and went
+ * dark red — the one dark surface in a white band (light-theme review defect
+ * #6). Mixing keeps the panel's own value in both themes and only shifts its
+ * hue, which is all "inspired" needs to say. */
 .tidy5e-sheet.application.ddb
   .ddb-inspiration-box.inspired
   .ddb-stat-box-shape__frame {
-  fill: var(--ddb-accent-subtle-bg);
+  fill: color-mix(in srgb, var(--ddb-accent) 20%, var(--ddb-box-bg));
 }
 
 .tidy5e-sheet.application.ddb .ddb-inspiration-box__level {
@@ -605,14 +610,22 @@
   font-size: var(--ddb-size-label);
 }
 
-/* The label overhangs the frame on both sides so "HEROIC INSPIRATION" can
- * balance onto two lines without squeezing the token. */
+/* Inside the frame now, in the 32px the token stack leaves.
+ *
+ * The 70 x 80 octagon's second edge runs x 4.5 .. 65.5 with its bottom corner
+ * cuts starting at y 67.2, so the usable width closes up fast below that. A
+ * 10px bottom offset puts the two balanced 10px lines at roughly y 49 .. 70,
+ * where the narrowest point still measures 59px against the ~54px that
+ * "INSPIRATION" sets at --ddb-size-label. That is the constraint that fixes
+ * this offset: 8px would drop the descender line to y 72, where the cuts have
+ * taken the width down to 51px and the longer word would cross the echo. */
 .tidy5e-sheet.application.ddb .ddb-inspiration-box__label {
   position: absolute;
-  left: calc(-1 * var(--ddb-space-5));
-  right: calc(-1 * var(--ddb-space-5));
-  bottom: 0;
+  left: 0;
+  right: 0;
+  bottom: var(--ddb-space-4);
   display: block;
+  padding: 0 var(--ddb-space-1);
   text-align: center;
   line-height: 1.05;
   white-space: normal;
@@ -638,10 +651,17 @@
 /* The shield is drawn in what the band leaves, like every other combat-row
  * frame. Its viewBox is 68 x 80 and the box it now gets is 68 x 66, so the
  * default `xMidYMid meet` scales the silhouette uniformly by 66/80 = 0.825 and
- * centres it: the ink lands on x 5.95 .. 62.05, y 14 .. 80. Uniform scale, so
+ * centres it: the ink lands on x 5.95 .. 62.05, y 14 .. 78.2. Uniform scale, so
  * the measured heater proportions are intact, the studs stay round, and
  * `vector-effect="non-scaling-stroke"` keeps the double outline at
- * --ddb-border-width-panel. Nothing outside the 68 x 80 element is painted. */
+ * --ddb-border-width-panel. Nothing outside the 68 x 80 element is painted.
+ *
+ * LABEL-TO-SHAPE GAP. The hexes' flat top edge lands at element y 14.5. With
+ * the shield's top flattened (DdbShieldShape, review defect #14) its topmost
+ * stud lands at 14.0 and its body edge at 16.06, so all three shapes start
+ * within 1.6px of one another under a label band that ends at 11. The old
+ * centre-peaked top put the body edge at 20.2 and the shield alone looked like
+ * it was hanging away from its caption. */
 .tidy5e-sheet.application.ddb .ddb-ac-shield .ddb-box-background {
   inset: var(--ddb-caps-label-band) 0 0 0;
   width: auto;
@@ -653,28 +673,28 @@
  * number on the shield's optical centre.
  *
  * GEOMETRY, in DdbShieldShape's own 68 x 80 viewBox units. The safe area is
- * the inner outline: peak y 7.5, shoulders y 11.5, bottom point y 68.8. It
- * reaches maximum width at y 25 (x 9.0 .. 59.0, 50 units across) and holds
- * above 90% of that from y 12 to y 42, below which the sides fall away to the
- * point. The AREA CENTROID of that region is y 33.7 — inside the widest band,
- * and the only defensible centre for a single figure on a form whose lower
- * half tapers. (The old label+value stack was biased off the bounding-box
- * centre for the same reason; with the label gone, the bias has to be
- * re-derived for the figure alone, not inherited.)
+ * the inner outline: flat top y 8, bottom point y 68.5. It reaches maximum
+ * width at y 22.2 (x 9.05 .. 58.95, 49.9 units across) and holds above 90% of
+ * that down to y ~42, below which the sides fall away to the point. The AREA
+ * CENTROID of that region is y 32.97 — inside the widest band, and the only
+ * defensible centre for a single figure on a form whose lower half tapers.
+ * (The old label+value stack was biased off the bounding-box centre for the
+ * same reason; with the label gone the bias is re-derived for the figure
+ * alone, not inherited.)
  *
  * This layer covers the shield box, 66px tall, so plain centring would land
- * the figure at 33 of 66 — viewBox y 40, already into the narrowing. Ten
- * pixels of bottom padding lift the centre by 5px, to 28 of 66, i.e. viewBox
- * 28 / 0.825 = 33.9. The inline padding is the safe area's own half-width
- * (50 units x 0.825 = 41px of usable span), so a three-digit AC clips to the
- * shield rather than crossing the outline. */
+ * the figure at 33 of 66 — viewBox y 40, already into the narrowing. Twelve
+ * pixels of bottom padding lift the centre by 6px, to 27 of 66, i.e. viewBox
+ * 27 / 0.825 = 32.7 — 0.14px off the centroid. The inline padding holds the
+ * figure inside the safe area's own span (49.9 units x 0.825 = 41px), so a
+ * three-digit AC clips to the shield rather than crossing the outline. */
 .tidy5e-sheet.application.ddb .ddb-ac-shield__content {
   position: absolute;
   inset: var(--ddb-caps-label-band) 0 0 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 var(--ddb-space-5) var(--ddb-space-4);
+  padding: 0 var(--ddb-space-5) var(--ddb-space-5);
   text-align: center;
 }
 
@@ -722,24 +742,51 @@
    * at 4px the 60px applicator stack had 69px of room and the buttons' own
    * sizing (see below) pushed it to 88px, straight over the 1.5px border. */
   padding: var(--ddb-space-2) var(--ddb-space-4);
-  /* Accent, to match the SVG frames beside it in the band. */
-  border: var(--ddb-border-width-panel) solid var(--ddb-accent);
+  /* TRANSPARENT border, ring painted by the pseudo-elements below. The border
+   * still reserves its 1.125px in the box model — the panel's outside edge and
+   * everything measured against it are unchanged — but it carries no colour of
+   * its own. */
+  border: var(--ddb-border-width-panel) solid transparent;
   /* Panel-level surface, so the panel radius — not the input radius. */
   border-radius: var(--ddb-radius-panel);
   background: var(--ddb-box-bg);
 }
 
-/* The panel's second edge. Every SVG frame in the band is double-lined, and
- * without this the largest surface in the band would be the only single-lined
- * one. It is inert decoration behind the interior (which carries `z-index: 1`),
- * inset far enough that the applicator still clears it. */
+/* BOTH of the panel's lines are box-shadow rings, not borders.
+ *
+ * This is the only quick-info surface drawn in CSS rather than SVG, and with a
+ * real `border` it came out visibly lighter than the SVG frames beside it:
+ * Blink snaps a border to whole device pixels, so --ddb-border-width-panel
+ * (1.125px) rendered as 1px here while the SVG strokes — which are not snapped
+ * — rendered at the full 1.125 (live design review, defect #9). An inset
+ * box-shadow is not snapped either, so the panel now matches its neighbours.
+ * The technique is the one primary-box.css uses: a pseudo-element positioned
+ * on the line's own rectangle, with the ring drawn inward across it.
+ *
+ * Both are inert decoration behind the interior, which carries `z-index: 1`.
+ *
+ * `::after` — the silhouette. Absolute insets resolve against the PADDING box,
+ * so pulling it out by one border width lands its edge exactly on the panel's
+ * border box, and the ring then fills the (transparent) border area. */
 .tidy5e-sheet.application.ddb .ddb-hp-block::after {
   content: '';
   position: absolute;
+  inset: calc(-1 * var(--ddb-border-width-panel));
+  border-radius: var(--ddb-radius-panel);
+  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-ring);
+  pointer-events: none;
+}
+
+/* `::before` — the second edge. Every SVG frame in the band is double-lined,
+ * and without this the largest surface in the band would be the only
+ * single-lined one. Inset far enough that the applicator still clears it, and
+ * concentric with the panel: the corner tightens by exactly the offset. */
+.tidy5e-sheet.application.ddb .ddb-hp-block::before {
+  content: '';
+  position: absolute;
   inset: var(--ddb-panel-double-gap);
-  border: var(--ddb-border-width-panel) solid var(--ddb-accent);
-  /* Concentric with the panel: the corner tightens by exactly the offset. */
   border-radius: calc(var(--ddb-radius-panel) - var(--ddb-panel-double-gap));
+  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-ring);
   pointer-events: none;
 }
 
@@ -908,13 +955,34 @@
   text-overflow: ellipsis;
 }
 
+/* Same box as `.ddb-hp-block__input` below, down to the hairline.
+ *
+ * CURRENT and TEMP are always inputs while the sheet is editable, but MAX is
+ * only an input once it is UNLOCKED — in play mode it renders as this span. It
+ * therefore used to be the one figure in the readout with no underline, so the
+ * three fields advertised themselves differently for a reason no reader can
+ * see (live design review, defect #9). The hairline is now a property of the
+ * READOUT's state, not of which element happens to be rendering: present on
+ * all three whenever the block is editable, absent from all three when it is
+ * not. It is declared transparent here so switching modes never reflows the
+ * fixed-height panel. */
 .tidy5e-sheet.application.ddb .ddb-hp-block__value {
+  display: block;
+  width: 100%;
+  max-width: 3rem;
+  margin: 0 auto;
+  border-bottom: var(--ddb-border-width-panel) solid transparent;
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-value-lg);
   font-weight: var(--ddb-weight-value);
   letter-spacing: var(--ddb-letterspacing-value-lg);
+  text-align: center;
   line-height: 1;
   color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-block.editable .ddb-hp-block__value {
+  border-bottom-color: var(--ddb-panel-border);
 }
 
 /* Transparent field, and the only rule is a hairline under the figure itself —

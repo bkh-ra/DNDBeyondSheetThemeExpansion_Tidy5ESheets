@@ -34,8 +34,15 @@
   class={['ddb-inspiration-box', { inspired: active }]}
   data-tidy-sheet-part="inspiration-tracker-container"
 >
-  <!-- The frame covers only the icon; the two-line caps label sits beneath it. -->
-  <DdbStatBoxShape width={70} height={52} />
+  <!--
+    Full-height 70 x 80 octagon, the same frame PROFICIENCY and SPEED carry, so
+    the band is one rhythm: the tile used to be a 52px frame with its caps label
+    hanging outside and underneath it, which left it ~25px shorter than its
+    neighbours and made it the only box whose label was not inside its own
+    outline (live design review). The label is now pinned inside the frame; see
+    quick-info.css.
+  -->
+  <DdbStatBoxShape width={70} height={80} />
   {#if banked}
     <div class="ddb-inspiration-box__content">
       <button
@@ -92,6 +99,8 @@
       {@render token()}
     </button>
   {/if}
+  <!-- dnd5e's `DND5E.Inspiration` is "Heroic Inspiration"; the caps transform
+       and the frame's width balance it onto two lines inside the octagon. -->
   <span class="ddb-inspiration-box__label">
     {localize('DND5E.Inspiration')}
   </span>

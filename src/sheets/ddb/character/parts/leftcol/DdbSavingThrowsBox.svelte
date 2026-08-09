@@ -11,8 +11,8 @@
   import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
   import type { ActorAbilityContextEntry } from 'src/types/types';
   import { CONSTANTS } from 'src/constants';
-  import { getModifierData } from 'src/utils/formatting';
-  import { isNil } from 'src/utils/data';
+  import { formatAsModifier, getModifierData } from 'src/utils/formatting';
+  import { error } from 'src/utils/logging';
   import DdbBox from './DdbBox.svelte';
   import DdbProficiencyPip from './DdbProficiencyPip.svelte';
   import DdbSaveEntryShape from './DdbSaveEntryShape.svelte';
@@ -44,6 +44,52 @@
    * closest true analogue we can render without inventing actor API calls.
    */
   let saveBonus = $derived(context.system?.bonuses?.abilities?.save ?? '');
+
+  /**
+   * That field holds a FORMULA, not a number — a paladin's Aura of Protection
+   * stores `@abilities.cha.mod`. Printing it verbatim put the literal string
+   * "@abilities.cha.mod" on the sheet (live-eval defect), so it is resolved
+   * against the actor's roll data here.
+   *
+   * `dnd5e.utils.simplifyBonus` is the system's own display-side resolver and
+   * is what the quadrone sheets use for exactly this (see
+   * `Tidy5eActorSheetQuadroneBase._prepareTraits` and
+   * `Tidy5eNpcSheetQuadrone`), including the `deterministic: true` roll data.
+   *
+   * It answers 0 for anything it cannot evaluate, which is indistinguishable
+   * from a genuine +0, so determinism is tested BEFORE trusting it: a bonus
+   * carrying a dice term (`1d4`) or one that will not parse at all has no
+   * honest signed integer, and is shown as the unevaluated formula instead of
+   * being flattened into a wrong number.
+   *
+   * `null` means there is no bonus at all and the row does not render, which
+   * keeps the box a clean 2x3 grid on characters with nothing to say.
+   */
+  let saveBonusDisplay = $derived.by<{
+    resolved: boolean;
+    text: string;
+  } | null>(() => {
+    const formula = saveBonus?.toString().trim() ?? '';
+
+    if (formula === '') {
+      return null;
+    }
+
+    try {
+      const rollData = context.actor.getRollData({ deterministic: true });
+
+      if (new Roll(formula, rollData).isDeterministic) {
+        return {
+          resolved: true,
+          text: formatAsModifier(dnd5e.utils.simplifyBonus(formula, rollData)),
+        };
+      }
+    } catch (e) {
+      error('Unable to resolve the global saving throw bonus.', false, e);
+    }
+
+    return { resolved: false, text: formula };
+  });
 
   /**
    * Concentration is a save on the quadrone sheet too, and quadrone shows it
@@ -157,10 +203,20 @@
     </div>
   {/if}
 
-  {#if !isNil(saveBonus, '')}
+  {#if saveBonusDisplay}
     <div class="ddb-saves-note">
       <span class="ddb-saves-note-label">{localize('DND5E.Bonus')}</span>
-      <span class="ddb-saves-note-text">{saveBonus}</span>
+      <!-- Right-aligned by `.ddb-saves-note-value`, onto the same edge the
+           concentration modifier above it sits on. -->
+      <span
+        class={[
+          'ddb-saves-note-value',
+          !saveBonusDisplay.resolved && 'ddb-saves-note-formula',
+        ]}
+        data-tooltip={saveBonusDisplay.resolved ? saveBonus : undefined}
+      >
+        {saveBonusDisplay.text}
+      </span>
     </div>
   {/if}
 </DdbBox>

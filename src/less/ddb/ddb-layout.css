@@ -40,8 +40,8 @@
   /* full-sheet backdrop: page tint over the character's theme image */
   background:
     linear-gradient(
-      color-mix(in srgb, var(--ddb-page-bg) 34%, transparent),
-      color-mix(in srgb, var(--ddb-page-bg) 44%, transparent)
+      color-mix(in srgb, var(--ddb-page-bg) var(--ddb-backdrop-tint-top), transparent),
+      color-mix(in srgb, var(--ddb-page-bg) var(--ddb-backdrop-tint-bottom), transparent)
     ),
     var(--t5e-sheet-header-bg, var(--t5e-background-image, none)) top center /
       cover no-repeat,
@@ -59,6 +59,12 @@
   flex-direction: column;
   gap: 6px;
   padding: 6px 8px 8px;
+  /* Safety valve (live-eval defect #3): normally the fixed panes fit and this
+   * never scrolls, but a tall character (extra left-column groups) must scroll
+   * the body rather than slice its bottom boxes off at the window edge. */
+  overflow: hidden auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ddb-accent-transparent) transparent;
 }
 
 .tidy5e-sheet.application.ddb .ddb-sheet-body > :not(.ddb-columns) {
@@ -130,12 +136,13 @@
   flex: 0 0 auto;
 }
 
-/* The defenses/conditions box fills the rest of the row, like DDB */
+/* The defenses/conditions box hugs its content (DDB parity — live-eval
+ * defect #8: stretching it full-width left ~60% dead panel). It may grow to
+ * a cap, but never to fill the row. */
 .tidy5e-sheet.application.ddb .ddb-combat-strip-row .ddb-conditions-defenses {
-  flex: 1 1 auto;
-  width: auto;
-  max-width: none;
-  margin-right: 0;
+  flex: 0 1 auto;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .tidy5e-sheet.application.ddb .ddb-col-primary .ddb-primary-box {

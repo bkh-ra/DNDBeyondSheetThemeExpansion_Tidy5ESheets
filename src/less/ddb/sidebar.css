@@ -8,8 +8,8 @@
  *
  * TWO THINGS THIS FILE HAS TO DO
  * ------------------------------
- * 1. PANE SHELL. Paint the pane like the other DDB panels (`--ddb-box-bg`,
- *    1.5px panel border, 4px radius, hairline shadow) and honour the DDB height
+ * 1. PANE SHELL. Paint the pane like the other DDB panels (`--ddb-box-bg`, the
+ *    shared double accent ring at `--ddb-radius-panel`) and honour the DDB height
  *    model: the pane's outer height comes from the grid row, its header is
  *    fixed, and ONLY `.ddb-sidebar-content` scrolls. See the height-model note
  *    on `.ddb-sidebar-content` below.
@@ -119,7 +119,11 @@
 .tidy5e-sheet.application.ddb .ddb-sidebar::after {
   content: '';
   position: absolute;
-  z-index: 2;
+  /* BEHIND the content, above the pane background. The header and the scroll
+   * region are lifted to z-index 1, so favorite rows never have the frame
+   * painted across them; the rings still show through everywhere the content
+   * is transparent, which is everywhere except a hovered row's fill. */
+  z-index: 0;
   border: none;
   pointer-events: none;
 }
@@ -128,7 +132,7 @@
 .tidy5e-sheet.application.ddb .ddb-sidebar::before {
   inset: 0;
   border-radius: var(--ddb-radius-panel);
-  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-border);
+  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-ring);
 }
 
 /* Inner line. Concentric with the silhouette: the gap comes off the radius as
@@ -136,7 +140,7 @@
 .tidy5e-sheet.application.ddb .ddb-sidebar::after {
   inset: var(--ddb-panel-double-gap);
   border-radius: calc(var(--ddb-radius-panel) - var(--ddb-panel-double-gap));
-  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-border);
+  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-ring);
 }
 
 /* Collapsed: the pane shrinks to a rail holding only the toggle. The grid
@@ -172,12 +176,17 @@
  * reading as a cross-bar of the panel rather than a line crossing over it. */
 .tidy5e-sheet.application.ddb .ddb-sidebar-header {
   flex: 0 0 auto;
+  /* Above the rings, like the scroll region. */
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: stretch;
   gap: var(--ddb-space-1);
   min-width: 0;
   margin: var(--ddb-panel-double-gap) var(--ddb-panel-double-gap) 0;
-  padding: 0 var(--ddb-space-1);
+  /* Matches the scroll region's 12px left inset, so the toggle and the list
+   * below it clear the ring by the same ~7px. */
+  padding: 0 var(--ddb-space-3);
   /* The divider is a box-shadow band, not a `border-bottom`, for the same
    * reason the frame is (see the lineweight note above): measured, a
    * `border-bottom: 1.125px` rasterizes to 1.000px while this band rasterizes
@@ -337,9 +346,22 @@
    * `> :last-child` rule above), so the scrollbar and the scrolling rows stay
    * inside the frame instead of running under it. Margins do not change the
    * height contract: flex-basis is still 0. */
+  /* Above the rings (see the z-index note on `::before`). */
+  position: relative;
+  z-index: 1;
+  /* Inline insets are tuned so BOTH sides clear the inner ring by the same
+   * amount. The ring's inner edge sits at gap + line-weight ≈ 5.1px from the
+   * pane edge, so a left inset of 4px margin + 8px padding = 12px leaves ~7px.
+   * The right gets NO padding on purpose: a classic scrollbar is taken out of
+   * the content box, so the reserved gutter IS the right-hand inset. Without
+   * this the right gutter measured ~18px against ~3px on the left — icons
+   * almost touching the ring while values floated in a wide channel.
+   * `scrollbar-gutter: stable` keeps that inset identical whether or not the
+   * list currently overflows. */
   margin-inline: var(--ddb-panel-double-gap);
-  padding: var(--ddb-space-2) var(--ddb-space-1) var(--ddb-space-3);
+  padding: var(--ddb-space-2) 0 var(--ddb-space-3) var(--ddb-space-3);
   overflow: hidden auto;
+  scrollbar-gutter: stable;
   scrollbar-width: thin;
   scrollbar-color: var(--ddb-accent-transparent) transparent;
 

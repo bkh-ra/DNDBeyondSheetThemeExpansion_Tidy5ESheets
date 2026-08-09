@@ -1,24 +1,31 @@
 <!--
-  DDB-FORK: Ornamental frame for a quick-info ability box — the most decorated
-  shape in the band, drawn from scratch as six stacked paths that read as one
-  banner:
+  DDB-FORK: Frame for a quick-info ability box, drawn from scratch as four
+  stacked paths that read as one card:
 
     1. `frame`   - the rounded-rect card body, 5.5 .. 75.5 x 4.5 .. 79.5 of the
                    81 x 95 footprint,
-    2. `wing`    - a small pointed flare on each TOP corner that rises above the
-                   card and folds back down onto its top edge,
-    3. `flank`   - a second line running down the outside of each side, pinched
-                   into a narrow lens at mid-height, so the sides read double,
-    4. `well`    - the inner rounded rect the big modifier sits in, drawn at
+    2. `corner`  - ONE short 45-degree chamfer across each corner of the card,
+                   both ends landing on the card's own straight runs. Four
+                   separate 10-unit strokes that touch nothing and cross
+                   nothing,
+    3. `well`    - the inner rounded rect the big modifier sits in, drawn at
                    the card's own strength so the card + well pair matches the
                    double line every other box in the band carries,
-    5. `laurel`  - a closed leaf sweeping off the bottom of each flank, inward
-                   and down, the pair meeting under the score badge and
-                   cradling it,
-    6. `badge`   - an OVAL (34 x 21, so wider than tall) centred on the card's
+    4. `badge`   - an OVAL (34 x 21, so wider than tall) centred on the card's
                    bottom edge. Painted last with an opaque fill so it occludes
-                   both the card's bottom edge and the laurel tips, and the
-                   three shapes read as a single silhouette.
+                   the card's bottom edge and the two read as a single
+                   silhouette.
+
+  ORNAMENT BUDGET — why this shape is quiet. The card used to carry corner
+  wings, doubled side flanks and a pair of bottom laurels. All three broke out
+  of the 81 x 95 footprint (the flanks ran at x 0.5/80.5, the wings rose to
+  y 0.5 ABOVE the card, the laurels fell to y 88.5 below it), and the six cards
+  in the band sit 3px apart: at 1x the curves crossed each other AND the
+  neighbouring card's, so the row read as a rendering fault rather than as
+  ornament (live design review, defect #2). The rule now is absolute — NO ink
+  outside the card body, so no ability box can ever touch its neighbour. The
+  card's own edge is already 5.5 units in from the footprint on both sides,
+  which is the margin that guarantees it.
 
   Every stroked edge sits on the half-pixel grid (the 0.5 inset convention used
   across src/sheets/ddb/svg/), so lines stay crisp at
@@ -61,18 +68,18 @@
        Z"
   />
 
+  <!-- Corner chamfers. Each runs between two points that already lie on the
+       card's straight runs (top edge x 10.5 .. 70.5, sides y 9.5 .. 74.5), so
+       the ends meet the frame cleanly and the stroke never leaves the card.
+       Leftmost/rightmost ink is x 5.5 / 75.5 — the card edge itself, 5.5 units
+       clear of the footprint. -->
   <path
-    class="ddb-box-background__path ddb-ability-box-shape__wing"
+    class="ddb-box-background__path ddb-ability-box-shape__corner"
     vector-effect="non-scaling-stroke"
-    d="M 5.5 12.5 L 2.5 7.5 L 9.5 0.5 L 18.5 4.5
-       M 75.5 12.5 L 78.5 7.5 L 71.5 0.5 L 62.5 4.5"
-  />
-
-  <path
-    class="ddb-box-background__path ddb-ability-box-shape__flank"
-    vector-effect="non-scaling-stroke"
-    d="M 2.5 7.5 V 29 C 0.5 32.5 0.5 37 2.5 40.5 V 56.5
-       M 78.5 7.5 V 29 C 80.5 32.5 80.5 37 78.5 40.5 V 56.5"
+    d="M 5.5 14.5 L 15.5 4.5
+       M 65.5 4.5 L 75.5 14.5
+       M 75.5 69.5 L 65.5 79.5
+       M 15.5 79.5 L 5.5 69.5"
   />
 
   <path
@@ -83,19 +90,6 @@
        V 54.5 A 4 4 0 0 1 68.5 58.5
        H 12.5 A 4 4 0 0 1 8.5 54.5
        V 29.5 A 4 4 0 0 1 12.5 25.5
-       Z"
-  />
-
-  <path
-    class="ddb-box-background__path ddb-ability-box-shape__laurel"
-    vector-effect="non-scaling-stroke"
-    d="M 2.5 56.5
-       C 2.5 71 11 82.5 25.5 88.5
-       C 19 83.5 12 75.5 8.5 65.5
-       Z
-       M 78.5 56.5
-       C 78.5 71 70 82.5 55.5 88.5
-       C 62 83.5 69 75.5 72.5 65.5
        Z"
   />
 

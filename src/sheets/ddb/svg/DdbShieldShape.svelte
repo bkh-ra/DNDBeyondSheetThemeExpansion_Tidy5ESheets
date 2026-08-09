@@ -1,24 +1,40 @@
 <!--
   DDB-FORK: Heater-shield frame for the quick-info Armor Class box.
 
-  Drawn from scratch as four pieces:
+  Drawn from scratch as three pieces:
 
-    1. `frame` - the shield proper: a top edge that rises from each shoulder to
-                 a shallow peak at centre, sides that bow outward below the
-                 shoulders and then taper in, and a ROUNDED point at bottom
-                 centre (a short quadratic across the tip rather than a cusp),
-    2. `inner` - a second outline ~5px inside the first and following it, so
-                 the shield reads as a double line. Drawn at full strength like
-                 the outer one: the pair IS the treatment, and dimming half of
-                 it made the shield read flat beside the ability cards. It also
-                 marks the safe area for the AC figure — the only thing inside
-                 the shield now that the caption rides above the outline with
-                 the combat row's other two labels. Its widest span is
-                 x 9.0 .. 59.0 at y 25, and the area centroid of the region it
-                 encloses is y 33.7: that is where the figure is centred (see
-                 `.ddb-ac-shield__content` in quick-info.css),
-    3. `stud`  - four small filled dots riding on the outer outline: one at
-                 each top corner, one on the peak, one on the bottom point.
+    1. `frame` - the shield proper: a FLAT top edge, sides that bow outward
+                 below the shoulders and then taper in, and a ROUNDED point at
+                 bottom centre (a short quadratic across the tip rather than a
+                 cusp). The top was a shallow centre peak until the live design
+                 review (defect #14): the peak pushed the shield's body edge
+                 5px further down the box than the flat tops of the INITIATIVE
+                 and HIT DICE hexes beside it, so the shield alone looked like
+                 it had a wider gap under its caps label. Flat, all three
+                 shapes start within ~1.5px of each other, and a flat top is
+                 what a heater shield has anyway,
+    2. `inner` - a second outline a UNIFORM 5.5 units inside the first and
+                 following it, so the shield reads as a double line. Drawn at
+                 full strength like the outer one: the pair IS the treatment,
+                 and dimming half of it made the shield read flat beside the
+                 ability cards. The offset used to fall to 4.8 across the top
+                 edge and its shoulder miters, which is where the review saw
+                 the two lines merge; every vertex here is now a true miter of
+                 the 5.5 offset and the side cubics are tuned to hold it (see
+                 the verification note below).
+
+                 It also marks the safe area for the AC figure — the only thing
+                 inside the shield now that the caption rides above the outline
+                 with the combat row's other two labels. Its widest span is
+                 x 9.05 .. 58.95 at y 22.2, and the area centroid of the region
+                 it encloses is y 32.9: that is where the figure is centred
+                 (see `.ddb-ac-shield__content` in quick-info.css),
+    3. `stud`  - four filled dots riding ON the outer outline, centred on the
+                 line: three evenly spaced along the flat top (both shoulders
+                 and centre) and one on the bottom point. At r 1.75 they landed
+                 as stray pixels rather than ornament once the shield was
+                 scaled down; r 2.5 is the review's floor and is what makes
+                 them read as rivets.
 
   Every stroked edge sits on the half-pixel grid (the 0.5 inset convention used
   across src/sheets/ddb/svg/). Footprint follows the measured DDB armor-class
@@ -53,33 +69,35 @@
   <path
     class="ddb-box-background__path ddb-shield-shape__frame"
     vector-effect="non-scaling-stroke"
-    d="M 5.5 7.5
-       L 34 2.5
-       L 62.5 7.5
+    d="M 5.5 2.5
+       H 62.5
        C 66.5 24 65 43 53.5 57.5
        C 48 64.5 41 70.5 35.3 74.8
        Q 34 75.8 32.7 74.8
        C 27 70.5 20 64.5 14.5 57.5
-       C 3 43 1.5 24 5.5 7.5
+       C 3 43 1.5 24 5.5 2.5
        Z"
   />
   <path
     class="ddb-box-background__path ddb-shield-shape__inner"
     vector-effect="non-scaling-stroke"
-    d="M 10.5 11.5
-       L 34 7.5
-       L 57.5 11.5
-       C 60.5 25 59.5 41.5 50 53.5
+    d="M 10 8
+       H 58
+       C 60 23 59.5 41.5 50 53.5
        C 45.5 59.5 39.5 64.5 34.8 68.2
        Q 34 68.8 33.2 68.2
        C 28.5 64.5 22.5 59.5 18 53.5
-       C 8.5 41.5 7.5 25 10.5 11.5
+       C 8.5 41.5 8 23 10 8
        Z"
   />
+  <!-- Centred ON the outline, so each dot reads as a rivet through the edge.
+       The bottom one sits on the tip's true apex (the quadratic's midpoint,
+       y 75.3) rather than on its control point, which is what left the old
+       dot floating just off the line. -->
   <g class="ddb-shield-shape__studs">
-    <circle class="ddb-shield-shape__stud" cx="5.5" cy="7.5" r="1.75" />
-    <circle class="ddb-shield-shape__stud" cx="34" cy="2.75" r="1.75" />
-    <circle class="ddb-shield-shape__stud" cx="62.5" cy="7.5" r="1.75" />
-    <circle class="ddb-shield-shape__stud" cx="34" cy="74.5" r="1.75" />
+    <circle class="ddb-shield-shape__stud" cx="5.5" cy="2.5" r="2.5" />
+    <circle class="ddb-shield-shape__stud" cx="34" cy="2.5" r="2.5" />
+    <circle class="ddb-shield-shape__stud" cx="62.5" cy="2.5" r="2.5" />
+    <circle class="ddb-shield-shape__stud" cx="34" cy="75.3" r="2.5" />
   </g>
 </svg>

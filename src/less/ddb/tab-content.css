@@ -496,10 +496,11 @@
   color: var(--ddb-text-disabled);
 }
 
-/* Filter dropdown menu surface — floating panel: panel radius, single-lined. */
+/* Filter dropdown menu surface — floating panel: panel radius, ring token,
+ * single-lined. */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .button-with-options-wrapper menu {
   background: var(--ddb-panel-bg-solid);
-  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-ring);
   border-radius: var(--ddb-radius-panel);
   box-shadow: var(--ddb-shadow-elevated);
   color: var(--ddb-text);
@@ -581,4 +582,54 @@
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row-use-button {
   --t5e-use-button-border-color: var(--ddb-panel-border);
   border-radius: var(--ddb-radius-control);
+}
+
+/* ------------------------------------------------------------------ */
+/* 9. The scroller                                                    */
+/* ------------------------------------------------------------------ */
+
+/* THE REAL SCROLLING ELEMENT IS `.tab-content`, not `.ddb-primary-box-content`.
+ * Every quadrone tab renders `<div class="tab-content">` (see e.g.
+ * CharacterSheetTab.svelte, which scrolls it directly via
+ * `tabContent.scrollTo`), and quadrone/actors.css gives it
+ * `flex: 1 1 0; overflow: auto`. So the pane's own `scrollbar-width: thin`
+ * (ddb-layout.css) styles a scroller that never overflows, while the bar the
+ * user sees belongs to this inner element — which nothing had styled, hence the
+ * default grey Windows bar with arrow buttons in light mode (defect #12).
+ *
+ * `:where()` keeps this at the specificity of the surrounding rules, and the
+ * webkit block is the fallback path for Chromium builds that ignore the
+ * standard properties. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :where(.tab-content, .scroll-container, .tidy-scrollable) {
+  scrollbar-width: thin;
+  scrollbar-color: var(--ddb-accent-transparent) transparent;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :where(.tab-content, .scroll-container, .tidy-scrollable)::-webkit-scrollbar {
+  width: var(--ddb-space-2);
+  height: var(--ddb-space-2);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :where(.tab-content, .scroll-container, .tidy-scrollable)::-webkit-scrollbar-track,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :where(.tab-content, .scroll-container, .tidy-scrollable)::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :where(.tab-content, .scroll-container, .tidy-scrollable)::-webkit-scrollbar-thumb {
+  background: var(--ddb-accent-transparent);
+  border-radius: var(--ddb-radius-control);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :where(.tab-content, .scroll-container, .tidy-scrollable)::-webkit-scrollbar-thumb:hover {
+  background: var(--ddb-accent);
+}
+
+/* The bar is painted at the scroller's border box, which is flush against the
+ * panel ring; a little inline-end padding holds it off the frame, and the
+ * block-end padding lets the final row scroll clear of the rounded corner
+ * instead of being guillotined against it (defects #12, #13). Padding only —
+ * the flex/overflow model is quadrone's and stays untouched. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tab-content {
+  padding-inline-end: var(--ddb-space-3);
+  padding-block-end: calc(var(--ddb-space-5) + var(--ddb-radius-panel));
 }

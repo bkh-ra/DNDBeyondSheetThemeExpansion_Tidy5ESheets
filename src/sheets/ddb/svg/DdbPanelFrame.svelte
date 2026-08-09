@@ -16,6 +16,12 @@
   `--ddb-panel-double-gap` and the radius from `--ddb-radius-panel`, both read
   off the host by `DdbBox`, so panels across the sheet stay in lockstep.
 
+  Both strokes are painted from `--ddb-panel-ring` (see `left-column.css`), the
+  one token every PANEL-level ring on the sheet reads. It resolves to the accent
+  in both themes; going through the token rather than `--ddb-accent` is what
+  keeps this frame locked to the HP box, the primary box and the sidebar.
+  Interior hairlines are a different concept and keep their neutral tokens.
+
   The silhouette here is a ROUNDED rect rather than the stat boxes' 45-degree
   octagon: that is what the left-column panels are in the captures. The shared
   language is the double line, not the corner shape.

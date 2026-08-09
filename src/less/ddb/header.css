@@ -145,10 +145,18 @@
   min-width: 0;
 }
 
+/* min-width:0 all the way down, and the row clips: a flex ITEM defaults to
+ * `min-width: auto`, so the h1 below refused to shrink under its own text no
+ * matter how many ancestors carried min-width:0 — its `text-overflow: ellipsis`
+ * could never fire and a long name overhung the rows beneath it (defect #4).
+ * `overflow: hidden` here also contains the display face's glyph box, which at
+ * 2rem/1.1 line-height overshoots its line box and reached the meta line. */
 .tidy5e-sheet.application.ddb .ddb-header-name-row {
   display: flex;
   align-items: center;
   min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 /* The character name is the sheet's ONE deliberate serif (user choice):
@@ -156,6 +164,9 @@
  * Applied to BOTH the h1 (view) and the input (edit) so the font never
  * changes when the sheet is unlocked. */
 .tidy5e-sheet.application.ddb .ddb-character-name {
+  /* The pair that makes the ellipsis below actually fire (see the row above). */
+  min-width: 0;
+  max-width: 100%;
   margin: 0;
   padding: 0;
   border: none;
@@ -173,8 +184,9 @@
 
 /* Editable name uses TextInputQuadrone, which renders an <input>. */
 .tidy5e-sheet.application.ddb input.ddb-character-name {
+  flex: 0 1 auto;
   width: 100%;
-  min-width: 6rem;
+  min-width: 0;
   height: auto;
   border-radius: var(--ddb-radius-input);
 }

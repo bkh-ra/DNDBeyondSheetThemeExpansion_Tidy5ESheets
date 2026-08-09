@@ -80,7 +80,11 @@
   did not reliably cover the full fixed width. A background + 1px border on the
   root is size-independent, so both interior modes always sit on the panel.
 -->
-<section class="ddb-hp-block">
+<!-- `editable` drives the readout's edit affordance: the hairline under CURRENT
+     / MAX / TEMP has to be identical across the three, and MAX renders as a
+     span rather than an input whenever the sheet is locked. See
+     `.ddb-hp-block__value` in quick-info.css. -->
+<section class={['ddb-hp-block', { editable: context.editable }]}>
   {#if context.editable}
     <div class="ddb-hp-block__applicator">
       <button

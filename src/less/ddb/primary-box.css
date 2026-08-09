@@ -25,7 +25,10 @@
   max-width: 100%;
   align-self: start;
   justify-self: start;
-  padding: var(--ddb-space-3) var(--ddb-space-4);
+  /* No padding of its own: each group carries symmetric interior padding, so
+   * the divider between them spans the strip's full inner height instead of
+   * stopping short at the padding box (defect #7). */
+  padding: 0;
   background: var(--ddb-panel-bg);
   /* Geometry only — the visible silhouette is the ::after ring below. */
   border: var(--ddb-border-width-panel) solid transparent;
@@ -54,9 +57,11 @@
  * panel laid down ~11% less ink than the `vector-effect="non-scaling-stroke"`
  * frames in the left column and quick-info band next to it — the mismatch the
  * user is seeing. These rings carry the same ink as those strokes at both pixel
- * ratios. (Colour is deliberately left at --ddb-panel-border: quick-info.css
- * documents the accent stroke as belonging to the framed stat boxes, while the
- * scrollable lists use the neutral hairline.)
+ * ratios. Colour is --ddb-panel-ring (accent in both themes): the neutral
+ * --ddb-panel-border is #eaeaea in light, i.e. invisible on the white panel,
+ * and only 60% accent in dark, which read as a second, duller ink next to the
+ * SVG-framed panels. Interior hairlines (row dividers, the group divider, the
+ * tab-strip rule) keep the neutral token — only panel RINGS use the ring token.
  *
  * The element keeps a transparent border of the same width, so the box model is
  * exactly what it was. Both rings are overlays — `pointer-events: none`, no
@@ -77,7 +82,7 @@
 .tidy5e-sheet.application.ddb .ddb-primary-box::after {
   inset: calc(-1 * var(--ddb-border-width-panel));
   border-radius: var(--ddb-radius-panel);
-  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-border);
+  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-ring);
 }
 
 /* Outward parallel line: its inner edge sits one --ddb-panel-double-gap beyond
@@ -92,7 +97,7 @@
     var(--ddb-radius-panel) + var(--ddb-panel-double-gap) +
       var(--ddb-border-width-panel)
   );
-  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-border);
+  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-ring);
 }
 
 /* The outward line is painted outside the panel, and BOTH panels live in
@@ -122,24 +127,18 @@
 .tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-group {
   flex: 0 1 auto;
   min-width: 0;
-  padding: 0 var(--ddb-space-4);
+  /* Symmetric on all four sides so content clears the ring evenly top and
+   * bottom (defect #7: 15px above, 3px below). */
+  padding: var(--ddb-space-3) var(--ddb-space-4);
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
   gap: var(--ddb-space-half);
 }
 
-.tidy5e-sheet.application.ddb
-  .ddb-conditions-defenses
-  .ddb-cd-group:first-child {
-  padding-left: 0;
-}
-
-.tidy5e-sheet.application.ddb
-  .ddb-conditions-defenses
-  .ddb-cd-group:last-child {
-  padding-right: 0;
-}
-
+/* Interior divider — neutral hairline, not the ring token. The groups stretch
+ * (align-items: stretch above) and now own the strip's vertical padding, so it
+ * runs the full inner height whatever each group holds. */
 .tidy5e-sheet.application.ddb
   .ddb-conditions-defenses
   .ddb-cd-group
@@ -147,11 +146,17 @@
   border-left: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
 }
 
+/* Both groups' headings share a baseline, and therefore both groups' first
+ * value row shares a top edge, even though only one header carries buttons
+ * (the trait configs when unlocked, the + when editable) — that asymmetry was
+ * defect #7's 7px heading / 14px value-row offset. The min-height is the
+ * button box, so the row is the same height with or without them. */
 .tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-header {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   gap: var(--ddb-space-1);
+  min-height: 1rem;
 }
 
 .tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-label {
@@ -344,7 +349,9 @@
   /* Solid, not --ddb-box-bg: that token is translucent in Underdark mode and a
    * floating list must not show the sheet through itself. */
   background: var(--ddb-panel-bg-solid);
-  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  /* Panel-level surface, so the ring token (the neutral hairline is invisible
+   * against the solid light panel). */
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-ring);
   /* Floating panel surface — panel radius, but single-lined: it is an overlay,
    * not part of the sheet's framed composition. */
   border-radius: var(--ddb-radius-panel);

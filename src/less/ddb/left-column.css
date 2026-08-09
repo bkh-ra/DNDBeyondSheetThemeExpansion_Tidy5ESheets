@@ -64,17 +64,23 @@
 /* The double outline, matching the quick-info stat boxes: the silhouette (which
  * also carries the panel fill) plus one parallel line 4px inside it. BOTH at
  * full accent — dimming the inner one merges the pair into a single soft line
- * at a 1.5px stroke. */
+ * at a 1.5px stroke.
+ *
+ * Both strokes read `--ddb-panel-ring`, the shared PANEL-level ring token, not
+ * `--ddb-accent` directly: every panel ring on the sheet (this frame, the HP
+ * and primary boxes, the conditions strip, the sidebar) is then a single knob.
+ * Never `--ddb-panel-border` here — that is the INTERIOR hairline colour, and
+ * in light theme it is #eaeaea-on-white. */
 .tidy5e-sheet.application.ddb .ddb-panel-frame__panel {
   fill: var(--ddb-panel-bg);
-  stroke: var(--ddb-accent);
+  stroke: var(--ddb-panel-ring);
   stroke-width: var(--ddb-border-width-panel);
   stroke-linejoin: round;
 }
 
 .tidy5e-sheet.application.ddb .ddb-panel-frame__echo {
   fill: none;
-  stroke: var(--ddb-accent);
+  stroke: var(--ddb-panel-ring);
   stroke-width: var(--ddb-border-width-panel);
   stroke-linejoin: round;
 }
@@ -393,7 +399,14 @@
   transform: translateY(-50%);
 }
 
-/* Centred in the hexagon, with the dotted underline the captures give it. */
+/* Centred in the hexagon, over a tight solid hairline.
+ *
+ * This was `underline dotted`. At a 10-12px condensed cap height the browser
+ * spaces those dots roughly 2px apart, so the rule rendered as a row of
+ * separated specks under each abbreviation — it read as dirt on the panel, not
+ * as an underline (live-eval defect). A 1px solid muted rule is also what DDB
+ * actually draws there. The thickness is a raw px because the type scale has no
+ * hairline token and the panel border width (1.125px) is a different concept. */
 .tidy5e-sheet.application.ddb .ddb-save-abbr {
   min-width: 0;
   text-align: center;
@@ -402,7 +415,9 @@
   font-weight: var(--ddb-weight-label);
   text-transform: var(--ddb-transform-label);
   letter-spacing: var(--ddb-letterspacing-label);
-  text-decoration: underline dotted;
+  text-decoration: underline solid;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--ddb-text-muted);
   text-underline-offset: var(--ddb-space-half);
   color: var(--ddb-label);
 }
@@ -420,9 +435,17 @@
 }
 
 /* Rendered only when the actor has a save bonus (see DdbSavingThrowsBox), so
- * the box collapses to a clean 2x3 grid when there is nothing to say. */
+ * the box collapses to a clean 2x3 grid when there is nothing to say.
+ *
+ * Label left, value hard right — the same two-ended reading the CONCENTRATION
+ * row above it has, so the two values stack on one right edge. Shares that
+ * row's `--ddb-size-label-md` and `--ddb-weight-value` so the pair reads as one
+ * short list rather than two unrelated lines. (In edit mode the concentration
+ * value pulls left by the gear gutter beside it; the alignment is exact in play
+ * mode, which is the state the column is read in.) */
 .tidy5e-sheet.application.ddb .ddb-saves-note {
   display: flex;
+  align-items: baseline;
   gap: var(--ddb-space-2);
   margin-top: var(--ddb-space-half);
   font-family: var(--ddb-font-condensed);
@@ -440,6 +463,25 @@
   color: var(--ddb-label);
 }
 
+/* `margin-left: auto` rather than a `1fr` grid column: the label is intrinsic
+ * width, so pushing the value off it puts the value on the box's own right
+ * inset — the exact edge the concentration modifier lands on. */
+.tidy5e-sheet.application.ddb .ddb-saves-note-value {
+  margin-left: auto;
+  text-align: right;
+  font-weight: var(--ddb-weight-value);
+  white-space: nowrap;
+}
+
+/* A bonus that is not a plain number after roll-data substitution — a dice
+ * term, or a formula that failed to parse. There is no honest signed integer to
+ * show, so the formula itself is printed, set apart as unevaluated. */
+.tidy5e-sheet.application.ddb .ddb-saves-note-value.ddb-saves-note-formula {
+  font-weight: inherit;
+  font-style: italic;
+  color: var(--ddb-text-muted);
+}
+
 /* ------------------------------------------------------------------ */
 /* SENSES box                                                         */
 /* ------------------------------------------------------------------ */
@@ -455,15 +497,23 @@
   list-style: none;
 }
 
-/* Value chip nested at the left end of a full-width bordered row, the way DDB
- * draws its passive-score rows (see the athelstan 01-actions captures).
+/* PLAIN TEXT ROWS — value then label, framed only by the panel around them,
+ * the way DDB draws its passive-score block.
  * NB: never write a capture path with a wildcard segment inside a CSS comment.
  * A star followed by a slash closes the comment early and spills the rest of
- * the line into the stylesheet, which silently ate this very rule once. */
-/* `border-box` so `min-height` is the row's real height: with content-box the
- * 22px chip plus padding and two 1.5px borders pushed these rows to 32px and
- * broke the shared 26px list rhythm. No block padding for the same reason — the
- * chip's own height sets the interior. */
+ * the line into the stylesheet, which silently ate this very rule once.
+ *
+ * These rows used to carry their own `--ddb-panel-border` outline plus a 3px
+ * control radius. Once the value chips inside them were removed the outlines
+ * had nothing left to enclose and read as ghost rectangles (#eaeaea-on-white in
+ * light theme), and their 3px radius fought the panel's 10px corner. Live-eval
+ * defect: the BOX went, the LAYOUT did not.
+ *
+ * `border-box` and `min-height: 26px` therefore still set the row height, and
+ * the left padding still adds back the width the removed border occupied, so
+ * the value column sits on exactly the same x it did before. 26px + the 4px
+ * list gap = the 30px pitch measured off the captures. No block padding: the
+ * row height is the min-height, nothing else. */
 .tidy5e-sheet.application.ddb .ddb-sense-row {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -471,9 +521,8 @@
   box-sizing: border-box;
   gap: var(--ddb-space-3);
   min-height: 26px;
-  padding: 0 var(--ddb-space-2) 0 var(--ddb-space-half);
-  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
-  border-radius: var(--ddb-radius-control);
+  padding: 0 calc(var(--ddb-space-2) + var(--ddb-border-width-panel)) 0
+    calc(var(--ddb-space-half) + var(--ddb-border-width-panel));
 }
 
 /* No border, padding or background — the passive score reads as plain text.
