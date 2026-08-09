@@ -16,10 +16,13 @@
   const localize = FoundryAdapter.localize;
 
   /**
-   * One short label above the value, so the shield reads "AC" over the number
-   * instead of splitting "ARMOR" / "CLASS" around it. dnd5e ships the
-   * abbreviation as `DND5E.AC` ("AC"), so this is localized, not hardcoded —
-   * and the full string stays on the attribution tooltip below.
+   * The caps label that rides ABOVE the shield outline, in the same band and
+   * the same typography as the INITIATIVE and HIT DICE labels either side of
+   * it (`.ddb-ac-shield__label` shares the stat box's label rules — see the
+   * combat-row block in quick-info.css). Only the figure stays inside the
+   * shield. dnd5e ships the abbreviation as `DND5E.AC` ("AC"), so this is
+   * localized, not hardcoded — and the full string stays on the attribution
+   * tooltip carried by the section below.
    */
   let acLabel = $derived(localize('DND5E.AC'));
 </script>
@@ -32,7 +35,7 @@
 >
   <DdbShieldShape />
   <div class="ddb-ac-shield__content">
-    <span class="ddb-ac-shield__label ddb-ac-shield__label--top">
+    <span class="ddb-ac-shield__label">
       {acLabel}
     </span>
     <span class="ddb-ac-shield__value">

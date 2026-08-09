@@ -11,15 +11,23 @@
                  the shield reads as a double line. Drawn at full strength like
                  the outer one: the pair IS the treatment, and dimming half of
                  it made the shield read flat beside the ability cards. It also
-                 marks the safe area for the ARMOR / value / CLASS stack, which
-                 sits wholly inside it,
+                 marks the safe area for the AC figure — the only thing inside
+                 the shield now that the caption rides above the outline with
+                 the combat row's other two labels. Its widest span is
+                 x 9.0 .. 59.0 at y 25, and the area centroid of the region it
+                 encloses is y 33.7: that is where the figure is centred (see
+                 `.ddb-ac-shield__content` in quick-info.css),
     3. `stud`  - four small filled dots riding on the outer outline: one at
                  each top corner, one on the peak, one on the bottom point.
 
   Every stroked edge sits on the half-pixel grid (the 0.5 inset convention used
   across src/sheets/ddb/svg/). Footprint follows the measured DDB armor-class
-  box (79 x 90 px in DDB's own viewBox, drawn here at the 68 x 80 the band
-  allots it — design/SVG-MOTIFS.md); the ornament was reconstructed by
+  box (79 x 90 px in DDB's own viewBox, drawn here in the 68 x 80 the row
+  allots it — design/SVG-MOTIFS.md). The row reserves the top 14px of that for
+  the caps label, so the CSS hands this svg a 68 x 66 box and the default
+  `xMidYMid meet` scales the whole silhouette by 0.825; the viewBox stays
+  68 x 80 so every coordinate below is still the measured one. The ornament was
+  reconstructed by
   observation at 15x zoom. No DDB path data is used or referenced, and none may
   be.
 

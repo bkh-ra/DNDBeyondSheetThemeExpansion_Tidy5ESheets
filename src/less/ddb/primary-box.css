@@ -25,11 +25,10 @@
   max-width: 100%;
   align-self: start;
   justify-self: start;
-  margin-right: auto;
-  /* Padding clears the inner line (space-3/4 minus the 4px double-gap). */
   padding: var(--ddb-space-3) var(--ddb-space-4);
   background: var(--ddb-panel-bg);
-  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  /* Geometry only — the visible silhouette is the ::after ring below. */
+  border: var(--ddb-border-width-panel) solid transparent;
   border-radius: var(--ddb-radius-panel);
   /* No hairline shadow: in light mode it paints a third ring just outside the
    * border, which is exactly the "soft merged edge" the double outline avoids. */
@@ -39,24 +38,85 @@
 }
 
 /* ---- shared double outline -------------------------------------------
- * Panel-level surfaces carry two parallel rounded lines: the element's own
- * border is the outer silhouette, and this pseudo-element is the inner line,
- * inset by --ddb-panel-double-gap at the same color and weight, with the radius
- * reduced by the gap so the two curves stay concentric.
+ * Two concentric rounded lines per panel: the silhouette (::after, sitting
+ * exactly where the element's border would be) and one parallel line OUTSIDE
+ * it (::before), offset by --ddb-panel-double-gap. Outside, not inside: an
+ * inward line crosses the scrolling list and clips its content.
  *
- * It is an overlay, never part of the box model: `pointer-events: none` keeps
- * clicks (condition toggles, tab clicks, table rows) reaching the real
- * elements, and being absolutely positioned it neither clips nor scrolls with
- * the panel's content. Full-strength color on both lines — dimming or tightening
- * the inner one makes the pair read as a single soft edge. */
+ * WHY BOX-SHADOW RINGS AND NOT `border` — measured, not eyeballed. Chrome
+ * headless, black hairlines on white, scanline sampled per device pixel:
+ *   DPR 1  border: 1.125px  -> 1 px @ 100%                  (1.000px of ink)
+ *          box-shadow ring  -> 1 px @ 100% + 1 px @ 12.5%   (1.125px of ink)
+ *          SVG 1.125 stroke -> 2 px @ ~56% (straddles edge) (1.125px of ink)
+ *   DPR 2  border: 2 dev px | shadow 2 + 0.25 | SVG 2 + 2x0.25 dev px
+ * Blink snaps CSS border widths to whole device pixels; it does not snap
+ * box-shadow spreads, and SVG strokes are anti-aliased geometry. So a bordered
+ * panel laid down ~11% less ink than the `vector-effect="non-scaling-stroke"`
+ * frames in the left column and quick-info band next to it — the mismatch the
+ * user is seeing. These rings carry the same ink as those strokes at both pixel
+ * ratios. (Colour is deliberately left at --ddb-panel-border: quick-info.css
+ * documents the accent stroke as belonging to the framed stat boxes, while the
+ * scrollable lists use the neutral hairline.)
+ *
+ * The element keeps a transparent border of the same width, so the box model is
+ * exactly what it was. Both rings are overlays — `pointer-events: none`, no
+ * box-model contribution — so clicks, scrolling and the height model are
+ * untouched, and both are at full strength so the pair never merges. */
+.tidy5e-sheet.application.ddb .ddb-conditions-defenses::before,
 .tidy5e-sheet.application.ddb .ddb-conditions-defenses::after,
+.tidy5e-sheet.application.ddb .ddb-primary-box::before,
 .tidy5e-sheet.application.ddb .ddb-primary-box::after {
   content: '';
   position: absolute;
-  inset: var(--ddb-panel-double-gap);
-  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
-  border-radius: calc(var(--ddb-radius-panel) - var(--ddb-panel-double-gap));
   pointer-events: none;
+}
+
+/* Silhouette: pseudo box aligned to the panel's border box, ring drawn inward
+ * across the (transparent) border area. */
+.tidy5e-sheet.application.ddb .ddb-conditions-defenses::after,
+.tidy5e-sheet.application.ddb .ddb-primary-box::after {
+  inset: calc(-1 * var(--ddb-border-width-panel));
+  border-radius: var(--ddb-radius-panel);
+  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-border);
+}
+
+/* Outward parallel line: its inner edge sits one --ddb-panel-double-gap beyond
+ * the silhouette, so the pseudo's own edge is (gap + 2 x stroke) out from the
+ * padding box, and its radius grows by (gap + stroke) to stay concentric. */
+.tidy5e-sheet.application.ddb .ddb-conditions-defenses::before,
+.tidy5e-sheet.application.ddb .ddb-primary-box::before {
+  inset: calc(
+    -1 * (var(--ddb-panel-double-gap) + 2 * var(--ddb-border-width-panel))
+  );
+  border-radius: calc(
+    var(--ddb-radius-panel) + var(--ddb-panel-double-gap) +
+      var(--ddb-border-width-panel)
+  );
+  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-border);
+}
+
+/* The outward line is painted outside the panel, and BOTH panels live in
+ * `.ddb-col-primary`, which is `overflow: hidden` — so the room for it has to
+ * exist inside the column or it is clipped away. Reserving it as a margin
+ * (gap + stroke = 5.125px) keeps the 6px grid gap between columns untouched:
+ * the outward line simply takes over the position the old border held, and the
+ * panel proper steps inward. Chose the full 4px token gap rather than a
+ * narrower one precisely because the separation is paid for inside the column,
+ * not out of the 6px gutter — at 4px + 1.125px of stroke the two lines stay
+ * plainly distinct at the lighter 1.125px weight. */
+.tidy5e-sheet.application.ddb .ddb-conditions-defenses,
+.tidy5e-sheet.application.ddb .ddb-primary-box {
+  margin: calc(var(--ddb-panel-double-gap) + var(--ddb-border-width-panel));
+  border-color: transparent;
+}
+
+/* ddb-layout.css zeroes the strip's right margin for the fit-content case;
+ * inside the combat row it still needs room for its outward line. Same
+ * specificity, later import. */
+.tidy5e-sheet.application.ddb
+  .ddb-combat-strip-row
+  .ddb-conditions-defenses {
+  margin: calc(var(--ddb-panel-double-gap) + var(--ddb-border-width-panel));
 }
 
 .tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-group {
@@ -407,7 +467,8 @@
   min-height: 0;
   min-width: 0;
   background: var(--ddb-box-bg);
-  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  /* Geometry only — the visible silhouette is the ::after ring. */
+  border: var(--ddb-border-width-panel) solid transparent;
   border-radius: var(--ddb-radius-panel);
   box-shadow: none;
 }

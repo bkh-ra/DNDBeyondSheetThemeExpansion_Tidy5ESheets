@@ -58,8 +58,9 @@
   /* the pane never scrolls; `.ddb-sidebar-content` does */
   overflow: hidden;
   background: var(--ddb-box-bg);
-  /* OUTER silhouette of the double outline; the inner line is `::after`. */
-  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  /* NO `border` — see the lineweight note above `::before`. Both lines of the
+   * double outline are drawn as inset box-shadow rings on the pseudo-elements. */
+  border: none;
   /* Panel-level surface, so --ddb-radius-panel (10px) — the one radius shared
    * by the left-column boxes, quick-info boxes, primary box and conditions
    * strip. Small controls inside stay on --ddb-radius-control. */
@@ -72,31 +73,70 @@
   transition: width var(--ddb-transition);
 }
 
-/* --- the INNER line of the panel's double outline ---
+/* --- the double outline: `::before` = outer silhouette, `::after` = inner line ---
  *
  * Every DDB panel reads as two parallel rounded outlines. The left-column and
- * quick-info boxes draw theirs as SVG (`DdbPanelFrame.svelte`); this pane is a
- * bordered div, so the second line is a pseudo-element inset by the shared
- * `--ddb-panel-double-gap`.
+ * quick-info boxes draw theirs as SVG (`DdbPanelFrame.svelte`: a rounded path
+ * at `--ddb-border-width-panel` with `vector-effect="non-scaling-stroke"`, plus
+ * an echo path inset by `--ddb-panel-double-gap`).
+ *
+ * WHY BOX-SHADOW AND NOT `border`
+ * -------------------------------
+ * Measured in headless Chrome at 100% zoom / DPR 1, sampling the rasterized
+ * left edge and summing coverage into an "ink width":
+ *
+ *     technique                              ink at nominal 1.125px
+ *     CSS `border: 1.125px solid`            1.000px   <- snapped, 11% light
+ *     CSS `border: 1px solid`                1.000px   <- indistinguishable
+ *     SVG stroke-width 1.125 (the frames)    1.125px   <- true, antialiased
+ *     inset `box-shadow` spread 1.125px      1.122px   <- true, antialiased
+ *
+ * Blink pixel-snaps box decorations, so a fractional `border-width` collapses
+ * onto whole device pixels and the 0.125 is simply discarded — the CSS panels
+ * drew at 1px while the SVG panels drew at 1.125px, which is the mismatch the
+ * user reported. Box-shadow spread is rasterized by Skia without that snapping
+ * and lands within 0.003px of the SVG stroke, so both families now render one
+ * weight. Do NOT "fix" this by rounding the token or hard-coding a different px
+ * value here, and do not revert either line to `border`.
+ *
+ * Removing the outer `border` also corrects the GAP. While the pane had a
+ * border, `::after`'s containing block was the padding box, so `inset: 4px`
+ * put the two strokes 5.125px apart centre-to-centre instead of the 4px the SVG
+ * frames use. With no border the padding box is the border box and the measured
+ * spacing matches the SVG reference exactly (both render cores 4px apart).
  *
  * BOTH LINES ARE FULL STRENGTH. Do not borrow `--ddb-stroke-echo-opacity` here
  * (that token is for the SVG frames' hand-drawn corner echo) and do not shrink
- * the gap: at the 1.125px panel weight a faded or tighter second line stops
- * reading as two outlines and blurs into a single soft edge. This has regressed
- * twice — keep it same-color, same-weight, at the token gap.
+ * the gap: at this weight a faded or tighter second line stops reading as two
+ * outlines and blurs into a single soft edge. This has regressed twice.
  *
- * It is anchored to the PANE, not to `.ddb-sidebar-content`, so the frame holds
- * still while the favorites list scrolls beneath it; `pointer-events: none`
- * keeps it clear of favorite rows, the toggle and the gear. */
+ * The frame is anchored to the PANE, not to `.ddb-sidebar-content`, so it holds
+ * still while the favorites list scrolls; `pointer-events: none` keeps it clear
+ * of favorite rows, the toggle and the gear. The inner line is placed INSIDE
+ * the panel, matching `DdbPanelFrame`'s inset echo; it clips nothing, because
+ * the header and the scroll region are both inset to sit within it. */
+.tidy5e-sheet.application.ddb .ddb-sidebar::before,
 .tidy5e-sheet.application.ddb .ddb-sidebar::after {
   content: '';
   position: absolute;
-  inset: var(--ddb-panel-double-gap);
   z-index: 2;
-  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
-  /* Concentric with the outer silhouette: same gap taken off the radius. */
-  border-radius: calc(var(--ddb-radius-panel) - var(--ddb-panel-double-gap));
+  border: none;
   pointer-events: none;
+}
+
+/* Outer silhouette, hugging the pane edge exactly where a border would sit. */
+.tidy5e-sheet.application.ddb .ddb-sidebar::before {
+  inset: 0;
+  border-radius: var(--ddb-radius-panel);
+  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-border);
+}
+
+/* Inner line. Concentric with the silhouette: the gap comes off the radius as
+ * well as the inset, exactly as `DdbPanelFrame.roundedRect()` does it. */
+.tidy5e-sheet.application.ddb .ddb-sidebar::after {
+  inset: var(--ddb-panel-double-gap);
+  border-radius: calc(var(--ddb-radius-panel) - var(--ddb-panel-double-gap));
+  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-border);
 }
 
 /* Collapsed: the pane shrinks to a rail holding only the toggle. The grid
@@ -138,7 +178,14 @@
   min-width: 0;
   margin: var(--ddb-panel-double-gap) var(--ddb-panel-double-gap) 0;
   padding: 0 var(--ddb-space-1);
-  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  /* The divider is a box-shadow band, not a `border-bottom`, for the same
+   * reason the frame is (see the lineweight note above): measured, a
+   * `border-bottom: 1.125px` rasterizes to 1.000px while this band rasterizes
+   * to 1.125px, matching the panel frames. An outer shadow is clipped to
+   * outside the border box, so this paints exactly one 1.125px band along the
+   * bottom edge and nothing else. */
+  border-bottom: none;
+  box-shadow: 0 var(--ddb-border-width-panel) 0 0 var(--ddb-panel-border);
 }
 
 /* The rail drops the inner outline (see above), so the header reclaims the
@@ -147,7 +194,10 @@
   justify-content: center;
   margin: 0;
   padding: var(--ddb-space-1) 0;
+  /* No divider on the rail — the header IS the rail's only content. Cancels
+   * the box-shadow band above, not a border. */
   border-bottom: none;
+  box-shadow: none;
 }
 
 /* Buttons: quadrone's `:is(button, .button)` rule still MATCHES these even

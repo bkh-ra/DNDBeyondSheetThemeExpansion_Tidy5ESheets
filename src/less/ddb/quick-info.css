@@ -103,10 +103,13 @@
  *
  * Restating height/min-height here hands sizing back to the insets, so every
  * interior matches the frame behind it and centres against it. Any new DDB box
- * interior that renders as a button must be listed here. */
+ * interior that renders as a button must be listed here — and the `div`
+ * interiors are listed too, so that a later change from `div` to `button`
+ * (or a stray `.button` class) cannot silently reintroduce the collapse. */
 .tidy5e-sheet.application.ddb .ddb-stat-box__content,
 .tidy5e-sheet.application.ddb .ddb-ability-box__roller,
-.tidy5e-sheet.application.ddb .ddb-inspiration-box__content {
+.tidy5e-sheet.application.ddb .ddb-inspiration-box__content,
+.tidy5e-sheet.application.ddb .ddb-ac-shield__content {
   height: auto;
   min-height: 0;
 }
@@ -374,8 +377,12 @@
 }
 
 /* Multi-word labels ("Proficiency Bonus") wrap to two centred lines inside the
- * frame instead of running past its edge into the neighbouring box. */
-.tidy5e-sheet.application.ddb .ddb-stat-box__label {
+ * frame instead of running past its edge into the neighbouring box. The AC
+ * shield's label is the same role and shares the rule (with the typography
+ * block near the top of this file) so the combat row's three captions can
+ * never diverge. */
+.tidy5e-sheet.application.ddb .ddb-stat-box__label,
+.tidy5e-sheet.application.ddb .ddb-ac-shield__label {
   max-width: 100%;
   white-space: normal;
   text-align: center;
@@ -390,6 +397,54 @@
   font-weight: 500;
 }
 
+/* ------------------------------------------------------------------ *
+ * Combat row: ONE caps-label treatment for all three items
+ * ------------------------------------------------------------------ */
+
+/* DdbCombatRow renders INITIATIVE (hex), ARMOR CLASS (shield) and HIT DICE
+ * (hex) side by side, outside the band. All three wear the same treatment: a
+ * caps label in a fixed band across the TOP of the item, outside the frame,
+ * with the shape drawn in whatever height is left beneath it and ONLY the
+ * figure inside the shape. (The shield used to carry its "AC" caption inside
+ * the outline, which made it the odd one out in a row of three.)
+ *
+ * The band is a local custom property — the same device `.ddb-death-saves`
+ * uses for `--ddb-pip-size` — so the two frame insets, the interior inset and
+ * the label offset are one number in one place and cannot drift. 14px is one
+ * `--ddb-size-label` line (10px x 1.1 = 11) plus `--ddb-space-3` of descender
+ * clearance and air; it is deliberately not on the spacing scale because it is
+ * a type metric, not spacing.
+ *
+ * `align-self` is what puts the three captions on a COMMON BASELINE:
+ * `.ddb-combat-row` centres its items (ddb-layout.css) and the three are not
+ * the same height (62 / 80 / 62), so centred, the hexes' bands sat 9px below
+ * the shield's. Flush to the row top, all three label bands — and, because the
+ * band is identical, all three frame tops — land on the same line. */
+.tidy5e-sheet.application.ddb .ddb-quick-info__box--initiative,
+.tidy5e-sheet.application.ddb .ddb-quick-info__box--hit-dice,
+.tidy5e-sheet.application.ddb .ddb-ac-shield {
+  --ddb-caps-label-band: 0.875rem; /* 14px */
+
+  align-self: flex-start;
+}
+
+/* Each label is a child of its item's interior layer, and that layer starts at
+ * the bottom of the band — so one negative offset of exactly the band height
+ * lifts every one of them into it. */
+.tidy5e-sheet.application.ddb
+  .ddb-quick-info__box--initiative
+  .ddb-stat-box__label,
+.tidy5e-sheet.application.ddb
+  .ddb-quick-info__box--hit-dice
+  .ddb-stat-box__label,
+.tidy5e-sheet.application.ddb .ddb-ac-shield__label {
+  position: absolute;
+  top: calc(-1 * var(--ddb-caps-label-band));
+  left: 0;
+  right: 0;
+  color: var(--ddb-heading-box);
+}
+
 /* Initiative (rendered by DdbCombatRow, outside the band, so it keeps its own
  * compact proportions): a 60 x 48 frame with the caps label riding above it,
  * as DDB draws it. */
@@ -401,7 +456,7 @@
 .tidy5e-sheet.application.ddb
   .ddb-quick-info__box--initiative
   .ddb-box-background {
-  inset: 0.875rem 0 0 0;
+  inset: var(--ddb-caps-label-band) 0 0 0;
   width: auto;
   height: auto;
 }
@@ -409,18 +464,8 @@
 .tidy5e-sheet.application.ddb
   .ddb-quick-info__box--initiative
   .ddb-stat-box__content {
-  inset: 0.875rem 0 0 0;
+  inset: var(--ddb-caps-label-band) 0 0 0;
   padding: 0 var(--ddb-space-half);
-}
-
-.tidy5e-sheet.application.ddb
-  .ddb-quick-info__box--initiative
-  .ddb-stat-box__label {
-  position: absolute;
-  top: -0.875rem;
-  left: 0;
-  right: 0;
-  color: var(--ddb-heading-box);
 }
 
 .tidy5e-sheet.application.ddb .ddb-quick-info__initiative-config,
@@ -579,29 +624,57 @@
  * Armor class shield (DdbCombatRow, outside the band)
  * ------------------------------------------------------------------ */
 
+/* Footprint is UNCHANGED at 68 x 80 — the row's width budget is fixed and the
+ * primary column below it gets whatever height this row does not take. The
+ * caps label band is carved OUT of that 80, exactly as the two hexes carve
+ * theirs, rather than added on top of it. */
 .tidy5e-sheet.application.ddb .ddb-ac-shield {
   position: relative;
   flex: 0 0 auto;
   width: 4.25rem; /* 68px */
-  height: 5rem; /* 80px */
+  height: 5rem; /* 80px = 14px label band + 66px shield */
 }
 
-/* AC over the value, both inside the inner shield outline. The bottom inset is
- * what does the optical centring: a shield tapers to a point, so a stack
- * centred on the full bounding box sits too low and the figure runs into the
- * narrowing. Because the stack is centred in this box, its centre lands at
- * exactly half the box height: holding 16px back puts it on y 32, which is
- * ~40% down the 2.5 .. 75.8 outline — the optical centre of a form whose lower
- * half tapers away — and keeps the figure in the widest part of the body. */
+/* The shield is drawn in what the band leaves, like every other combat-row
+ * frame. Its viewBox is 68 x 80 and the box it now gets is 68 x 66, so the
+ * default `xMidYMid meet` scales the silhouette uniformly by 66/80 = 0.825 and
+ * centres it: the ink lands on x 5.95 .. 62.05, y 14 .. 80. Uniform scale, so
+ * the measured heater proportions are intact, the studs stay round, and
+ * `vector-effect="non-scaling-stroke"` keeps the double outline at
+ * --ddb-border-width-panel. Nothing outside the 68 x 80 element is painted. */
+.tidy5e-sheet.application.ddb .ddb-ac-shield .ddb-box-background {
+  inset: var(--ddb-caps-label-band) 0 0 0;
+  width: auto;
+  height: auto;
+}
+
+/* Only the figure lives in here now (the label is lifted into the band by the
+ * shared combat-row rule above), so this layer's whole job is to put ONE
+ * number on the shield's optical centre.
+ *
+ * GEOMETRY, in DdbShieldShape's own 68 x 80 viewBox units. The safe area is
+ * the inner outline: peak y 7.5, shoulders y 11.5, bottom point y 68.8. It
+ * reaches maximum width at y 25 (x 9.0 .. 59.0, 50 units across) and holds
+ * above 90% of that from y 12 to y 42, below which the sides fall away to the
+ * point. The AREA CENTROID of that region is y 33.7 — inside the widest band,
+ * and the only defensible centre for a single figure on a form whose lower
+ * half tapers. (The old label+value stack was biased off the bounding-box
+ * centre for the same reason; with the label gone, the bias has to be
+ * re-derived for the figure alone, not inherited.)
+ *
+ * This layer covers the shield box, 66px tall, so plain centring would land
+ * the figure at 33 of 66 — viewBox y 40, already into the narrowing. Ten
+ * pixels of bottom padding lift the centre by 5px, to 28 of 66, i.e. viewBox
+ * 28 / 0.825 = 33.9. The inline padding is the safe area's own half-width
+ * (50 units x 0.825 = 41px of usable span), so a three-digit AC clips to the
+ * shield rather than crossing the outline. */
 .tidy5e-sheet.application.ddb .ddb-ac-shield__content {
   position: absolute;
-  inset: 0 0 1rem 0;
+  inset: var(--ddb-caps-label-band) 0 0 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: var(--ddb-space-half);
-  padding: 0 var(--ddb-space-3);
+  padding: 0 var(--ddb-space-5) var(--ddb-space-4);
   text-align: center;
 }
 
@@ -612,12 +685,6 @@
   letter-spacing: var(--ddb-letterspacing-value-lg);
   line-height: 1;
   color: var(--ddb-text);
-}
-
-.tidy5e-sheet.application.ddb .ddb-ac-shield__label {
-  line-height: 1.05;
-  white-space: normal;
-  text-wrap: balance;
 }
 
 .tidy5e-sheet.application.ddb .ddb-ac-shield__config {
@@ -1067,7 +1134,7 @@
 .tidy5e-sheet.application.ddb
   .ddb-quick-info__box--hit-dice
   .ddb-box-background {
-  inset: 0.875rem 0 0 0;
+  inset: var(--ddb-caps-label-band) 0 0 0;
   width: auto;
   height: auto;
 }
@@ -1075,18 +1142,8 @@
 .tidy5e-sheet.application.ddb
   .ddb-quick-info__box--hit-dice
   .ddb-stat-box__content {
-  inset: 0.875rem 0 0 0;
+  inset: var(--ddb-caps-label-band) 0 0 0;
   padding: 0 var(--ddb-space-half);
-}
-
-.tidy5e-sheet.application.ddb
-  .ddb-quick-info__box--hit-dice
-  .ddb-stat-box__label {
-  position: absolute;
-  top: -0.875rem;
-  left: 0;
-  right: 0;
-  color: var(--ddb-heading-box);
 }
 
 .tidy5e-sheet.application.ddb
