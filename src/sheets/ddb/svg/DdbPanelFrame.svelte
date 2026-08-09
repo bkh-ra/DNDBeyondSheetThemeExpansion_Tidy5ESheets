@@ -67,7 +67,7 @@
     class: cssClass,
     width = 0,
     height = 0,
-    variant = 'plain',
+    variant = 'ornate',
     radius = 10,
     plaque = false,
     titleWidth = 0,
@@ -89,8 +89,12 @@
   /** Horizontal run of each angled shoulder. */
   const plaqueShoulder = 5;
 
-  /** Inset of the doubled side line from the perimeter. */
-  const sideOffset = 4;
+  /**
+   * Inset of the doubled side line from the perimeter. Wide enough that the two
+   * lines stay legibly separate at a 1.5px stroke instead of blurring together
+   * into one soft edge.
+   */
+  const sideOffset = 5;
   /** How far the side line's waist pinches inward, in the ornate variant. */
   const waist = 3;
 
@@ -106,12 +110,20 @@
     Math.max(0, Math.min(radius, Math.min(width, height) / 2 - inset)),
   );
 
-  /** Bracket runs: about an eighth of each edge, bounded to stay sane. */
+  /**
+   * Bracket runs are a PROPORTION of each edge, never a fixed length.
+   *
+   * They used to be capped at an absolute 28px, which is why the stretched
+   * proficiencies box rendered as a plain rounded rectangle: 28px is most of a
+   * 150px-tall senses box's side but only ~7% of the ~380px it stretches to, so
+   * the ornament shrank to two invisible corner ticks. Scaling by edge length
+   * keeps every box in the column equally decorated at any height.
+   */
   let bx = $derived(
-    Math.max(6, Math.min(28, (width - 2 * r) * 0.22, (width - 2 * r) / 2 - 2)),
+    Math.max(0, Math.min((width - 2 * r) * 0.3, (width - 2 * r) / 2 - 3)),
   );
   let by = $derived(
-    Math.max(6, Math.min(28, (height - 2 * r) * 0.22, (height - 2 * r) / 2 - 2)),
+    Math.max(0, Math.min((height - 2 * r) * 0.3, (height - 2 * r) / 2 - 3)),
   );
 
   let plaqueDepth = $derived(Math.min(10, Math.max(0, height / 4)));
@@ -224,7 +236,16 @@
     }
 
     const g = sideOffset; // how far inside the perimeter the sweep sits
-    const run = Math.max(6, Math.min(bx, by));
+    // Clamped so opposing sweeps can never cross on a short or narrow edge.
+    const run = Math.max(
+      6,
+      Math.min(
+        bx,
+        by,
+        (width - 2 * (r + g)) / 2 - 4,
+        (height - 2 * (r + g)) / 2 - 4,
+      ),
+    );
     if (width < 4 * (r + g) || height < 4 * (r + g)) {
       return [] as string[];
     }

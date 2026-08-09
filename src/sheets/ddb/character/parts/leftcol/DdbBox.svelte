@@ -27,7 +27,12 @@
     /** Box title. Rendered all-caps at the bottom of the frame. */
     title: string;
     class?: ClassValue;
-    /** Frame ornamentation. `ornate` is reserved for SAVING THROWS. */
+    /**
+     * Frame ornamentation. Every box in the left column is `ornate` — the
+     * column must read as one frame family, and a plainer variant made the
+     * senses/proficiencies/skills boxes look unstyled beside saving throws.
+     * `plain` is kept for surfaces that may want a quieter frame later.
+     */
     variant?: 'plain' | 'ornate';
     /** Box contents. */
     children: Snippet;
@@ -38,7 +43,7 @@
   let {
     title,
     class: classValue,
-    variant = 'plain',
+    variant = 'ornate',
     children,
     gear,
   }: Props = $props();

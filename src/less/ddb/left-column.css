@@ -79,9 +79,19 @@
   stroke-linejoin: round;
 }
 
-/* Secondary ornament: the doubled line down each side, and (ornate only) the
- * corner scrollwork. Both are echoes, so they take the shared echo opacity. */
-.tidy5e-sheet.application.ddb .ddb-panel-frame__side,
+/* The doubled line down each side is part of the frame's SILHOUETTE, not an
+ * echo, so it takes full accent. Dimming it made it merge optically with the
+ * perimeter line a few px away into one soft edge at 1.5px, which is a large
+ * part of why these boxes read as plain rectangles. */
+.tidy5e-sheet.application.ddb .ddb-panel-frame__side {
+  fill: none;
+  stroke: var(--ddb-accent);
+  stroke-width: var(--ddb-border-width-panel);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Genuine secondary ornament — the corner scrollwork — and only this, is dimmed. */
 .tidy5e-sheet.application.ddb .ddb-panel-frame__flourish {
   fill: none;
   stroke: var(--ddb-accent);
@@ -353,6 +363,8 @@
   transition: fill var(--ddb-transition);
 }
 
+/* Full accent stroke, no echo dimming: the hexagon is the control's silhouette,
+ * and dimming it blurred the bar into the panel at a 1.5px stroke. */
 .tidy5e-sheet.application.ddb .ddb-save-shape__bar {
   fill: var(--ddb-box-bg);
 }
@@ -362,11 +374,6 @@
  * the bar's angled end showed through as a stray chevron inside the circle. */
 .tidy5e-sheet.application.ddb .ddb-save-shape__cap {
   fill: var(--ddb-panel-bg-solid);
-}
-
-/* The bar reads as the quieter half of the pair, as in the captures. */
-.tidy5e-sheet.application.ddb .ddb-save-shape__bar {
-  opacity: var(--ddb-stroke-echo-opacity);
 }
 
 .tidy5e-sheet.application.ddb
