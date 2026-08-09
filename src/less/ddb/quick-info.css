@@ -813,9 +813,11 @@
 .tidy5e-sheet.application.ddb .ddb-hp-block {
   /* The one hairline CURRENT / MAX / TEMP share — see the colour note on
    * `.ddb-hp-block.editable .ddb-hp-block__value` below. */
-  /* 55% measured only 1.53:1 on the light panel (round-4 eval); 85% lands
-   * the hairline near 3:1 in light while staying subtle in dark. */
-  --ddb-hp-field-rule: color-mix(in srgb, var(--ddb-text-muted) 85%, transparent);
+  /* Round-5 eval proved ≥2.5:1 is unreachable from --ddb-text-muted (2.31:1
+   * at 100% on the light panel) — the rule mixes from --ddb-text instead.
+   * Light: ~2.8:1. In dark, --ddb-text is white, so 50% white over the dark
+   * panel lands ~3:1 — consistent in both themes from one expression. */
+  --ddb-hp-field-rule: color-mix(in srgb, var(--ddb-text) 50%, transparent);
 
   position: relative;
   box-sizing: border-box;
