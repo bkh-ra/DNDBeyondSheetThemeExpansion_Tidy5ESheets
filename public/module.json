@@ -1,9 +1,21 @@
 {
   "id": "ddb5e-sheets",
   "title": "DDB 5e Sheets",
-  "description": "D&D Beyond-style character sheet layout for Foundry VTT. A local fork of Tidy 5e Sheets by kgar (MIT), adding a third 'DDB' sheet layout alongside Classic and Quadrone.",
+  "description": "D&D Beyond-style character sheet layout for Foundry VTT. A fork of Tidy 5e Sheets by kgar (MIT) that adds a third \"DDB\" sheet layout alongside Classic and Quadrone. Contains no D&D Beyond assets.",
   "version": "13.7.0-ddb.0",
   "authors": [
+    {
+      "id": "bkh-ra",
+      "name": "bkh-ra",
+      "url": "https://github.com/bkh-ra",
+      "github": "bkh-ra",
+      "discord": "",
+      "twitter": "",
+      "patreon": "",
+      "ko-fi": "",
+      "reddit": "",
+      "email": ""
+    },
     {
       "id": "kgar",
       "name": "kgar",
@@ -31,8 +43,12 @@
       "email": ""
     }
   ],
-  "esmodules": ["./tidy5e-sheet.js"],
-  "styles": ["./tidy5e-sheet.css"],
+  "esmodules": [
+    "./tidy5e-sheet.js"
+  ],
+  "styles": [
+    "./tidy5e-sheet.css"
+  ],
   "languages": [
     {
       "lang": "en",
@@ -138,10 +154,10 @@
       }
     ]
   },
-  "url": "https://github.com/kgar/foundry-vtt-tidy-5e-sheets",
-  "readme": "https://github.com/kgar/foundry-vtt-tidy-5e-sheets/blob/main/README.md",
-  "bugs": "https://github.com/kgar/foundry-vtt-tidy-5e-sheets/issues",
-  "changelog": "https://github.com/kgar/foundry-vtt-tidy-5e-sheets/releases",
+  "url": "https://github.com/bkh-ra/DNDBeyondSheetThemeExpansion_Tidy5ESheets",
+  "readme": "https://github.com/bkh-ra/DNDBeyondSheetThemeExpansion_Tidy5ESheets/blob/ddb/README.md",
+  "bugs": "https://github.com/bkh-ra/DNDBeyondSheetThemeExpansion_Tidy5ESheets/issues",
+  "changelog": "https://github.com/bkh-ra/DNDBeyondSheetThemeExpansion_Tidy5ESheets/commits/ddb",
   "flags": {
     "allowBugReporter": true
   }

@@ -1,9 +1,9 @@
 # DDB 5e Sheets — Fork Notes
 
-Local fork of [Tidy 5e Sheets](https://github.com/kgar/foundry-vtt-tidy-5e-sheets) (kgar, MIT).
+Fork of [Tidy 5e Sheets](https://github.com/kgar/foundry-vtt-tidy-5e-sheets) (kgar, MIT).
 Adds a third character-sheet layout, **DDB** (D&D Beyond desktop style), alongside Classic and Quadrone.
 Base: tag `v13.7.0`. Branch layout: `main` mirrors `upstream/main` (never edited); all work on `ddb`.
-This repo is **local-only** — no GitHub remote of our own; `upstream` = kgar's repo, pull-only.
+Repository: `origin` = https://github.com/bkh-ra/DNDBeyondSheetThemeExpansion_Tidy5ESheets (this fork); `upstream` = kgar's repo, pull-only. Research material (D&D Beyond page captures, harvested style data, character backdrop art) is deliberately NOT in the repo — see `.gitignore`.
 
 ## Design decisions
 
@@ -48,7 +48,7 @@ prefix will silently lose to quadrone.
 
 - `src/sheets/ddb/**` — DDB layout sheet class, root component, tabs, parts, SVG motifs
 - `src/runtime/actor/CharacterSheetDdbRuntime.svelte.ts` — DDB tab registry
-- `design/**` — DDB harvest captures, tokens, groupings, tooling
+- `src/less/ddb/**` — the DDB style layer (tokens, layout, per-region css)
 - `FORK_NOTES.md`, `publish.ps1`
 
 ## Upstream merge procedure
@@ -62,5 +62,5 @@ prefix will silently lose to quadrone.
 
 ## Environment notes
 
-- `node_modules` is a junction → `C:\Users\brian\dev-cache\ddb5e-sheets\node_modules` (keeps npm churn out of OneDrive)
-- Publish: `powershell ./publish.ps1` (robocopy `dist` → Foundry `Data/modules/ddb5e-sheets`) or `npm run link-create` (symlink; needs a `foundry-data-path-config.json`, see `_example`)
+- If the checkout lives in a synced folder (OneDrive etc.), junction `node_modules` to a local path outside it to avoid sync churn
+- Publish: `powershell ./publish.ps1` (robocopy `dist` → `<Foundry user data>/Data/modules/ddb5e-sheets`) or `npm run link-create` (symlink). Both read the Foundry user-data root from `foundry-data-path-config.json` (gitignored; copy `foundry-data-path-config_example.json`)

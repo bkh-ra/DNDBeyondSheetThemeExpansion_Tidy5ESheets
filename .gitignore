@@ -33,6 +33,9 @@ foundry-data-path-config.json
 tests/.env
 tests/state.json
 
-# DDB-FORK: local DDB page captures are large and stay on this machine
-design/captures/*
-!design/captures/.gitkeep
+
+# DDB-FORK: research / DDB-derived material never leaves this machine
+# (page captures, harvested style data, capture tooling, and any character
+# backdrop art pulled from a personal D&D Beyond account).
+design/
+public/backdrops/

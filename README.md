@@ -1,3 +1,46 @@
+# DDB 5e Sheets
+
+**A D&D Beyond-style character sheet layout for [Foundry Virtual Tabletop](https://foundryvtt.com/) — built as a fork of [Tidy 5e Sheets](https://github.com/kgar/foundry-vtt-tidy-5e-sheets) by [kgar](https://github.com/kgar).**
+
+This module adds a third sheet layout, **DDB**, alongside Tidy's Classic and Quadrone layouts. It presents player characters in the familiar D&D Beyond desktop arrangement — header banner, ability cards, quick-info band, saving throws / senses / proficiencies column, skills column, tabbed primary box, and a favorites sidebar — in both light and "Underdark" dark themes, driven by Tidy's per-character accent color.
+
+Everything underneath is Tidy 5e Sheets: the data preparation, item and spell tables, drag-and-drop, theming engine, and all of the NPC / vehicle / item sheets ship unchanged. The DDB layout is a different *presentation* of the same sheet context.
+
+## Credit
+
+- **[Tidy 5e Sheets](https://github.com/kgar/foundry-vtt-tidy-5e-sheets)** by **kgar**, with contributions from sednec and [p4535992](https://github.com/p4535992), itself a rewrite of the original [Tidy5e Sheet](https://github.com/sdenec/tidy5e-sheet) by sdenec. This fork would not exist without that foundation — please support the upstream project.
+- Fork layout, DDB layer, and maintenance: [bkh-ra](https://github.com/bkh-ra).
+- Licensed under the [MIT License](LICENSE.txt), the same as upstream.
+
+**No D&D Beyond assets are included.** The layout, frame shapes, and design tokens were re-implemented from observation; no artwork, icons, path data, or code from dndbeyond.com is shipped. D&D Beyond is a trademark of Wizards of the Coast; this project is unaffiliated.
+
+## Installation
+
+This module **replaces** Tidy 5e Sheets rather than running beside it (it contains all of Tidy plus the DDB layout, and refuses to initialize while `tidy5e-sheet` is active). Disable the original Tidy 5e Sheets module, then install this one and choose **"DDB Character Sheet (D&D Beyond Style)"** in a character's Sheet Configuration. Existing Tidy data (favorites, notes, sections, theme settings) is read through automatically.
+
+Requirements: Foundry VTT v13 or v14, dnd5e system 5.3.x.
+
+## Building
+
+```
+npm ci
+npm run build
+```
+
+Publish the `dist/` folder into your Foundry `Data/modules/ddb5e-sheets` with `powershell -File publish.ps1` (set your Foundry user-data path in `foundry-data-path-config.json`, see the `_example` file) or `npm run link-create`.
+
+## Fork structure
+
+- `main` — mirror of upstream Tidy 5e Sheets; never edited here.
+- `ddb` — all fork work. Shared-file edits are marked `// DDB-FORK`; new code lives under `src/sheets/ddb/`, `src/less/ddb/`, and `src/runtime/actor/CharacterSheetDdbRuntime.svelte.ts`.
+- [`FORK_NOTES.md`](FORK_NOTES.md) documents every shared-file edit, the DDB CSS specificity contract, and the procedure for merging upstream releases.
+
+---
+
+# Original Tidy 5e Sheets README
+
+*What follows is the upstream README, preserved for reference. Package links, badges, and installation instructions there refer to the original Tidy 5e Sheets module, not this fork.*
+
 # Tidy 5e Sheets
 
 ![GitHub issues](https://img.shields.io/github/issues/kgar/foundry-vtt-tidy-5e-sheets?style=for-the-badge)
