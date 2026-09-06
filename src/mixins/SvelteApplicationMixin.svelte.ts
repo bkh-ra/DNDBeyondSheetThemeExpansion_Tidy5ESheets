@@ -122,6 +122,23 @@ export function getSvelteApplicationMixin<
     /*  Rendering                                   */
     /* -------------------------------------------- */
 
+    async render(
+      options: boolean | ApplicationRenderOptions = {},
+      _options: ApplicationRenderOptions = {},
+    ) {
+      if (
+        _options.renderContext === CONSTANTS.RENDER_CONTEXT_UPDATE_USER &&
+        !_options.renderData?.flags?.[CONSTANTS.MODULE_ID]
+      ) {
+        debug(
+          'Ignoring non-Tidy-related user update and preventing re-render.',
+        );
+        return;
+      }
+
+      return await super.render(options, _options);
+    }
+
     #debouncedRerenderForSettings = FoundryAdapter.debounce(
       this.render.bind(this),
       150,
@@ -318,23 +335,6 @@ export function getSvelteApplicationMixin<
       super._tearDown(options);
     }
 
-    async render(
-      options: boolean | ApplicationRenderOptions = {},
-      _options: ApplicationRenderOptions = {},
-    ) {
-      if (
-        _options.renderContext === CONSTANTS.RENDER_CONTEXT_UPDATE_USER &&
-        !_options.renderData?.flags?.[CONSTANTS.MODULE_ID]
-      ) {
-        debug(
-          'Ignoring non-Tidy-related user update and preventing re-render.',
-        );
-        return;
-      }
-
-      return await super.render(options, _options);
-    }
-
     /* -------------------------------------------- */
     /*  Event Listeners and Handlers                */
     /* -------------------------------------------- */
@@ -367,6 +367,18 @@ export function getSvelteApplicationMixin<
         this._onConfigurePlugins.bind(this),
         { signal: frameListenerController.signal },
       );
+
+      this.element.addEventListener(
+        'pointerdown',
+        this.#onPointerDown.bind(this),
+        {
+          signal: frameListenerController.signal,
+        },
+      );
+
+      this.element.addEventListener('dblclick', this.#onDblClick.bind(this), {
+        signal: frameListenerController.signal,
+      });
 
       this.themeSettingsSubscription =
         ThemeQuadrone.subscribeAndReactToThemeSettingsChanges(
@@ -492,6 +504,18 @@ export function getSvelteApplicationMixin<
           ProseMirror.defaultSchema,
         );
     }
+
+    #onDblClick(event: MouseEvent) {
+      this._onDblClick(event, event.target as HTMLElement);
+    }
+
+    _onDblClick(event: MouseEvent, target: HTMLElement) {}
+
+    #onPointerDown(event: PointerEvent) {
+      this._onPointerDown(event, event.target as HTMLElement);
+    }
+
+    _onPointerDown(event: PointerEvent, target: HTMLElement) {}
 
     /* -------------------------------------------- */
     /*  Detached Windows                            */

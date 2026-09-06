@@ -10,7 +10,7 @@ import CharacterBiographyTab from 'src/sheets/quadrone/actor/tabs/CharacterBiogr
 import CharacterFeaturesTab from 'src/sheets/quadrone/actor/tabs/CharacterFeaturesTab.svelte';
 import CharacterBastionTab from 'src/sheets/quadrone/actor/tabs/CharacterBastionTab.svelte';
 import CharacterSheetTab from 'src/sheets/quadrone/actor/tabs/CharacterSheetTab.svelte';
-import { systemSettings } from 'src/settings/settings.svelte';
+import * as Bastion from 'src/features/facility/Bastion';
 import { buildCharacterSheetTabOptions } from 'src/settings/tab-options/CharacterSheetTabOptions';
 import { buildActorInventoryTabOptions } from 'src/settings/tab-options/ActorInventoryTabOptions';
 import { buildActorSpellbookTabOptions } from 'src/settings/tab-options/ActorSpellbookTabOptions';
@@ -114,16 +114,7 @@ export const CharacterSheetDdbRuntime =
           component: CharacterBastionTab,
           type: 'svelte',
         },
-        enabled: (context) => {
-          const { enabled } = systemSettings.value.bastionConfiguration;
-          const { basic, special } = CONFIG.DND5E.facilities.advancement;
-          const threshold = Math.min(
-            ...Object.keys(basic).map(Number),
-            ...Object.keys(special).map(Number),
-          );
-
-          return context.actor.system.details.level >= threshold && enabled;
-        },
+        enabled: (context) => Bastion.characterHasBastionTab(context.actor),
         id: CONSTANTS.TAB_CHARACTER_BASTION,
         layout: CONSTANTS.SHEET_LAYOUT_DDB,
         iconClass: 'fa-solid fa-house-turret',

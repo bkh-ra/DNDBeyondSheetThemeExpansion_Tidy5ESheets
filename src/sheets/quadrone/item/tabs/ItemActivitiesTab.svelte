@@ -31,11 +31,15 @@
   function onResize(entry: ResizeObserverEntry) {
     sectionsInlineWidth = entry.borderBoxSize[0].inlineSize;
   }
+
+  let visibleSections = $derived(
+    context.activities.filter((section) => section.show),
+  );
 </script>
 
-<div {@attach observeResize(onResize)}>
-  {#each context.activities as section (section.key)}
-    {#if section.show}
+{#if visibleSections.length}
+  <div {@attach observeResize(onResize)}>
+    {#each context.activities as section (section.key)}
       {const rowActionInfo = $derived(
         RowActionRuntimeBase.getRowActionWidthInfo(
           section.activities,
@@ -92,13 +96,6 @@
                   class={['tidy-table-row-use-button']}
                   aria-label={ctx.activity.name}
                   data-action="activity-use"
-                  onkeydown={(ev) =>
-                    ev.key === 'Enter' ||
-                    (ev.key === ' ' &&
-                      ctx.activity.use({
-                        event: ev,
-                        options: { sheet: context.sheet },
-                      }))}
                   data-has-roll-modes
                 >
                   <img class="item-image" alt="" src={ctx.activity.img} />
@@ -113,12 +110,12 @@
                     </span>
                     <!-- TODO: Uncomment when we have activity descriptions -->
                     <!-- <span class="row-detail-expand-indicator">
-                <i
-                  class="fa-solid fa-angle-right expand-indicator"
-                  class:expanded
-                >
-                </i>
-              </span> -->
+                  <i
+                    class="fa-solid fa-angle-right expand-indicator"
+                    class:expanded
+                  >
+                  </i>
+                </span> -->
                   </span>
                   {#if ctx.type === CONSTANTS.ACTIVITY_TYPE_CAST && !ctx.spell?.uuid}
                     <span
@@ -154,6 +151,20 @@
           {/each}
         {/snippet}
       </TidyTable>
-    {/if}
-  {/each}
-</div>
+    {/each}
+  </div>
+{:else}
+  <button
+    type="button"
+    class="button button-primary"
+    title={localize('DND5E.ACTIVITY.Action.Create')}
+    aria-label={localize('DND5E.ACTIVITY.Action.Create')}
+    onclick={() =>
+      context.sheet._addDocument({
+        tabId: CONSTANTS.TAB_ITEM_ACTIVITIES,
+      })}
+  >
+    <i class="fas fa-plus"></i>
+    {localize('DND5E.ADVANCEMENT.Action.Create')}
+  </button>
+{/if}

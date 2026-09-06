@@ -3,6 +3,7 @@ import type {
   ActiveEffectSection,
   ActivityItemContext,
   AttunementContext,
+  ChosenFacilityContext,
   ContainerCapacityContext,
   CustomContent,
   DocumentSheetV2Context,
@@ -170,12 +171,15 @@ export type ActivitySectionQuadrone = TidySectionBase & {
 };
 
 export type ItemSheetQuadroneContext = {
+  /** The target sheet or its parent supports an aggregate/action section (e.g., action-economy Character Sheet tab or statblock NPC tab) */
+  actionSectionEnabled: boolean;
   activities: ActivitySectionQuadrone[];
   activationTypes: GroupableSelectOption[];
   advancement: AdvancementSection[];
   affectsPlaceholder: string;
   baseItems: Record<string, string>;
   canCraft?: boolean;
+  canIdentify: boolean;
   canPrepare?: boolean;
   concealDetails: boolean;
   config: typeof CONFIG.DND5E;
@@ -205,6 +209,7 @@ export type ItemSheetQuadroneContext = {
     chat: string;
   };
   equipmentTypes: GroupableSelectOption[];
+  facilityContext?: ChosenFacilityContext;
   facilitySubtypes?: Record<string, string>;
   /** The data schema of document.system. */
   fields: any; // One day, maybe we can have types for all the various items. Doesn't seem within reach right now.
@@ -232,7 +237,6 @@ export type ItemSheetQuadroneContext = {
     };
   };
   limited: boolean;
-  lockItemQuantity: boolean;
   modernRules: boolean;
   options: any;
   name: ItemNameContext;
@@ -374,7 +378,10 @@ export type CurrencyContext = {
 };
 
 export type ContainerSheetQuadroneContext = {
+  /** The target sheet or its parent supports an aggregate/action section (e.g., action-economy Character Sheet tab or statblock NPC tab) */
+  actionSectionEnabled: boolean;
   capacity: ContainerCapacityContext;
+  canIdentify: boolean;
   concealDetails: boolean;
   config: typeof CONFIG.DND5E;
   containerContents: ContainerContents;
@@ -401,8 +408,6 @@ export type ContainerSheetQuadroneContext = {
   items: Item5e[];
   itemType: string;
   labels: Record<string, any>;
-  lockItemQuantity: boolean;
-  lockMoneyChanges: boolean;
   modernRules: boolean;
   name: ItemNameContext;
   owner: boolean;

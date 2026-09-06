@@ -10,8 +10,11 @@ import type {
   DocumentSheetConfiguration,
 } from 'src/types/application.types';
 import type {
+  ActiveEffect5e,
+  Actor5e,
   CustomContent,
   DocumentSheetV2Context,
+  Folder,
   Tab,
   TidySectionBase,
 } from 'src/types/types';
@@ -23,8 +26,6 @@ import {
 } from 'src/sheets/CustomContentRendererV2';
 import { tick } from 'svelte';
 import { applySheetAttributesToWindow } from 'src/utils/applications.svelte';
-import { isNil } from 'src/utils/data';
-import { processInputChangeDelta } from 'src/utils/form';
 import type {
   CustomHeaderControlsEntry,
   SheetHeaderControlPosition,
@@ -45,6 +46,16 @@ import { TidyHooks } from 'src/foundry/TidyHooks';
 import { SettingsProvider } from 'src/settings/settings.svelte';
 import type { Item5e } from 'src/types/item.types';
 import { TidySheetSettingsQuadroneApplication } from 'src/applications/settings/sheet/TidySheetSettingsQuadroneApplication.svelte';
+import type { Activity5e } from 'src/foundry/dnd5e.types';
+import { isUserInteractable } from 'src/utils/element';
+import { delay } from 'src/utils/asynchrony';
+import {
+  applyNumberInputConstraints,
+  getSpecializedUpdateInformation,
+  isNumericInput,
+  shouldParseInputDelta,
+} from 'src/utils/form';
+import * as Bastion from 'src/features/facility/Bastion';
 
 export type TidyDocumentSheetRenderOptions = ApplicationRenderOptions & {
   mode?: number;
@@ -71,6 +82,7 @@ export function getTidyExtensibleDocumentSheetMixin<
     _mode = $state<number | undefined>();
     _headerControlSettings: Map<string, SheetHeaderControlPosition> = new Map();
     _sectionForMenu?: TidySectionBase;
+    currentTabId: string = '';
 
     constructor(options: TConstructorArgs) {
       super(options);
@@ -84,20 +96,90 @@ export function getTidyExtensibleDocumentSheetMixin<
         controls: [],
       },
       actions: {
-        //changeMode: PrimarySheet5e.#changeMode,
+        'activity-use': TidyDocumentSheet.#useActivity,
+        configureTab: TidyDocumentSheet.#configureTab,
+        copyInnerText: TidyDocumentSheet.#copyInnerText,
+        copyValue: TidyDocumentSheet.#copyValue,
         currency: TidyDocumentSheet.#currency,
         deleteDocument: TidyDocumentSheet.#deleteDocument,
         editDocument: TidyDocumentSheet.#showDocument,
         editImage: TidyDocumentSheet.#editImage,
+        emphasize: TidyDocumentSheet.#emphasize,
+        increase: TidyDocumentSheet.#increase,
+        decrease: TidyDocumentSheet.#decrease,
+        recharge: TidyDocumentSheet.#recharge,
+        sheetSettings: TidyDocumentSheet.#sheetSettings,
         showContextMenu: TidyDocumentSheet.#showContextMenu,
         showDocument: TidyDocumentSheet.#showDocument,
-        use: TidyDocumentSheet.#useItem,
-        'activity-use': TidyDocumentSheet.#useActivity,
         toggle: TidyDocumentSheet.#toggle,
+        togglePip: TidyDocumentSheet.#togglePip,
         'transfer-currency': TidyDocumentSheet.#transferCurrency,
-        configureTab: TidyDocumentSheet.#configureTab,
+        use: TidyDocumentSheet.#useItem,
       },
     };
+
+    /**
+     * A map from value prop to an object of max prop and spent prop.
+     * These values represent Limited Uses data structures that require
+     * special handling when saving changes to a field which is presenting
+     * the value to the user but needing the spent prop to be updated on
+     * change.
+     */
+    readonly valueMaxSpentMap = new Map<
+      string,
+      { maxProp: string; spentProp: string }
+    >([
+      ['uses.value', { maxProp: 'uses.max', spentProp: 'uses.spent' }],
+      [
+        'system.uses.value',
+        { maxProp: 'system.uses.max', spentProp: 'system.uses.spent' },
+      ],
+      [
+        'system.resources.legact.value',
+        {
+          maxProp: 'system.resources.legact.max',
+          spentProp: 'system.resources.legact.spent',
+        },
+      ],
+      [
+        'system.resources.legres.value',
+        {
+          maxProp: 'system.resources.legres.max',
+          spentProp: 'system.resources.legres.spent',
+        },
+      ],
+    ]);
+
+    _tryGetValueSpentUpdate(
+      doc: any,
+      value: number | string,
+      valueProp: string,
+    ) {
+      value = Number(value);
+
+      if (Number.isNaN(value)) {
+        return;
+      }
+
+      const valueMaxSpentInfo = this.valueMaxSpentMap.get(valueProp);
+
+      if (!valueMaxSpentInfo) {
+        return;
+      }
+
+      const max = FoundryAdapter.getProperty<number>(
+        doc,
+        valueMaxSpentInfo.maxProp,
+      );
+
+      if (!max) {
+        return;
+      }
+
+      return {
+        [valueMaxSpentInfo.spentProp]: max - value,
+      };
+    }
 
     get sheetMode() {
       return this._fixedMode ?? this._mode;
@@ -126,7 +208,7 @@ export function getTidyExtensibleDocumentSheetMixin<
 
     #focusedInputSelector: string | undefined = '';
 
-    async _onChangeForm(formConfig: unknown, event: any) {
+    _onChangeForm(formConfig: unknown, event: any) {
       if (
         FoundryAdapter.isElementInstanceOf(
           event.target,
@@ -144,27 +226,89 @@ export function getTidyExtensibleDocumentSheetMixin<
         return;
       }
 
-      const { target } = event;
-      if (!target) {
+      if (!event.target) {
         return;
+      }
+
+      // Only apply sheet-level processing to inputs that opt into standard Foundry form management via name and data-name attributes.
+      const isSelfSufficientInput =
+        !event.target.name && !event.target.dataset.name;
+      if (isSelfSufficientInput) {
+        return;
+      }
+
+      const { targetDocument } = this._getDocumentSubmissionInformation(
+        event.target,
+      );
+
+      // Process delta changes
+      if (shouldParseInputDelta(event.target)) {
+        dnd5e.utils.parseInputDelta(event.target, targetDocument);
       }
 
       try {
         if (event.target.matches('[data-name]')) {
-          await this._onEmbeddedDocumentInputChange(event);
-          return;
+          return this._onSingleInputChange(event);
         }
 
-        const isSelfSufficientInput = !event.target.name;
-        if (isSelfSufficientInput) {
-          return;
-        }
+        const result = super._onChangeForm(formConfig, event);
 
-        super._onChangeForm(formConfig, event);
+        this._revertIfNotMatchingDocumentValue(result, event);
       } catch (e: any) {
         Object.values(e.getAllFailures()).forEach((failure: any) =>
           ui.notifications.error(failure.message),
         );
+      }
+    }
+
+    async _revertIfNotMatchingDocumentValue(
+      maybePromise: Promise<any>,
+      event: any,
+    ) {
+      await maybePromise;
+
+      const { targetDocument } = this._getDocumentSubmissionInformation(
+        event.target,
+      );
+
+      const shouldRevertInput =
+        event.target.name &&
+        foundry.utils.getProperty(targetDocument, event.target.name) !==
+          event.target.value;
+
+      if (shouldRevertInput) {
+        this._revertFormChangeToDocumentValue(
+          targetDocument,
+          event,
+          event.target.name,
+        );
+      }
+    }
+
+    private _revertFormChangeToDocumentValue(
+      targetDocument: any,
+      event: any,
+      prop: string,
+    ) {
+      const value = FoundryAdapter.getProperty(targetDocument, prop) ?? '';
+
+      // <prose-mirror> and similar Foundry elements will eagerly push change events
+      // in any instance where the element value is set,
+      // causing an infinite loop when trying to correct value drift due to a failed update.
+      // Instead of setting their values conventionally, so it with `_setValue`.
+      if (
+        '_setValue' in event.target &&
+        typeof event.target._setValue === 'function'
+      ) {
+        event.target._setValue(value);
+        event.target.dispatchEvent(
+          new Event('input', { bubbles: true, cancelable: true }),
+        );
+        // intentionally skip the form change event
+      } else if (event.target.type === 'checkbox') {
+        event.target.checked = !!value;
+      } else {
+        event.target.value = value;
       }
     }
 
@@ -191,6 +335,10 @@ export function getTidyExtensibleDocumentSheetMixin<
       const modified = event.target.toggleRevealed(content);
 
       doc.update({ [target]: modified });
+    }
+
+    selectTab(tabId: string) {
+      this.element.querySelector(`[data-tab-id="${tabId}"]`)?.click();
     }
 
     async #persistSheetPositionPreferences(position?: ApplicationPosition) {
@@ -270,6 +418,21 @@ export function getTidyExtensibleDocumentSheetMixin<
         unlocked: sheetModeConfig.unlocked,
         config: CONFIG.DND5E,
       } as DocumentSheetV2Context;
+    }
+
+    /* -------------------------------------------- */
+    /*  Rendering                                   */
+    /* -------------------------------------------- */
+
+    async render(
+      options: boolean | ApplicationRenderOptions = {},
+      _options: ApplicationRenderOptions = {},
+    ) {
+      if (typeof options === 'object' && options.tidy?.tab) {
+        this.currentTabId = options.tidy.tab;
+      }
+
+      return await super.render(options, _options);
     }
 
     async _renderHTML(
@@ -388,66 +551,89 @@ export function getTidyExtensibleDocumentSheetMixin<
       super._updateFrame(options);
     }
 
-    async _onEmbeddedDocumentInputChange(
+    async _onSingleInputChange(
       event: InputEvent & { target: HTMLInputElement },
     ) {
-      const itemId =
-        event.target.closest<HTMLElement>('[data-item-id]')?.dataset.itemId;
+      const { name } = event.target.dataset;
 
-      const item = !!itemId ? await this.getItem(itemId) : null;
+      const { operationType, prop } = getSpecializedUpdateInformation(name);
 
-      const activityId =
-        event.target.closest<HTMLElement>('[data-activity-id]')?.dataset
-          .activityId;
-
-      const activity = item?.system.activities?.get(activityId);
-
-      if (activity) {
-        return await this._processEmbeddedDocumentChange(event, activity);
+      // Current User updates
+      if (operationType === 'currentUser' && !!prop) {
+        return prop ? await this._onCurrentUserUpdated(event, prop) : undefined;
       }
 
-      if (itemId) {
-        return await this._processEmbeddedDocumentChange(event, item);
-      }
+      // Standard Embedded or Top-Level Document Submission Information
+      const { targetDocument } = this._getDocumentSubmissionInformation(
+        event.target,
+      );
+
+      return await this._processSingleInputChange(event, targetDocument);
     }
 
-    private async _processEmbeddedDocumentChange(
+    _onCurrentUserUpdated(event: any, prop: string): Promise<any> {
+      let value = event.target.value;
+      return game.user.update({ [prop]: value });
+    }
+
+    async _processSingleInputChange(
       event: InputEvent & { target: HTMLInputElement },
       doc: any,
     ) {
       event.stopImmediatePropagation();
 
-      const field = event.target.getAttribute('data-name')!;
+      const prop = event.target.getAttribute('data-name')!;
 
-      let valueToSave: string | number = event.target.value;
+      const valueToSave: string | number = event.target.value;
 
-      // For deltas, parse the resulting delta value
-      if (event.target.matches('[inputmode="numeric"]')) {
-        valueToSave = processInputChangeDelta(
-          event.target.value,
-          doc,
-          field,
-        )?.toString();
+      if (isNumericInput(event.target)) {
+        const valueAsNumber = Number.isNumeric(valueToSave)
+          ? Number(valueToSave)
+          : valueToSave;
+
+        await this._updateNumericProperty(doc, prop, valueAsNumber);
+      } else if (event.target.type === 'checkbox') {
+        await doc.update({ [prop]: event.target.checked });
+      } else {
+        await doc.update({ [prop]: valueToSave });
       }
 
-      // For numeric changes, enforce min/max on the value to save
-      if (event.target.matches('[inputmode="numeric"], [type="number"]')) {
-        const minAttribute = event.target.getAttribute('min');
-        const min = !isNil(minAttribute, '') ? Number(minAttribute) : -Infinity;
+      const { targetDocument } = this._getDocumentSubmissionInformation(
+        event.target,
+      );
 
-        const maxAttribute = event.target.getAttribute('max');
-        const max = !isNil(maxAttribute, '') ? Number(maxAttribute) : Infinity;
+      if (
+        foundry.utils.getProperty(targetDocument, prop)?.toString() !==
+        event.target.value?.toString()
+      ) {
+        this._revertFormChangeToDocumentValue(targetDocument, event, prop);
+      }
+    }
 
-        const valueAsNumber = Number(valueToSave);
-        valueToSave = Math.clamp(valueAsNumber, min, max);
+    async _updateNumericProperty(
+      targetDocument: any,
+      prop: string,
+      value: number | string,
+    ) {
+      const valueSpentUpdate = this._tryGetValueSpentUpdate(
+        targetDocument,
+        value,
+        prop,
+      );
 
-        if (doc && !Number.isNaN(valueToSave)) {
-          event.target.value = valueToSave?.toString();
-        }
+      if (!valueSpentUpdate) {
+        // Standard case: save the intended value.
+        return await targetDocument.update({ [prop]: value });
       }
 
-      // Save the value to the document, whatever that value ultimately became
-      await doc.update({ [field]: valueToSave });
+      if (targetDocument.documentName === CONSTANTS.DOCUMENT_NAME_ACTIVITY) {
+        return await targetDocument.item.updateActivity(
+          targetDocument.id,
+          valueSpentUpdate,
+        );
+      }
+
+      return targetDocument.update(valueSpentUpdate);
     }
 
     getItem(id?: string) {
@@ -486,6 +672,56 @@ export function getTidyExtensibleDocumentSheetMixin<
           e,
         );
       }
+    }
+
+    _getDocumentSubmissionInformation(target: HTMLElement): Partial<{
+      itemId: string;
+      item: Item5e;
+      activityId: string;
+      activity: Activity5e;
+      effectId: string;
+      effect: ActiveEffect5e;
+      targetDocument: Actor5e | Item5e | Activity5e;
+    }> {
+      const { itemId } =
+        target.closest<HTMLElement>('[data-item-id]')?.dataset ?? {};
+      const sheetDocument = this.document;
+      const sheetDocumentIsRelatedItem =
+        sheetDocument.documentName === CONSTANTS.DOCUMENT_NAME_ITEM &&
+        (sheetDocument.id === itemId || !itemId);
+      const item = sheetDocumentIsRelatedItem
+        ? sheetDocument
+        : sheetDocument.type === CONSTANTS.ITEM_TYPE_CONTAINER
+          ? sheetDocument.system.getContainedItem(itemId)
+          : sheetDocument?.items?.get(itemId);
+
+      const { activityId } =
+        target.closest<HTMLElement>('[data-activity-id]')?.dataset ?? {};
+      const activity = item?.system.activities?.get(activityId);
+
+      const { effectId } =
+        target.closest<HTMLElement>('[data-effect-id]')?.dataset ?? {};
+      const { parentId } =
+        target.closest<HTMLElement>('[data-parent-id]')?.dataset ?? {};
+      const effect = effectId
+        ? FoundryAdapter.getEffect({
+            document: this.document,
+            effectId,
+            parentId,
+          })
+        : undefined;
+
+      const targetDocument = effect ?? activity ?? item ?? sheetDocument;
+
+      return {
+        itemId,
+        item,
+        activityId,
+        activity,
+        targetDocument,
+        effectId,
+        effect,
+      };
     }
 
     /* -------------------------------------------- */
@@ -878,6 +1114,255 @@ export function getTidyExtensibleDocumentSheetMixin<
     /*  Event Listeners and Handlers                */
     /* -------------------------------------------- */
 
+    _onPointerDown(event: PointerEvent, target: HTMLElement) {
+      if (event.button !== CONSTANTS.MOUSE_BUTTON_AUXILIARY) {
+        return;
+      }
+
+      this._openAnything(event, target, CONSTANTS.SHEET_MODE_EDIT);
+    }
+
+    _onDblClick(event: PointerEvent, target: HTMLElement) {
+      if (isUserInteractable(target)) {
+        return;
+      }
+
+      this._openAnything(event, target, CONSTANTS.SHEET_MODE_PLAY);
+    }
+
+    _openAnything(event: PointerEvent, target: HTMLElement, mode?: number) {
+      // Standard Case
+
+      const { targetDocument } = this._getDocumentSubmissionInformation(target);
+
+      if (targetDocument && targetDocument !== this.document) {
+        event.stopPropagation();
+        event.preventDefault();
+        return this._renderChild(targetDocument.sheet, {
+          mode,
+        });
+      }
+
+      // Special Case - Slot
+
+      const isActor =
+        this.document.documentName === CONSTANTS.DOCUMENT_NAME_ACTOR;
+
+      if (!!target.closest('[data-slots]') && isActor) {
+        event.stopPropagation();
+        event.preventDefault();
+        return FoundryAdapter.openSpellSlotsConfig(this.document);
+      }
+
+      // Special Case - Skill / Tool
+
+      const { trait } =
+        target.closest<HTMLElement>('[data-trait]')?.dataset ?? {};
+      const { key } = target.closest<HTMLElement>('[data-key]')?.dataset ?? {};
+
+      if (trait && key && isActor) {
+        event.stopPropagation();
+        event.preventDefault();
+        FoundryAdapter.renderSkillToolConfig(
+          this.document,
+          trait as 'skills' | 'tool',
+          key,
+        );
+      }
+
+      // Special Case - Item Advancement
+
+      const { id } = target.closest<HTMLElement>('[data-id]')?.dataset ?? {};
+
+      if (this.document.documentName === CONSTANTS.DOCUMENT_NAME_ITEM && id) {
+        event.stopPropagation();
+        event.preventDefault();
+        return this._renderChild(this.document.advancement?.byId[id]?.sheet);
+      }
+
+      // Direct UUID reference
+
+      const { uuid } =
+        target.closest<HTMLElement>('[data-uuid]')?.dataset ?? {};
+
+      if (uuid) {
+        event.stopPropagation();
+        event.preventDefault();
+        return fromUuid(uuid).then((doc: any) => {
+          if (doc !== this.document) {
+            return this._renderChild(doc.sheet, {
+              mode,
+            });
+          }
+        });
+      }
+    }
+
+    /* -------------------------------------------- */
+    /*  Sheet Actions                               */
+    /* -------------------------------------------- */
+
+    async addOccupant(
+      event: Event,
+      item: Item5e,
+      facilityType: string,
+      prop: string,
+    ) {
+      if (
+        !TidyHooks.tidy5eSheetsFacilityEmptyOccupantSlotClicked(
+          event,
+          item,
+          facilityType,
+          prop,
+        )
+      ) {
+        return;
+      }
+
+      const result = await dnd5e.applications.CompendiumBrowser.selectOne(
+        {
+          filters: {
+            locked: {
+              documentClass: 'Actor',
+              types: new Set(['character', 'npc', 'vehicle', 'group']),
+            },
+          },
+        },
+        this._detachOptions(),
+      );
+
+      if (result) {
+        return await this._onDropActorAddToFacility(item, prop, result);
+      }
+    }
+
+    deleteOccupant(facility: Item5e, prop: string, index: number) {
+      if (!facility || !prop || index === undefined) {
+        return;
+      }
+
+      return Bastion.deleteOccupant(facility, prop, index);
+    }
+
+    /* -------------------------------------------- */
+
+    /**
+     * Handle configuring a tab on a sheet.
+     * @param this {TidyDocumentSheet}
+     * @param _event {Event}
+     * @param target The clicked element, with a data-tab-id attribute containing the tab ID
+     * @returns Nothing, loads the tab configuration application
+     */
+    static async #configureTab(
+      this: TidyDocumentSheet,
+      _event: Event,
+      target: HTMLElement,
+    ) {
+      if (!this.isEditable) {
+        return;
+      }
+
+      this.openSheetSettings(target.dataset.tabId);
+    }
+
+    openSheetSettings(tabId?: string) {
+      const settings = new TidySheetSettingsQuadroneApplication({
+        document: this.document,
+        initialTabId: tabId,
+      });
+
+      return this._renderChild(settings);
+    }
+
+    /* -------------------------------------------- */
+
+    static async #copyInnerText(
+      this: TidyDocumentSheet,
+      event: Event,
+      target: HTMLElement,
+    ) {
+      this._copyValue(target.innerText);
+    }
+
+    _copyValue(value: string | undefined) {
+      game.clipboard.copyPlainText(value);
+      ui.notifications.info(game.i18n.format('DND5E.Copied', { value }), {
+        console: false,
+      });
+    }
+
+    /* -------------------------------------------- */
+
+    static async #copyValue(
+      this: TidyDocumentSheet,
+      event: Event,
+      target: HTMLElement,
+    ) {
+      this._copyValue(target.dataset.value);
+    }
+
+    /* -------------------------------------------- */
+
+    static async #currency(
+      this: TidyDocumentSheet,
+      _event: Event,
+      _target: HTMLElement,
+    ) {
+      return new dnd5e.applications.CurrencyManager({
+        document: this.document,
+      }).render({ force: true });
+    }
+
+    /* -------------------------------------------- */
+
+    static async #decrease(
+      this: TidyDocumentSheet,
+      event: Event,
+      target: HTMLElement,
+    ) {
+      if ((await this._decrease(event, target)) === false) {
+        return;
+      }
+
+      this._onAdjustProperty(event, target, -1);
+    }
+
+    protected async _decrease(
+      event: Event,
+      target: HTMLElement,
+    ): Promise<any> {}
+
+    /* -------------------------------------------- */
+
+    /**
+     * Handle removing an document.
+     * @this {PrimarySheet5e}
+     * @param {Event} event         Triggering click event.
+     * @param {HTMLElement} target  Button that was clicked.
+     */
+    static async #deleteDocument(
+      this: TidyDocumentSheet,
+      event: Event,
+      target: HTMLElement,
+    ) {
+      if ((await this._deleteDocument(event, target)) === false) {
+        return;
+      }
+      const uuid = target.closest<HTMLElement>('[data-uuid]')?.dataset.uuid;
+      const doc = await fromUuid(uuid);
+      doc?.deleteDialog({ sheet: this });
+    }
+
+    /**
+     * Handle removing an document.
+     * @param {Event} event         Triggering click event.
+     * @param {HTMLElement} target  Button that was clicked.
+     * @returns {any}               Return `false` to prevent default behavior.
+     */
+    async _deleteDocument(event: Event, target: HTMLElement): Promise<any> {}
+
+    /* -------------------------------------------- */
+
     static async #editImage(
       this: TidyDocumentSheet,
       _event: Event,
@@ -927,72 +1412,132 @@ export function getTidyExtensibleDocumentSheetMixin<
       await fp.browse();
     }
 
-    /**
-     * Adds a document when only one creation type is available. Presents the item creation dialog when multiple are available.
-     * @param args The tab where this Add operation is occurring, and other optional parameters.
-     */
-    async _addDocument(args: {
-      tabId: string;
-      customSection?: string;
-      creationItemTypes?: string[];
-      data?: Record<string, any>;
-    }): Promise<any> {}
+    /* -------------------------------------------- */
 
-    static async #currency(
+    static async #emphasize(
       this: TidyDocumentSheet,
       event: Event,
       target: HTMLElement,
     ) {
-      return new dnd5e.applications.CurrencyManager({
-        document: this.document,
-      }).render({ force: true });
+      const {
+        emphasizeTabId,
+        emphasizeSelector,
+        emphasizeUuid,
+        emphasizeMode,
+      } = target.dataset;
+
+      let sheet = this;
+
+      if (emphasizeUuid) {
+        const doc = await fromUuid(emphasizeUuid);
+        await this._renderChild(doc.sheet, {
+          mode: Number(emphasizeMode ?? CONSTANTS.SHEET_MODE_EDIT),
+          tidy: {
+            tab: emphasizeTabId,
+          },
+        });
+        sheet = doc.sheet;
+      }
+
+      await sheet.emphasize?.(emphasizeTabId, emphasizeSelector);
     }
 
-    /**
-     * Handle configuring a tab on a sheet.
-     * @param this {TidyDocumentSheet}
-     * @param _event {Event}
-     * @param target The clicked element, with a data-tab-id attribute containing the tab ID
-     * @returns Nothing, loads the tab configuration application
-     */
-    static async #configureTab(
+    async emphasize(tabId: string | undefined, selector: string | undefined) {
+      if (tabId) {
+        this.selectTab(tabId);
+      }
+
+      if (selector) {
+        await delay(1);
+        this.element.querySelector(selector)?.focus();
+      }
+    }
+
+    /* -------------------------------------------- */
+
+    static async #increase(
       this: TidyDocumentSheet,
+      event: Event,
+      target: HTMLElement,
+    ) {
+      if ((await this._increase(event, target)) === false) {
+        return;
+      }
+
+      return await this._onAdjustProperty(event, target, 1);
+    }
+
+    protected async _increase(
       _event: Event,
-      target: HTMLElement,
-    ) {
-      if (!this.isEditable) {
+      _target: HTMLElement,
+    ): Promise<any> {}
+
+    async _onAdjustProperty(event: Event, target: HTMLElement, amount: number) {
+      const { targetDocument } = this._getDocumentSubmissionInformation(target);
+
+      const prop = target.dataset.property;
+
+      if (!prop) {
         return;
       }
 
-      this.openSheetSettings(target.dataset.tabId);
+      let value = FoundryAdapter.getProperty<number>(targetDocument, prop) ?? 0;
+
+      value += amount;
+
+      value = applyNumberInputConstraints(
+        value,
+        target.parentElement?.querySelector<HTMLElement>('input'),
+      );
+
+      if (isNaN(value)) {
+        return;
+      }
+
+      return await this._updateNumericProperty(targetDocument, prop, value);
     }
 
-    /**
-     * Handle removing an document.
-     * @this {PrimarySheet5e}
-     * @param {Event} event         Triggering click event.
-     * @param {HTMLElement} target  Button that was clicked.
-     */
-    static async #deleteDocument(
+    /* -------------------------------------------- */
+
+    static async #recharge(
       this: TidyDocumentSheet,
       event: Event,
       target: HTMLElement,
     ) {
-      if ((await this._deleteDocument(event, target)) === false) {
-        return;
-      }
-      const uuid = target.closest<HTMLElement>('[data-uuid]')?.dataset.uuid;
-      const doc = await fromUuid(uuid);
-      doc?.deleteDialog({ sheet: this });
+      const { item, activity } = this._getDocumentSubmissionInformation(target);
+
+      this._onRollRecharge(activity ?? item, { event });
     }
 
-    /**
-     * Handle removing an document.
-     * @param {Event} event         Triggering click event.
-     * @param {HTMLElement} target  Button that was clicked.
-     * @returns {any}               Return `false` to prevent default behavior.
-     */
-    async _deleteDocument(event: Event, target: HTMLElement): Promise<any> {}
+    _onRollRecharge(
+      entry: Item5e | Activity5e,
+      { event }: Partial<{ event: Event }> = {},
+    ) {
+      const isItem = entry instanceof dnd5e.documents.Item5e;
+      const autoSucceed = event && 'shiftKey' in event && event.shiftKey;
+
+      if (autoSucceed && isItem) {
+        return entry.update({ ['system.uses.spent']: 0 });
+      }
+
+      if (autoSucceed) {
+        return entry.item.updateActivity(entry.id, { ['uses.spent']: 0 });
+      }
+
+      if (isItem) {
+        return entry.system.uses?.rollRecharge({ apply: true, event });
+      }
+
+      return entry.uses?.rollRecharge({ apply: true, event });
+    }
+
+    /* -------------------------------------------- */
+
+    static async #sheetSettings(this: TidyDocumentSheet) {
+      this.openSheetSettings();
+    }
+
+    /* -------------------------------------------- */
 
     /**
      * Handle triggering a context menu. [data-target-selector] on the sheet action node
@@ -1038,6 +1583,8 @@ export function getTidyExtensibleDocumentSheetMixin<
         }),
       );
     }
+
+    /* -------------------------------------------- */
 
     /**
      * Handle opening a document sheet.
@@ -1089,52 +1636,6 @@ export function getTidyExtensibleDocumentSheetMixin<
       }
     }
 
-    static async #useItem(
-      this: TidyDocumentSheet,
-      event: Event,
-      target: HTMLElement,
-    ) {
-      if (target.ariaDisabled === 'true' || !this.isEditable) {
-        return;
-      }
-
-      const { itemId } =
-        target.closest<HTMLElement>('[data-item-id]')?.dataset ?? {};
-      const item = await this.getItem(itemId);
-
-      if (!item) {
-        return;
-      }
-
-      this.tryUseItem(item, event);
-    }
-
-    async tryUseItem(item: Item5e, event: Event) {
-      item.use({ event }, { options: { sheet: this } });
-    }
-
-    static async #useActivity(
-      this: TidyDocumentSheet,
-      event: Event,
-      target: HTMLElement,
-    ) {
-      if (target.ariaDisabled === 'true' || !this.isEditable) {
-        return;
-      }
-
-      const { itemId } =
-        target.closest<HTMLElement>('[data-item-id]')?.dataset ?? {};
-      const { activityId } =
-        target.closest<HTMLElement>('[data-activity-id]')?.dataset ?? {};
-      const item = await this.getItem(itemId);
-
-      if (!item) {
-        return;
-      }
-      const activity = item.system.activities?.get(activityId);
-      await activity.use({ event, options: { sheet: this } });
-    }
-
     /* -------------------------------------------- */
 
     static async #toggle(
@@ -1167,13 +1668,135 @@ export function getTidyExtensibleDocumentSheetMixin<
       // todo etc.
     }
 
-    openSheetSettings(tabId?: string) {
-      const settings = new TidySheetSettingsQuadroneApplication({
-        document: this.document,
-        initialTabId: tabId,
-      });
+    /* -------------------------------------------- */
 
-      return this._renderChild(settings);
+    static async #togglePip(
+      this: TidyDocumentSheet,
+      _event: Event,
+      target: HTMLElement,
+    ) {
+      if (!this.isEditable) {
+        return;
+      }
+
+      const n = Number(target.closest<HTMLElement>('[data-n]')?.dataset.n);
+      const prop =
+        target.dataset.prop ??
+        target.closest<HTMLElement>('[data-prop]')?.dataset.prop;
+
+      if (!Number.isNumeric(n) || !prop) {
+        return;
+      }
+
+      let value = foundry.utils.getProperty(this.actor, prop);
+
+      value =
+        value === n && prop.endsWith('.spent')
+          ? // `spent` needs special inverse treatment
+            value + 1
+          : value === n
+            ? // popping off the top pip
+              value - 1
+            : value > n
+              ? // expending all pips beyond and including the clicked pip
+                // note: this is how Tidy has historically done this,
+                // whereas the default sheets will keep the clicked
+                // pip unexpended.
+                n - 1
+              : // increase value to match the clicked empty pip
+                n;
+
+      this.submit({ updateData: { [prop]: value } });
+    }
+
+    /* -------------------------------------------- */
+
+    static async #transferCurrency(
+      this: TidyDocumentSheet,
+      _event: Event,
+      target: HTMLElement,
+    ) {
+      const currencyKeys = Object.keys(CONFIG.DND5E.currencies);
+      const { itemId } =
+        target.closest<HTMLElement>('[data-item-id]')?.dataset ?? {};
+
+      const actor = this.actor;
+
+      if (!actor) {
+        warn(`No actor found for container ${itemId}.`);
+        return;
+      }
+
+      const container = actor.items.get(itemId);
+
+      if (!container) {
+        warn(`Container ${itemId} not found on this actor.`);
+        return;
+      }
+
+      // Build update objects for both documents
+      const containerUpdate: Record<string, number> = {};
+      const actorUpdate: Record<string, number> = {};
+
+      for (const key of currencyKeys) {
+        const containerValue = container.system.currency[key] ?? 0;
+        const actorValue = actor.system.currency[key] ?? 0;
+
+        if (containerValue > 0) {
+          containerUpdate[`system.currency.${key}`] = 0;
+          actorUpdate[`system.currency.${key}`] = actorValue + containerValue;
+        }
+      }
+
+      // Update both documents
+      await Promise.all([
+        container.update(containerUpdate),
+        actor.update(actorUpdate),
+      ]);
+    }
+
+    /* -------------------------------------------- */
+
+    static async #useActivity(
+      this: TidyDocumentSheet,
+      event: Event,
+      target: HTMLElement,
+    ) {
+      if (target.ariaDisabled === 'true' || !this.isEditable) {
+        return;
+      }
+
+      const { activity } = this._getDocumentSubmissionInformation(target);
+
+      if (!activity) {
+        return;
+      }
+
+      await activity.use({ event, options: { sheet: this } });
+    }
+
+    /* -------------------------------------------- */
+
+    static async #useItem(
+      this: TidyDocumentSheet,
+      event: Event,
+      target: HTMLElement,
+    ) {
+      if (target.ariaDisabled === 'true' || !this.isEditable) {
+        return;
+      }
+
+      const { item } = this._getDocumentSubmissionInformation(target);
+
+      if (!item) {
+        return;
+      }
+
+      this.tryUseItem(item, event);
+    }
+
+    async tryUseItem(item: Item5e, event: Event) {
+      item.use({ event }, { options: { sheet: this } });
     }
 
     /* -------------------------------------------- */
@@ -1233,53 +1856,95 @@ export function getTidyExtensibleDocumentSheetMixin<
 
     /* -------------------------------------------- */
 
-    static async #transferCurrency(
-      this: TidyDocumentSheet,
-      _event: Event,
-      target: HTMLElement,
-    ) {
-      const currencyKeys = Object.keys(CONFIG.DND5E.currencies);
-      const { itemId } =
-        target.closest<HTMLElement>('[data-item-id]')?.dataset ?? {};
-
-      const actor = this.actor;
-
-      if (!actor) {
-        warn(`No actor found for container ${itemId}.`);
-        return;
-      }
-
-      const container = actor.items.get(itemId);
-
-      if (!container) {
-        warn(`Container ${itemId} not found on this actor.`);
-        return;
-      }
-
-      // Build update objects for both documents
-      const containerUpdate: Record<string, number> = {};
-      const actorUpdate: Record<string, number> = {};
-
-      for (const key of currencyKeys) {
-        const containerValue = container.system.currency[key] ?? 0;
-        const actorValue = actor.system.currency[key] ?? 0;
-
-        if (containerValue > 0) {
-          containerUpdate[`system.currency.${key}`] = 0;
-          actorUpdate[`system.currency.${key}`] = actorValue + containerValue;
-        }
-      }
-
-      // Update both documents
-      await Promise.all([
-        container.update(containerUpdate),
-        actor.update(actorUpdate),
-      ]);
-    }
+    /**
+     * Adds a document when only one creation type is available. Presents the item creation dialog when multiple are available.
+     * @param args The tab where this Add operation is occurring, and other optional parameters.
+     */
+    async _addDocument(_args: {
+      tabId: string;
+      customSection?: string;
+      creationItemTypes?: string[];
+      data?: Record<string, any>;
+    }): Promise<any> {}
 
     /* -------------------------------------------- */
     /*  Drag and Drop                               */
     /* -------------------------------------------- */
+
+    async _onDrop(
+      event: DragEvent & { currentTarget: HTMLElement; target: HTMLElement },
+    ): Promise<any> {
+      const data = foundry.applications.ux.TextEditor.getDragEventData(event);
+
+      // Dropped Documents
+      const documentClass = foundry.utils.getDocumentClass(data.type);
+      if (documentClass) {
+        const document = await documentClass.fromDropData(data);
+        return await this._onDropDocument(event, document);
+      }
+
+      return await super._onDrop(event);
+    }
+
+    async _onDropDocument(
+      event: DragEvent & { currentTarget: HTMLElement; target: HTMLElement },
+      document: any,
+    ) {
+      switch (document.documentName) {
+        case CONSTANTS.DOCUMENT_NAME_ACTIVE_EFFECT:
+          return await this._onDropActiveEffect(event, document);
+        case CONSTANTS.DOCUMENT_NAME_ACTOR:
+          return await this._onDropActor(event, document);
+        case CONSTANTS.DOCUMENT_NAME_ITEM:
+          return await this._onDropItem(event, document);
+        case CONSTANTS.DOCUMENT_NAME_FOLDER:
+          return await this._onDropFolder(event, document);
+      }
+    }
+
+    async _onDropActiveEffect(event: DragEvent, data: any): Promise<any> {
+      return undefined;
+    }
+
+    async _onDropActor(
+      event: DragEvent & { currentTarget: HTMLElement; target: HTMLElement },
+      document: Actor5e,
+    ): Promise<any> {
+      if (!event.target.closest('.facility-occupants') || !document.uuid) {
+        return await super._onDropActor(event, document);
+      }
+
+      const { facilityId } =
+        event.target.closest<HTMLElement>('[data-facility-id]')?.dataset ?? {};
+
+      const facility = this.actor.items.get(facilityId);
+
+      if (facility) {
+        const { prop } =
+          event.target.closest<HTMLElement>('[data-prop]')?.dataset ?? {};
+
+        if (!prop) {
+          return;
+        }
+
+        return await this._onDropActorAddToFacility(
+          facility,
+          prop,
+          document.uuid,
+        );
+      }
+    }
+
+    async _onDropItem(event: DragEvent, data: object): Promise<any> {
+      return undefined;
+    }
+
+    async _onDropFolder(
+      event: DragEvent & { currentTarget: HTMLElement },
+      document: Folder,
+    ): Promise<any> {
+      return undefined;
+    }
 
     _allowedDropBehaviors(event: DragEvent, data?: { uuid?: string }) {
       if (!data?.uuid) {
@@ -1321,6 +1986,20 @@ export function getTidyExtensibleDocumentSheetMixin<
         d[`${base}Type`] === t[`${base}Type`]
         ? 'move'
         : 'copy';
+    }
+
+    _onDropActorAddToFacility(
+      facility: Item5e,
+      prop: string,
+      actorUuid: string,
+    ) {
+      const { max, value } = foundry.utils.getProperty(facility, prop);
+
+      if (value.length + 1 > max) {
+        return;
+      }
+
+      return facility.update({ [`${prop}.value`]: [...value, actorUuid] });
     }
   }
 

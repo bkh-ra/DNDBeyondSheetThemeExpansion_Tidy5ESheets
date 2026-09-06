@@ -3,11 +3,22 @@ import type { ContextMenuEntry } from 'src/foundry/foundry.types';
 import { TidyHooks } from 'src/foundry/TidyHooks';
 
 export function configureFacilityContextMenu(element: HTMLElement, app: any) {
-  const occupantUuid = element.getAttribute('data-actor-uuid');
-  const index = element.getAttribute('data-index');
-  const facilityId = element.getAttribute('data-facility-id');
-  const facilityName = element.getAttribute('data-facility-name');
-  const prop = element.getAttribute('data-prop');
+  const occupantUuid =
+    element.closest<HTMLElement>('[data-actor-uuid]')?.dataset.actorUuid;
+  const index = element.closest<HTMLElement>('[data-index]')?.dataset.index;
+  const facilityId =
+    element.closest<HTMLElement>('[data-facility-id]')?.dataset.facilityId;
+  const facilityName = element.closest<HTMLElement>('[data-facility-name]')
+    ?.dataset.facilityName;
+  const prop = element.closest<HTMLElement>('[data-prop]')?.dataset.prop;
+
+  // Either an actor or an embedded item (has actor prop) can summon this menu.
+  const actor = app.document.actor ?? app.document;
+  const item = actor?.items.get(facilityId);
+
+  if (!prop || !occupantUuid) {
+    return;
+  }
 
   let contextOptions: ContextMenuEntry[] = [
     {
@@ -18,29 +29,29 @@ export function configureFacilityContextMenu(element: HTMLElement, app: any) {
         app._openDocumentSheet(actor);
       },
       condition: () =>
-        app.actor.isOwner && !FoundryAdapter.isLockedInCompendium(app.actor),
+        actor.isOwner && !FoundryAdapter.isLockedInCompendium(actor),
     },
     {
       name: FoundryAdapter.localize(
         'TIDY5E.Facilities.ContextMenuActionRemove',
-        { facilityName }
+        { facilityName },
       ),
       icon: "<i class='fas fas fa-trash t5e-warning-color fa-fw'></i>",
       callback: async () => {
-        await app.actor.sheet.deleteOccupant(facilityId, prop, Number(index));
+        await app.deleteOccupant(item, prop, Number(index));
       },
       condition: () =>
-        app.actor.isOwner && !FoundryAdapter.isLockedInCompendium(app.actor),
+        actor.isOwner && !FoundryAdapter.isLockedInCompendium(actor),
     },
   ];
 
   ui.context.menuItems = contextOptions;
   TidyHooks.dnd5eGetFacilityOccupantContextOptions(
-    app.document,
-    app.document.items.get(facilityId),
+    actor,
+    item,
     occupantUuid,
     prop,
     index !== null ? Number(index) : null,
-    ui.context.menuItems
+    ui.context.menuItems,
   );
 }

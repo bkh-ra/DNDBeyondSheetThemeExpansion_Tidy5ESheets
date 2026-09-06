@@ -8,7 +8,7 @@
         rgba(248, 244, 241, 0.85) 10%,
         rgba(248, 244, 241, 0.1) 160%),
       var(--underlay) 40%,
-      var(--t5e-component-card-ondefault-default);
+      var(--t5e-component-card-default);
     container-name: bastion-tab;
     container-type: inline-size;
 
@@ -24,13 +24,6 @@
 
     .bastion-header {
       margin-block-end: var(--t5e-size-1x);
-    }
-
-    .highlight {
-      background: var(--t5e-component-field-background);
-      outline: 0.0625rem solid var(--t5e-theme-color-highlight);
-      box-shadow: inset 0 0 0 0.0625rem var(--t5e-theme-color-highlight),
-        0 0 0.375rem var(--t5e-theme-color-highlight);
     }
 
     .facility-panels,
@@ -75,6 +68,11 @@
     }
 
     .facility:not(.empty) {
+      --bastion-facility-background: linear-gradient(145deg,
+          rgba(248, 244, 241, 0.85) 10%,
+          rgba(248, 244, 241, 0.1) 160%),
+        var(--underlay) 40%,
+        var(--t5e-component-card-default);
       border-radius: var(--t5e-component-card-radius);
       padding: 0.75rem 0.5rem;
       background: var(--bastion-facility-background);
@@ -85,7 +83,7 @@
       flex-direction: column;
       gap: var(--t5e-size-2x);
       outline: var(--t5e-outline-default);
-      outline-offset: -0.0625rem;
+      outline-offset: -0.03125rem;
       transition: box-shadow var(--t5e-transition-default);
 
       &.basic {
@@ -128,40 +126,6 @@
     .facility-menu {
       transition: all var(--t5e-transition-default);
       padding: 0.5rem 0.75rem;
-    }
-
-    /* Rosters */
-    .roster {
-      ul {
-        display: flex;
-        gap: 0.5rem;
-        margin-inline: var(--occupant-hightlight-width);
-
-        li {
-          border-radius: 0.25rem;
-          width: var(--roster-member-size, 3rem);
-          height: var(--roster-member-size, 3rem);
-
-          a {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-          }
-        }
-      }
-
-      img {
-        width: var(--roster-member-size, 3rem);
-        height: var(--roster-member-size, 3rem);
-        border-radius: 0.25rem;
-      }
-
-      .broken-link-icon {
-        font-size: calc(var(--roster-member-size, 3rem) * 0.5);
-        display: inline-flex;
-        align-self: center;
-        justify-content: center;
-      }
     }
 
     .facility-header {
@@ -285,56 +249,13 @@
       .title {
         font-size: 0.9375rem;
         transition: all 0.3s ease;
-        font-weight: 500;
+        font-weight: var(--font-heading-weight-label);
       }
 
       .subtitle {
         font-size: 0.8125rem;
         color: var(--t5e-color-text-lighter);
       }
-    }
-
-    /* Occupant Menu */
-    .occupant-with-menu {
-      position: relative;
-      display: flex;
-      align-items: stretch;
-      justify-content: stretch;
-
-      a {
-        position: absolute;
-        inset: 0;
-      }
-
-      img {
-        border: 0.0625rem solid var(--t5e-color-gold);
-        align-self: stretch;
-        justify-self: stretch;
-      }
-
-      &.unlocked:not(.empty):hover {
-        background-color: var(--t5e-component-field-background);
-        border-color: var(--t5e-theme-color-lighter);
-
-        img {
-          display: none;
-        }
-
-        .occupant-menu-icon {
-          opacity: 1;
-        }
-      }
-    }
-
-    .occupant-menu-icon {
-      opacity: 0;
-      color: var(--t5e-color-text-gold-emphasis);
-      text-shadow: var(--t5e-drop-shadow-card);
-      font-size: 1rem;
-    }
-
-    .roster .occupant-menu-icon {
-      font-size: 1.125rem;
     }
 
     /* Order Progress Meter */
@@ -365,6 +286,8 @@
           }
 
           .order {
+            display: flex;
+            align-items: center;
             overflow: hidden;
           }
         }

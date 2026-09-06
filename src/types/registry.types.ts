@@ -21,6 +21,8 @@ import type { Tidy5eVehicleSheetQuadrone } from 'src/sheets/quadrone/Tidy5eVehic
 import type { Tidy5eContainerSheetQuadrone } from 'src/sheets/quadrone/Tidy5eContainerSheetQuadrone.svelte';
 import type {
   ActivityColumnSpec,
+  BastionFacilityColumnSpec,
+  BastionOrderColumnSpec,
   ColumnPartitions,
   EffectColumnSpec,
   EncounterCombatantColumnSpec,
@@ -32,6 +34,7 @@ import type {
   VehicleDraftAnimalColumnSpec,
   VehiclePassengerColumnSpec,
 } from './columns.types';
+import type { Actor5e, InspirationSource } from './types';
 
 /**
  * `CONFIG.TIDY5E`, the configuration backbone of Tidy 5e Sheets. Contains runtime data, components,
@@ -98,6 +101,10 @@ export type TidyFeatureRegistry = {
 export type TidyColumnRegistry = {
   /** Columns for activities. */
   activity: Record<string, ActivityColumnSpec>;
+  /** Columns for group bastion member facility rows. */
+  bastionFacility: Record<string, BastionFacilityColumnSpec>;
+  /** Columns for group bastion orders table. */
+  bastionOrder: Record<string, BastionOrderColumnSpec>;
   /** Columns for container contents. */
   containerContents: Record<string, ItemColumnSpec>;
   /**
@@ -151,6 +158,10 @@ export type TidyPartitionRegistry = {
   columns: {
     /** Partitions for activity columns. */
     activity: ColumnPartitions;
+    /** Partitions for group bastion member facility columns. */
+    bastionFacility: ColumnPartitions;
+    /** Partitions for group bastion orders table columns. */
+    bastionOrder: ColumnPartitions;
     /** Partitions for container contents columns. */
     containerContents: ColumnPartitions;
     /** Partitions for custom item columns. */
@@ -272,6 +283,11 @@ export type ColumnOf<D extends ColumnRegistryDomain> =
   CONFIG['TIDY5E']['features']['columns'][D][keyof CONFIG['TIDY5E']['features']['columns'][D]];
 
 export type TidyPublicUtils = {
+  actorInspiration: {
+    tryGetInspirationSource: (
+      actor: Actor5e,
+    ) => Promise<InspirationSource | undefined>;
+  };
   getTabIdFromElement: (
     element: HTMLElement | null | undefined,
   ) => string | null;

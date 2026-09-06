@@ -36,9 +36,10 @@ import {
   type HeaderControlConfigContextItem,
   type WorldHeaderControlConfigurationSettingsEditor,
 } from 'src/settings/editors/world-header-control-configuration-settings-editor.svelte';
-import type {
-  SettingsEditor,
-  SettingsEditorController,
+import {
+  confirmUseDefault,
+  createCompositeEditorController,
+  type SettingsEditorController,
 } from 'src/settings/editors/settings-editors.svelte';
 import {
   getSheetTabsConfigurationSettingsEditor,
@@ -57,7 +58,6 @@ import {
   type SheetTabOptionsSettingsEditor,
   type SectionOptionGroup,
 } from 'src/settings/editors/sheet-tab-options-settings-editor.svelte';
-import type { TidySectionBase } from 'src/types/types';
 import { WorldSettingsQuadroneApplication } from '../world/TidyWorldSettingsQuadroneApplication.svelte';
 
 type SheetSettingsRuntimeAdapter = {
@@ -222,13 +222,15 @@ export class TidySheetSettingsQuadroneApplication
           customTabConfigProvider: {
             getTabConfig: TidyFlags.sidebarTabConfiguration.get,
             setTabConfig: TidyFlags.sidebarTabConfiguration.set,
-            getTabContext: (doc, setting) =>
-              getActorTabContext(
-                CharacterSheetQuadroneSidebarRuntime,
-                doc.documentName,
-                setting,
-                CONSTANTS.WORLD_TAB_CONFIG_KEY_CHARACTER_SIDEBAR,
-              ),
+            getTabContext: (doc, setting, defaultSetting) =>
+              getActorTabContext({
+                runtime: CharacterSheetQuadroneSidebarRuntime,
+                type: doc.documentName,
+                settings: setting,
+                docTypeKeyOverride:
+                  CONSTANTS.WORLD_TAB_CONFIG_KEY_CHARACTER_SIDEBAR,
+                defaultSettings: defaultSetting,
+              }),
           },
           title: FoundryAdapter.localize('TIDY5E.TabConfiguration.Title', {
             documentName: FoundryAdapter.localize(
@@ -256,7 +258,7 @@ export class TidySheetSettingsQuadroneApplication
   /**
    * The pane for undo/use defaults.
    */
-  getActivePane(): SettingsEditor<unknown> | undefined {
+  getActivePane(): SettingsEditorController | undefined {
     const currentTabId = this.currentTabId ?? TidySheetSettingsTabIds.theme;
     switch (currentTabId) {
       case TidySheetSettingsTabIds.theme:
@@ -276,9 +278,16 @@ export class TidySheetSettingsQuadroneApplication
           return undefined;
         }
         const tabId = currentTabId.slice('sheet:'.length);
-        // Special traits keeps its own in-pane controls.
+        // Character tab is a composite of its own visibility settings and Special Traits
         if (tabId === CONSTANTS.TAB_CHARACTER_ATTRIBUTES) {
-          return undefined;
+          // TODO: find a better place and maybe a utility for making composites.
+          const compositeController = createCompositeEditorController(
+            this.specialTraitsChildApp,
+            this.sheetTabOptionsEditorByTabId.get(tabId ?? '') ??
+              this.sheetTabsConfigurationSettingsTab,
+          );
+
+          return compositeController;
         }
         // Fall back to tabDisplaySettingsTab for tabs that only have visibility
         // controls (the placeholder pane) — changes land there either way.
@@ -320,14 +329,7 @@ export class TidySheetSettingsQuadroneApplication
 
   // TODO: Aren't the individual editors also prompting for Use Default?
   async useDefault() {
-    const proceed = await foundry.applications.api.DialogV2.confirm({
-      window: {
-        title: FoundryAdapter.localize('TIDY5E.UseDefaultDialog.title'),
-      },
-      content: `<p>${FoundryAdapter.localize(
-        'TIDY5E.UseDefaultDialog.text',
-      )}</p>`,
-    });
+    const proceed = await confirmUseDefault();
 
     if (!proceed) {
       return;

@@ -1,6 +1,5 @@
 import { CONSTANTS } from 'src/constants';
 import { ExpansionTracker } from 'src/features/expand-collapse/ExpansionTracker.svelte';
-import { ImportSheetControl } from 'src/features/sheet-header-controls/ImportSheetControl';
 import { getSvelteApplicationMixin } from 'src/mixins/SvelteApplicationMixin.svelte';
 import { ItemSheetQuadroneRuntime } from 'src/runtime/item/ItemSheetQuadroneRuntime.svelte';
 import type {
@@ -41,7 +40,6 @@ import {
 } from 'src/mixins/TidyDocumentSheetMixin.svelte';
 import { SheetSections } from 'src/features/sections/SheetSections';
 import { ItemSheetRuntime } from 'src/runtime/item/ItemSheetRuntime';
-import { TidySheetSettingsTabIds } from 'src/applications/settings/sheet/TidySheetSettingsQuadroneApplication.svelte';
 import type { SpellProgressionConfig } from 'src/foundry/config.types';
 import { ThemeQuadrone } from 'src/theme/theme-quadrone.svelte';
 import type { ThemeSettingsV3 } from 'src/theme/theme-quadrone.types';
@@ -53,6 +51,7 @@ import type { Activity5e } from 'src/foundry/dnd5e.types';
 import { AdvancementColumnRuntime } from 'src/runtime/table-columns/AdvancementColumnRuntime.svelte';
 import { EffectRowActionRuntime } from 'src/runtime/table-row-actions/EffectRowActionRuntime.svelte';
 import { ItemAdvancementMemberRowActionRuntime } from 'src/runtime/table-row-actions/ItemAdvancementRowActions.svelte';
+import * as Bastions from 'src/features/facility/Bastion';
 
 export class Tidy5eItemSheetQuadrone extends getTidyExtensibleDocumentSheetMixin<
   DocumentSheetApplicationConfiguration | undefined,
@@ -64,7 +63,6 @@ export class Tidy5eItemSheetQuadrone extends getTidyExtensibleDocumentSheetMixin
     ItemSheetQuadroneContext
   >(foundry.applications.sheets.ItemSheetV2),
 ) {
-  currentTabId: string = '';
   sectionExpansionTracker: ExpansionTracker;
 
   constructor(options?: DocumentSheetApplicationConfiguration | undefined) {
@@ -108,29 +106,8 @@ export class Tidy5eItemSheetQuadrone extends getTidyExtensibleDocumentSheetMixin
       height: 600,
     },
     actions: {
-      [ImportSheetControl.actionName]: async function (this: any) {
-        await ImportSheetControl.importFromCompendium(this, this.document);
-      },
-      sheetSettings: async function (this: Tidy5eItemSheetQuadrone) {
-        this.openSheetSettings();
-      },
-      showIcon: async function (this: Tidy5eItemSheetQuadrone) {
-        const title =
-          this.item.system.identified === false
-            ? this.item.system.unidentified.name
-            : this.item.name;
-
-        this._renderChild(
-          new foundry.applications.apps.ImagePopout({
-            src: this.item.img,
-            uuid: this.item.uuid,
-            window: { title },
-          }),
-        );
-      },
-      themeSettings: async function (this: Tidy5eItemSheetQuadrone) {
-        return this.openSheetSettings(TidySheetSettingsTabIds.theme);
-      },
+      addOccupant: Tidy5eItemSheetQuadrone.#addOccupant,
+      showIcon: Tidy5eItemSheetQuadrone.#showIcon,
       showConfiguration: Tidy5eItemSheetQuadrone.#showConfiguration,
     },
     dragDrop: [
@@ -145,6 +122,19 @@ export class Tidy5eItemSheetQuadrone extends getTidyExtensibleDocumentSheetMixin
     ],
     submitOnClose: true,
   };
+
+  async _renderFrame(options: TidyDocumentSheetRenderOptions) {
+    const element = (await super._renderFrame(options)) as HTMLElement;
+
+    // Ensures there is no flicker when the sheet first opens,
+    // assuming the item name is currently visible.
+    // This works with the visibilityObserver in ItemNameHeaderOrchestrator.
+    element
+      .querySelector<HTMLElement>('.window-header')
+      ?.classList.add('item-name-visible');
+
+    return element;
+  }
 
   _updateFrame(options: TidyDocumentSheetRenderOptions = {}) {
     super._updateFrame(options);
@@ -174,11 +164,6 @@ export class Tidy5eItemSheetQuadrone extends getTidyExtensibleDocumentSheetMixin
       settingsOverride ??
       ThemeQuadrone.getSheetThemeSettings({ doc: this.document });
     this._applySheetThemeClasses(themeSettings);
-  }
-
-  selectTab(tabId: string) {
-    this.onTabSelected(tabId);
-    this.render();
   }
 
   _createComponent(node: HTMLElement): Record<string, any> {
@@ -288,7 +273,7 @@ export class Tidy5eItemSheetQuadrone extends getTidyExtensibleDocumentSheetMixin
     if (isIdentifiable) {
       itemDescriptions.push({
         enriched: enriched.unidentified,
-        content: systemObject.unidentified.description,
+        content: systemObject.unidentified?.description ?? '',
         field: 'system.unidentified.description',
         label: FoundryAdapter.localize('DND5E.DescriptionUnidentified'),
       });
@@ -321,15 +306,20 @@ export class Tidy5eItemSheetQuadrone extends getTidyExtensibleDocumentSheetMixin
 
     const target = this.item.type === 'spell' ? this.item.system.target : null;
 
+    const itemSheetActivities = Activities.getItemSheetActivities(
+      this.item,
+      documentSheetContext.unlocked,
+    );
+
     const context: ItemSheetQuadroneContext = {
+      actionSectionEnabled: SheetSections.showActionSectionConfig(
+        this.document.parent,
+      ),
       activities: [
         {
           key: CONSTANTS.TAB_ITEM_ACTIVITIES,
-          activities: (this.document.system.activities ?? [])
-            .filter((a: any) => {
-              return Activities.isConfigurable(a);
-            })
-            ?.map((activity: Activity5e) =>
+          activities: itemSheetActivities
+            .map((activity: Activity5e) =>
               Activities.getActivityItemContext(
                 this,
                 activity,
@@ -346,7 +336,7 @@ export class Tidy5eItemSheetQuadrone extends getTidyExtensibleDocumentSheetMixin
             owner: this.document.isOwner,
             unlocked: documentSheetContext.unlocked,
           }),
-          show: true,
+          show: itemSheetActivities.length > 0,
           dataset: {},
           label: 'DND5E.ACTIVITY.Title.other',
           sectionActions: SectionActions.getItemActivityHeaderActions(
@@ -357,6 +347,7 @@ export class Tidy5eItemSheetQuadrone extends getTidyExtensibleDocumentSheetMixin
       affectsPlaceholder: game.i18n.localize(
         `DND5E.TARGET.Count.${target?.template?.type ? 'Every' : 'Any'}`,
       ),
+      canIdentify: FoundryAdapter.canIdentify(this.document),
       coverOptions: Object.entries(CONFIG.DND5E.cover).map(
         ([value, label]) => ({ value, label }),
       ),
@@ -392,7 +383,6 @@ export class Tidy5eItemSheetQuadrone extends getTidyExtensibleDocumentSheetMixin
       ),
       identifiedName: FoundryAdapter.getIdentifiedName(this.item),
       labels: this.document.labels,
-      lockItemQuantity: FoundryAdapter.shouldLockItemQuantity(),
       limited: this.document.limited,
       modernRules: FoundryAdapter.checkIfModernRules(this.item),
       name: {
@@ -634,6 +624,10 @@ export class Tidy5eItemSheetQuadrone extends getTidyExtensibleDocumentSheetMixin
           return obj;
         },
         { available: [], executable: [] },
+      );
+
+      context.facilityContext = await Bastions.buildChosenFacilityContext(
+        this.item,
       );
     }
 
@@ -1131,6 +1125,22 @@ export class Tidy5eItemSheetQuadrone extends getTidyExtensibleDocumentSheetMixin
   /*  Sheet Actions                               */
   /* -------------------------------------------- */
 
+  static async #addOccupant(
+    this: Tidy5eItemSheetQuadrone,
+    event: Event,
+    target: HTMLElement,
+  ) {
+    const facilityType = target.closest<HTMLElement>('[data-facility-type]')
+      ?.dataset.facilityType;
+    const prop = target.closest<HTMLElement>('[data-prop]')?.dataset.prop;
+
+    if (!facilityType || !prop) {
+      return;
+    }
+
+    await this.addOccupant(event, this.item, facilityType, prop);
+  }
+
   static async #showConfiguration(
     this: Tidy5eItemSheetQuadrone,
     _event: Event,
@@ -1155,6 +1165,23 @@ export class Tidy5eItemSheetQuadrone extends getTidyExtensibleDocumentSheetMixin
           }),
         );
     }
+  }
+
+  /* -------------------------------------------- */
+
+  static async #showIcon(this: Tidy5eItemSheetQuadrone) {
+    const title =
+      this.item.system.identified === false
+        ? this.item.system.unidentified.name
+        : this.item.name;
+
+    this._renderChild(
+      new foundry.applications.apps.ImagePopout({
+        src: this.item.img,
+        uuid: this.item.uuid,
+        window: { title },
+      }),
+    );
   }
 
   /* -------------------------------------------- */
@@ -1238,6 +1265,8 @@ export class Tidy5eItemSheetQuadrone extends getTidyExtensibleDocumentSheetMixin
       case 'Item':
         return this._onDropItem(event, data);
     }
+
+    return super._onDrop(event);
   }
 
   /* -------------------------------------------- */

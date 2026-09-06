@@ -47,22 +47,6 @@
     expanded = !expanded;
     onEffectToggled?.(effectContext.effect.id, expanded, location);
   }
-
-  let summaryData = $state<EffectSummaryData | undefined>();
-
-  $effect(() => {
-    (async () => {
-      if (effectContext.effect && expanded) {
-        summaryData = {
-          description: {
-            value: await FoundryAdapter.enrichHtml(
-              effectContext.effect.description ?? '',
-            ),
-          },
-        };
-      }
-    })();
-  });
 </script>
 
 <TidyTableRow
@@ -73,28 +57,30 @@
     ['data-tidy-always-draggable']: '',
     ['data-tidy-table-row']: '',
     ['data-tidy-sheet-part']: CONSTANTS.SHEET_PARTS.EFFECT_TABLE_ROW,
-    ['data-info-card']: 'effect',
-    ['data-info-card-entity-uuid']: effectContext.uuid,
     ['data-parent-id']: effectContext?.parentId ?? effectContext?.parent?.id,
   }}
   {hidden}
-  ondblclick={(event) =>
-    event.target instanceof HTMLElement &&
-    !isUserInteractable(event.target) &&
-    effectContext.effect &&
-    FoundryAdapter.editOnMouseEvent(event, effectContext.effect)}
-  onmousedown={(event) =>
-    FoundryAdapter.editOnMiddleClick(event, effectContext.effect)}
   {...attributes}
 >
   {@render children?.({ toggleSummary, expanded: expanded })}
 
   {#snippet afterRow()}
     <ExpandableContainer {expanded} deferRendering>
-      <TidyEffectSummary
-        activeEffect={effectContext.effect}
-        summaryData={summaryData ?? emptySummaryData}
-      />
+      {const summaryDataPromise = $derived.by(async () => {
+        return {
+          description: {
+            value: await FoundryAdapter.enrichHtml(
+              effectContext.effect.description ?? '',
+            ),
+          },
+        };
+      })}
+      {#await summaryDataPromise then summaryData}
+        <TidyEffectSummary
+          activeEffect={effectContext.effect}
+          summaryData={summaryData ?? emptySummaryData}
+        />
+      {/await}
     </ExpandableContainer>
   {/snippet}
 </TidyTableRow>

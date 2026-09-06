@@ -41,7 +41,6 @@
   //  for this tab.
   let sidebarExpanded = $derived(sidebarExpandedPreference);
 
-  
   const swapAbilityScoreAndBonusEnabled = $derived(
     settings.value.swapAbilityScoreAndBonus,
   );
@@ -52,8 +51,9 @@
     untrack(() => {
       const type = context.actor.type;
       const tabId = selectedTabId;
-      const stored = UserSheetPreferencesService.getByType(type)?.tabs?.[tabId]
-        ?.sidebarExpanded;
+      const stored =
+        UserSheetPreferencesService.getByType(type)?.tabs?.[tabId]
+          ?.sidebarExpanded;
       if (stored !== expanded) {
         UserSheetPreferencesService.setDocumentTypeTabPreference(
           type,
@@ -112,6 +112,21 @@
       }
     }
   });
+
+  function handleHpInputKeyDown(
+    ev: KeyboardEvent & { currentTarget: EventTarget & HTMLElement },
+    originalValue: string | number,
+    closeOverlay = false,
+  ) {
+    if (ev.key !== 'Enter' && ev.key !== 'Escape') return;
+    ev.preventDefault();
+    if (ev.key === 'Escape') {
+      ev.stopPropagation();
+      (ev.currentTarget as HTMLInputElement).value = String(originalValue);
+    }
+    if (closeOverlay) hpOverlayCloseOnBlur = true;
+    ev.currentTarget.blur();
+  }
 </script>
 
 <header class="sheet-header flexcol">
@@ -140,7 +155,10 @@
                 data-tidy-sheet-part="actor-name"
                 data-tooltip={context.actor.name}
               >
-                {context.actor.name}
+                <!-- svelte-ignore a11y_missing_attribute -->
+                <a data-action="copyInnerText" class="cursor highlight-on-hover">
+                  {context.actor.name}
+                </a>
               </h1>
             {/if}
             {#if context.editable}
@@ -155,7 +173,7 @@
                 {#each Object.entries(context.config.restTypes) as [key, rest]}
                   <button
                     type="button"
-                    class="button button-icon-only short-rest button-gold"
+                    class="button button-icon-only button-gold"
                     data-tooltip=""
                     aria-label={localize(rest.label)}
                     data-action="rest"
@@ -230,13 +248,13 @@
           </div>
           <div class="ability-labels flexcol">
             {#if swapAbilityScoreAndBonusEnabled}
-            <span class="label font-label-medium color-text-gold"
-              >{localize('DND5E.Modifier')}</span
-            >
+              <span class="label font-label-medium color-text-gold"
+                >{localize('DND5E.Modifier')}</span
+              >
             {:else}
-            <span class="label font-label-medium color-text-gold"
-              >{localize('DND5E.AbilityScoreShort')}</span
-            >
+              <span class="label font-label-medium color-text-gold"
+                >{localize('DND5E.AbilityScoreShort')}</span
+              >
             {/if}
             <span class="divider"></span>
             <span class="label font-label-medium color-text-gold"
@@ -256,7 +274,10 @@
           />
         {/each}
         <div class="ability initiative flexcol">
-          <div class="initiative-score-container" data-tooltip="DND5E.Initiative">
+          <div
+            class="initiative-score-container"
+            data-tooltip="DND5E.Initiative"
+          >
             <button
               type="button"
               class="ability-roll-button button-borderless"
@@ -265,9 +286,12 @@
               disabled={!context.owner}
               data-has-roll-modes
             >
-              <span class="ability-abbr color-text-gold">{localize('DND5E.InitiativeAbbr')}</span>
+              <span class="ability-abbr color-text-gold"
+                >{localize('DND5E.InitiativeAbbr')}</span
+              >
               <span class="ability-label-container initiative-bonus">
-                <span class="modifier color-text-lightest">{ini.sign}</span><span class="bonus color-text-default">{ini.value}</span>
+                <span class="modifier color-text-lightest">{ini.sign}</span
+                ><span class="bonus color-text-default">{ini.value}</span>
               </span>
             </button>
             {#if context.unlocked}
@@ -283,7 +307,6 @@
               </button>
             {/if}
           </div>
-          <!-- TODO: Set concentration bonus here, but then move the concentration indicator up to subtitle, below the action buttons. -->
           {#if context.saves.concentration}
             {const save = $derived(context.saves.concentration)}
             <div class="concentration flexcol">
@@ -304,9 +327,11 @@
                     {save.mod}
                   </span>
                 {:else}
-                  {const tooltip = $derived(localize('DND5E.AbilityConfigure', {
-                    ability: context.saves.concentration.label,
-                  }))}
+                  {const tooltip = $derived(
+                    localize('DND5E.AbilityConfigure', {
+                      ability: context.saves.concentration.label,
+                    }),
+                  )}
                   <div class="config-container">
                     <button
                       aria-label={tooltip}
@@ -360,6 +385,11 @@
                 hpValueInputFocused = true;
                 hpValueInput?.selectText();
               }}
+              oncontextmenu={(ev) => {
+                ev.preventDefault();
+                hpOverlayFocusTarget = 'tempmax';
+                hpOverlayOpen = true;
+              }}
               disabled={!context.editable}
             >
               <div
@@ -381,7 +411,6 @@
                     {hpTempMax}
                   </span>
                 </div>
-                <!-- TODO: hightouch - relatively positioned tiny pencil to denote altered max HP -->
               {/if}
             </button>
             <TextInputQuadrone
@@ -395,6 +424,7 @@
               enableDeltaChanges={true}
               onfocus={() => (hpValueInputFocused = true)}
               onblur={() => (hpValueInputFocused = false)}
+              onkeydown={(ev) => handleHpInputKeyDown(ev, hpValue)}
               blurAfterChange={true}
               hidden={!hpValueInputFocused}
             />
@@ -402,12 +432,20 @@
 
           {#if !context.unlocked}
             {#if hpTemp > 0}
-              <!-- TODO: Convert to buttons -->
+              <!-- TODO: Convert to button -->
               <div
+                role="button"
+                tabindex="0"
                 class="temp-hp label pointer"
                 onclick={() => {
                   hpOverlayFocusTarget = 'temp';
                   hpOverlayOpen = true;
+                }}
+                onkeydown={(ev) => {
+                  if (ev.key === 'Enter' || ev.key === ' ') {
+                  hpOverlayFocusTarget = 'temp';
+                  hpOverlayOpen = true;
+                  }
                 }}
                 oncontextmenu={(ev) => {
                   ev.preventDefault();
@@ -487,11 +525,7 @@
                 value={hpTempMax}
                 selectOnFocus={true}
                 enableDeltaChanges={false}
-                onkeydown={(ev) => {
-                  if (ev.key === 'Enter' || ev.key === ' ') {
-                    hpOverlayCloseOnBlur = true;
-                  }
-                }}
+                onkeydown={(ev) => handleHpInputKeyDown(ev, hpTempMax, true)}
                 onfocus={() => {
                   hpOverlayOpen = true;
                 }}
@@ -513,11 +547,7 @@
                 value={hpTemp}
                 selectOnFocus={true}
                 enableDeltaChanges={true}
-                onkeydown={(ev) => {
-                  if (ev.key === 'Enter' || ev.key === ' ') {
-                    hpOverlayCloseOnBlur = true;
-                  }
-                }}
+                onkeydown={(ev) => handleHpInputKeyDown(ev, hpTemp, true)}
                 onfocus={() => {
                   hpOverlayOpen = true;
                 }}
@@ -643,7 +673,15 @@
                 {:else if context.editable}
                   <button
                     type="button"
-                    class="button button-borderless button-icon-only button-death-saves"
+                    class={[
+                      'button',
+                      'button-borderless',
+                      'button-icon-only',
+                      'button-death-saves',
+                      {
+                        dead: context.system.attributes.death.failure >= 3,
+                      },
+                    ]}
                     aria-label={localize(
                       context.showDeathSaves
                         ? 'DND5E.DeathSaveHide'

@@ -114,7 +114,7 @@ export class TidyFlags {
      */
     async set(encounter: Actor5e, settings: EncounterCombatantsSettings) {
       await encounter.update(
-        { [`flags.tidy5e-sheet.combatantSettings`]: null },
+        { [`flags.${CONSTANTS.MODULE_ID}.combatantSettings`]: null }, // DDB-FORK: scope follows module id
         {
           render: false,
         },
@@ -133,6 +133,7 @@ export class TidyFlags {
    */
   static encounterDifficultyTargetGroupId = {
     key: 'encounterDifficultyTargetGroupId' as const,
+    prop: TidyFlags.getFlagPropertyPath('encounterDifficultyTargetGroupId'),
     /** Gets the group ID. */
     get(user: any): string | null | undefined {
       return TidyFlags.tryGetFlag<string>(
@@ -1501,6 +1502,7 @@ export class TidyFlags {
         doc,
         TidyFlags.sidebarTabConfiguration.key,
         toSave,
+        true,
       );
     },
     /** Clears sidebar tab configuration. */

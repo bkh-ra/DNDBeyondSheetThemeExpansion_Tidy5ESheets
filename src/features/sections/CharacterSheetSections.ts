@@ -210,7 +210,6 @@ export class CharacterSheetSections {
     tabId: string,
     feats: Item5e[],
     options: Partial<CharacterFeatureSection>,
-    customSectionFlag: 'section' | 'actionSection' = 'section',
   ): FeatureSection[] {
     let featuresMap: Record<string, FeatureSection> = {};
 
@@ -252,7 +251,7 @@ export class CharacterSheetSections {
 
     for (let feat of feats) {
       // custom section
-      let customSection = TidyFlags[customSectionFlag].get(feat);
+      let customSection = TidyFlags.section.get(feat);
 
       if (!isNil(customSection)) {
         // Partition/Create Custom Section and add item
@@ -263,7 +262,7 @@ export class CharacterSheetSections {
             key: customSection,
             title: FoundryAdapter.localize(customSection),
             options,
-            custom: true,
+            isCustom: true,
           }));
 
         section.items.push(feat);
@@ -324,7 +323,7 @@ export class CharacterSheetSections {
         key: s,
         options,
         title: FoundryAdapter.localize(s),
-        custom: true,
+        isCustom: true,
       });
     });
 
@@ -377,14 +376,20 @@ export class CharacterSheetSections {
     key: string;
     title: string;
     options: Partial<TidyItemSectionBase>;
-    custom?: boolean;
+    isCustom?: boolean;
   }): FeatureSection {
-    let custom = args.custom
+    const custom = args.isCustom
       ? {
           creationItemTypes: [CONSTANTS.ITEM_TYPE_FEAT],
           section: args.key,
         }
       : undefined;
+
+    const dataset: Record<string, unknown> = args.isCustom
+      ? {
+          [TidyFlags.section.prop]: args.key,
+        }
+      : {};
 
     return {
       type: CONSTANTS.SECTION_TYPE_FEATURE,
@@ -393,7 +398,7 @@ export class CharacterSheetSections {
       items: [],
       label: args.title,
       show: true,
-      dataset: {},
+      dataset,
       custom,
       canCreate: true,
       columns: FeatureColumnRuntime.getColumnSpecifications({

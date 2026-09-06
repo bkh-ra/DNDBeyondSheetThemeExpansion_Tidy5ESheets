@@ -59,6 +59,8 @@ import type {
 } from './row-actions.types';
 import type {
   ActivityColumnSpec,
+  BastionFacilityColumnSpec,
+  BastionOrderColumnSpec,
   ConfiguredColumnSpecification,
   EffectColumnSpec,
   EncounterCombatantColumnSpec,
@@ -444,10 +446,12 @@ export type AttributePinContext =
 export type SheetPinItemContext = {
   document: Item5e;
   linkedUses?: LinkedUses;
+  presentation: string;
 } & SheetItemPinFlagData;
 
 export type SheetPinActivityContext = {
   document: Activity5e;
+  presentation: string;
 } & SheetActivityPinFlagData;
 
 export type SheetPinContext = SheetPinItemContext | SheetPinActivityContext;
@@ -456,28 +460,26 @@ export type TabSheetPinsContext = {
   [tabId: string]: SheetPinContext[];
 };
 
-export type CharacterFacilitiesContext = {
-  basic: {
-    available: AvailableBastionActionContext[];
-    chosen: ChosenFacilityContext[];
-    max: number;
-    value: number;
-  };
-  special: {
-    available: AvailableBastionActionContext[];
-    chosen: ChosenFacilityContext[];
-    max: number;
-    value: number;
-  };
-} & Record<
-  string,
-  {
-    available: AvailableBastionActionContext[];
-    chosen: ChosenFacilityContext[];
-    max: number;
-    value: number;
-  }
->;
+export type FacilityGroupContext = {
+  available: AvailableBastionActionContext[];
+  builtFacilities: ChosenFacilityContext[];
+  max: number;
+  count: number;
+};
+
+export type FacilitiesContext = {
+  basic: FacilityGroupContext;
+  special: FacilityGroupContext;
+} & Record<string, FacilityGroupContext>;
+
+/** A defender occupant, flattened across facilities for roster display. */
+export type FacilityDefenderContext = {
+  img: string;
+  name: string;
+  uuid: string;
+  /** Defender's facility ID. */
+  facility: string;
+};
 
 export type CharacterSheetContext = {
   actorClassesToImages: Record<string, string>;
@@ -491,10 +493,10 @@ export type CharacterSheetContext = {
   bondEnrichedHtml: string;
   conditions: Dnd5eActorCondition[];
   containerPanelItems: ContainerPanelItemContext[];
-  defenders: Actor5e[];
+  defenders: FacilityDefenderContext[];
   effects: Record<string, EffectCategory<ActiveEffectContext>>;
   epicBoonsEarned: string | undefined;
-  facilities: CharacterFacilitiesContext;
+  facilities: FacilitiesContext;
   favorites: FavoriteSection[];
   features: CharacterFeatureSection[];
   flawEnrichedHtml: string;
@@ -1140,6 +1142,7 @@ export type ActorTraitContext<TValue = unknown> = {
 
 export type ActorItemQuadroneContext = {
   activities?: ActivityItemContext[];
+  canIdentify?: boolean; // TODO: Move physical item props to some Physical Item context subtype
   containerName?: string;
   containerCapacity?: ContainerCapacityContext;
   containerContents?: ContainerContents;
@@ -1319,7 +1322,8 @@ export type NpcSpellcastingContext = {
 } & SpellcastingContextBase;
 
 export type SpellcastingClassContext = {
-  type: 'class';
+  type: 'class' | 'subclass';
+  uuid: string;
   classIdentifier: string;
   primary: boolean;
   prepared: {
@@ -1371,7 +1375,7 @@ export type CharacterSheetQuadroneContext = {
   conditions: Dnd5eActorCondition[];
   creatureType: CreatureTypeContext;
   currencies: CurrencyContext[];
-  defenders: Actor5e[];
+  defenders: FacilityDefenderContext[];
   effects: ActiveEffectSection[];
   enriched: {
     appearance: string;
@@ -1383,7 +1387,7 @@ export type CharacterSheetQuadroneContext = {
     trait: string;
   };
   epicBoonsEarned: string | undefined;
-  facilities: CharacterFacilitiesContext;
+  facilities: FacilitiesContext;
   favorites: FavoriteContextEntry[];
   features: FeatureSection[];
   inspirationSource?: InspirationSource;
@@ -1495,6 +1499,60 @@ export type GroupMembersQuadroneContext = {
   skilled: GroupMemberQuadroneContext[];
 };
 
+/** Group sheet bastion context for a single PC */
+export type GroupMemberBastionQuadroneContext = {
+  member: GroupMemberQuadroneContext;
+  name: string;
+  level: number;
+  facilities: FacilitiesContext;
+  /** All hirelings across facilities */
+  hirelings: FacilityOccupancyContext;
+  defenders: FacilityOccupancyContext;
+  /** Columns facility rows. */
+  columns: SectionColumnSpecifications<
+    ConfiguredColumnSpecification<BastionFacilityColumnSpec>
+  >;
+};
+
+/** The kind of occupant a facility slot holds. */
+export type FacilityOccupantSlot = 'hirelings' | 'defenders' | 'creatures';
+
+export type FacilityOccupancyContext = {
+  /** Which kind of occupant is counted. Drives the tooltip label. */
+  slot: FacilityOccupantSlot;
+  /** Total slots */
+  max: number;
+  /** Occupant actor UUIDs of filled slots. `length` for occupant count. */
+  occupants: string[];
+};
+
+/** An in-progress facility order, flattened across every party member. */
+export type BastionOrderQuadroneContext = {
+  facility: Item5e;
+  member: GroupMemberQuadroneContext;
+  /** Get icon for key with `getTidyFacilityIcon`. */
+  key: string;
+  label: string;
+  facilityName: string;
+  progress: {
+    value: number;
+    max: number;
+    pct: number;
+    order: string;
+  };
+  craft: Item5e | null;
+  cost: number | null;
+};
+
+export type GroupBastionsQuadroneContext = {
+  members: GroupMemberBastionQuadroneContext[];
+  orders: BastionOrderQuadroneContext[];
+  /** Columns for the party-wide order rows. */
+  orderColumns: SectionColumnSpecifications<
+    ConfiguredColumnSpecification<BastionOrderColumnSpec>
+  >;
+};
+
 export type Emphasizable = {
   identifiers: Set<string>;
 };
@@ -1518,6 +1576,7 @@ export type GroupMemberSkillContext = GroupSkillModContext & {
 
 export type GroupSkill = {
   name: string;
+  abilityAbbreviation: string;
   ability: string;
   key: string;
   proficient: boolean;
@@ -1615,6 +1674,7 @@ export type GroupSheetQuadroneContext = {
     };
   };
   memberContext: GroupMembersQuadroneContext;
+  bastionsContext: GroupBastionsQuadroneContext;
   members: GroupMemberSection[];
   skills: GroupSkill[];
   travel: {
@@ -1643,6 +1703,7 @@ export type EncounterMemberQuadroneContext = {
   canEdit: boolean;
   highlightColor: string | undefined;
   includeInCombat: boolean;
+  index: number;
   initiative: number | undefined;
   name: string;
   portrait: MultiActorMemberPortraitContext;

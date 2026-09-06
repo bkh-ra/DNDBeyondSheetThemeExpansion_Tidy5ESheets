@@ -36,6 +36,10 @@ export function getItemContextOptionsQuadrone(
 
   const tabId = CONFIG.TIDY5E.utils.getTabIdFromElement(element);
 
+  const showActionSectionConfig = SheetSections.showActionSectionConfig(
+    item.parent,
+  );
+
   let options: ContextMenuEntry[] = [];
 
   // Common - these are standard options, or they're options that Tidy offers which interface with standard foundry behaviors.
@@ -324,7 +328,8 @@ export function getItemContextOptionsQuadrone(
     condition: () =>
       item.isOwner &&
       SheetSections.itemSupportsCustomSections(item.type) &&
-      app.currentTabId !== CONSTANTS.TAB_ACTOR_ACTIONS &&
+      (app.currentTabId !== CONSTANTS.TAB_ACTOR_ACTIONS ||
+        !showActionSectionConfig) &&
       !FoundryAdapter.isLockedInCompendium(item),
     group: 'customize',
     callback: () =>
@@ -341,7 +346,11 @@ export function getItemContextOptionsQuadrone(
   let actionSectionContextName = itemParent?.system.isCharacter
     ? FoundryAdapter.localize(
         'TIDY5E.Section.SectionSelectorChooseTabSectionTooltip',
-        { tabName: FoundryAdapter.localize('Sheet') },
+        {
+          tabName: FoundryAdapter.localize(
+            game.release.generation < 14 ? 'Sheet' : 'DOCUMENT.Sheet',
+          ),
+        },
       )
     : itemParent?.system.isNPC
       ? FoundryAdapter.localize(
@@ -351,7 +360,9 @@ export function getItemContextOptionsQuadrone(
       : 'TIDY5E.Section.SectionSelectorChooseActionSectionTooltip';
 
   let actionSectionConfigTitle = itemParent?.system.isCharacter
-    ? FoundryAdapter.localize('Sheet')
+    ? FoundryAdapter.localize(
+        game.release.generation < 14 ? 'Sheet' : 'DOCUMENT.Sheet',
+      )
     : itemParent?.system.isNPC
       ? FoundryAdapter.localize('TIDY5E.StatblockTabName')
       : FoundryAdapter.localize('TIDY5E.Section.ActionLabel');
@@ -360,6 +371,7 @@ export function getItemContextOptionsQuadrone(
     name: actionSectionContextName,
     icon: '<i class="fas fa-diagram-cells"></i>',
     condition: () =>
+      showActionSectionConfig &&
       item.isOwner &&
       SheetSections.itemSupportsCustomSections(item.type) &&
       app.currentTabId === CONSTANTS.TAB_ACTOR_ACTIONS &&

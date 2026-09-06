@@ -1,4 +1,5 @@
 import { CONSTANTS } from 'src/constants';
+import * as Bastion from 'src/features/facility/Bastion';
 import { ItemFilterService } from 'src/features/filtering/ItemFilterService.svelte';
 import { CoarseReactivityProvider } from 'src/features/reactivity/CoarseReactivityProvider.svelte';
 import UserPreferencesService from 'src/features/user-preferences/UserPreferencesService';
@@ -38,6 +39,7 @@ import type {
   ExpandedItemData,
   ExpandedItemIdToLocationsMap,
   Folder,
+  InspirationSource,
   LocationToSearchTextMap,
   MessageBus,
   SpellcastingClassContext,
@@ -59,13 +61,14 @@ import { SvelteMap } from 'svelte/reactivity';
 import { mapGetOrInsert } from 'src/utils/map';
 import { ThemeQuadrone } from 'src/theme/theme-quadrone.svelte';
 import { TabDocumentItemTypesRuntime } from 'src/runtime/item/TabDocumentItemTypesRuntime';
-import { warn } from 'src/utils/logging';
+import { error, warn } from 'src/utils/logging';
 import { Activities } from 'src/features/activities/activities';
 import { SheetPinsProvider } from 'src/features/sheet-pins/SheetPinsProvider';
 import type { ThemeSettingsV3 } from 'src/theme/theme-quadrone.types';
 import { Container } from 'src/features/containers/Container';
 import { getThemeV2 } from 'src/theme/theme';
 import type { AnySheetPinFlagData } from 'src/foundry/TidyFlags.types';
+import { delay } from 'src/utils/asynchrony';
 
 const POST_WINDOW_TITLE_ANCHOR_CLASS_NAME = 'sheet-warning-anchor';
 
@@ -80,7 +83,6 @@ export function getTidy5eActorSheetQuadroneBase<
   ) {
     /** An optional tab which can receive pins from other tabs. */
     abstract aggregatePinTab: AggregatePinTabInfo | null;
-    abstract currentTabId: string;
     itemFilterService: ItemFilterService;
     messageBus = $state<MessageBus>({ message: undefined });
     searchFilters: LocationToSearchTextMap = new SvelteMap<string, string>();
@@ -161,38 +163,20 @@ export function getTidy5eActorSheetQuadroneBase<
         frame: true,
       },
       actions: {
+        addOccupant: Tidy5eActorSheetQuadroneBase.#addOccupant,
+        decreaseInspiration: Tidy5eActorSheetQuadroneBase.#decreaseInspiration,
+        decreaseSlots: Tidy5eActorSheetQuadroneBase.#decreaseSlots,
         findItem: Tidy5eActorSheetQuadroneBase.#findItem,
-        restoreTransformation: async function (
-          this: Tidy5eActorSheetQuadroneBase,
-        ) {
-          this.actor.revertOriginalForm();
-        },
-        sheetSettings: async function (this: Tidy5eActorSheetQuadroneBase) {
-          this.openSheetSettings();
-        },
-        rest: async function (
-          this: Tidy5eActorSheetQuadroneBase,
-          _event,
-          target,
-        ) {
-          this.actor.initiateRest({ type: target.dataset.type });
-        },
+        increaseInspiration: Tidy5eActorSheetQuadroneBase.#increaseInspiration,
+        increaseSlots: Tidy5eActorSheetQuadroneBase.#increaseSlots,
+        rest: Tidy5eActorSheetQuadroneBase.#rest,
+        restoreTransformation:
+          Tidy5eActorSheetQuadroneBase.#restoreTransformation,
         roll: Tidy5eActorSheetQuadroneBase.#roll,
-        showArtwork: async function (this: Tidy5eActorSheetQuadroneBase) {
-          const { src } = await this._preparePortrait(this.actor);
-
-          this._renderChild(
-            new foundry.applications.apps.ImagePopout({
-              src,
-              uuid: this.actor.uuid,
-              window: { title: this.actor.name },
-            }),
-          );
-        },
-        themeSettings: async function (this: Tidy5eActorSheetQuadroneBase) {
-          this.openSheetSettings(TidySheetSettingsTabIds.theme);
-        },
+        showArtwork: Tidy5eActorSheetQuadroneBase.#showArtwork,
         showConfiguration: Tidy5eActorSheetQuadroneBase.#showConfiguration,
+        toggleInspiration: Tidy5eActorSheetQuadroneBase.#toggleInspiration,
+        useFacility: Tidy5eActorSheetQuadroneBase.#useFacility,
       },
       dragDrop: [
         {
@@ -213,11 +197,6 @@ export function getTidy5eActorSheetQuadroneBase<
       return `[${game.i18n.localize(TokenDocument.metadata.label)}] ${
         this.actor.name
       }`;
-    }
-
-    selectTab(tabId: string) {
-      this.onTabSelected(tabId);
-      this.render();
     }
 
     _getActorSvelteContext(): [key: string, value: any][] {
@@ -382,6 +361,8 @@ export function getTidy5eActorSheetQuadroneBase<
     ) {
       const ctx = (context.itemContext[item.id] ??= {});
 
+      ctx.canIdentify = FoundryAdapter.canIdentify(this.document);
+
       ctx.containerName = this.actor.items.get(item.system.container)?.name;
 
       if (item.type === CONSTANTS.ITEM_TYPE_CONTAINER) {
@@ -519,14 +500,19 @@ export function getTidy5eActorSheetQuadroneBase<
         const sc = item.spellcasting;
         const ability = this.actor.system.abilities[sc.ability];
         const mod = ability?.mod ?? 0;
-        const name =
+
+        const spellcastingSourceDocument =
           item.system.spellcasting.progression === sc.progression
-            ? item.name
-            : item.subclass?.name;
+            ? item
+            : item.subclass;
+
+        const name = spellcastingSourceDocument?.name;
+        const uuid = spellcastingSourceDocument?.uuid;
 
         const abilityConfig = CONFIG.DND5E.abilities[sc.ability];
         spellcasting.push({
-          type: 'class',
+          type: item?.type ?? 'class',
+          uuid,
           name,
           classIdentifier: item.system.identifier,
           ability: {
@@ -846,7 +832,7 @@ export function getTidy5eActorSheetQuadroneBase<
       };
 
       return Object.entries(context.system[property] ?? {})
-        .filter(([key]) => key in CONFIG.DND5E[property])
+        .filter(([key]) => key in CONFIG.DND5E[property] || ((property === 'tools') && (key in CONFIG.DND5E.vehicleTypes)))
         .map(([key, entry]: [string, any]) => ({
           ...entry,
           key,
@@ -1480,13 +1466,6 @@ export function getTidy5eActorSheetQuadroneBase<
         });
       }
 
-      // Dropped Documents
-      const documentClass = foundry.utils.getDocumentClass(data.type);
-      if (documentClass) {
-        const document = await documentClass.fromDropData(data);
-        return await this._onDropDocument(event, document);
-      }
-
       // Other Drops
       switch (data.type) {
         case CONSTANTS.FLAG_TYPE_TIDY_JOURNAL:
@@ -1554,22 +1533,6 @@ export function getTidy5eActorSheetQuadroneBase<
       );
     }
 
-    async _onDropDocument(
-      event: DragEvent & { currentTarget: HTMLElement; target: HTMLElement },
-      document: any,
-    ) {
-      switch (document.documentName) {
-        case CONSTANTS.DOCUMENT_NAME_ACTIVE_EFFECT:
-          return await this._onDropActiveEffect(event, document);
-        case CONSTANTS.DOCUMENT_NAME_ACTOR:
-          return await this._onDropActor(event, document);
-        case CONSTANTS.DOCUMENT_NAME_ITEM:
-          return await this._onDropItem(event, document);
-        case CONSTANTS.DOCUMENT_NAME_FOLDER:
-          return await this._onDropFolder(event, document);
-      }
-    }
-
     async _onDropJournal(
       event: DragEvent & { currentTarget: HTMLElement; target: HTMLElement },
       data: any,
@@ -1623,19 +1586,26 @@ export function getTidy5eActorSheetQuadroneBase<
     }
 
     /** @override */
-    async _onDropActor(event: DragEvent, document: Actor5e) {
+    async _onDropActor(
+      event: DragEvent & { currentTarget: HTMLElement; target: HTMLElement },
+      document: Actor5e,
+    ) {
       const canPolymorph =
         game.user.isGM ||
         (this.actor.isOwner && game.settings.get('dnd5e', 'allowPolymorphing'));
 
       if (
-        !canPolymorph ||
+        canPolymorph &&
         // TODO: Create a polymorph tab ID denylist that implementing sheet classes can opt into
-        this.currentTabId === CONSTANTS.TAB_CHARACTER_BASTION
+        this.currentTabId !== CONSTANTS.TAB_CHARACTER_BASTION
       ) {
-        return;
+        return await this._onDropPolymorph(document);
       }
 
+      return await super._onDropActor(event, document);
+    }
+
+    async _onDropPolymorph(document: Actor5e) {
       // Configure the transformation
       const settings =
         await dnd5e.applications.actor.TransformDialog.promptSettings(
@@ -2009,8 +1979,81 @@ export function getTidy5eActorSheetQuadroneBase<
     /*  Sheet Actions                               */
     /* -------------------------------------------- */
 
+    static async #addOccupant(
+      this: Tidy5eActorSheetQuadroneBase,
+      event: Event,
+      target: HTMLElement,
+    ) {
+      const facilityType = target.closest<HTMLElement>('[data-facility-type]')
+        ?.dataset.facilityType;
+      const facilityId =
+        target.closest<HTMLElement>('[data-facility-id]')?.dataset.facilityId;
+      const prop = target.closest<HTMLElement>('[data-prop]')?.dataset.prop;
+
+      if (!facilityType || !facilityId || !prop) {
+        return;
+      }
+
+      await this.addOccupant(
+        event,
+        this.actor.items.get(facilityId),
+        facilityType,
+        prop,
+      );
+    }
+
+    /* -------------------------------------------- */
+
+    static async #decreaseInspiration(
+      this: Tidy5eActorSheetQuadroneBase,
+      event: Event,
+      target: HTMLElement,
+    ) {
+      const { uuid } =
+        target.closest<HTMLElement>('[data-uuid]')?.dataset ?? {};
+      const actor = uuid ? await fromUuid(uuid) : this.document;
+      const inspirationSource =
+        await CONFIG.TIDY5E.utils.actorInspiration.tryGetInspirationSource(
+          actor,
+        );
+      return await inspirationSource?.change(-1);
+    }
+
+    /* -------------------------------------------- */
+
+    static async #decreaseSlots(
+      this: Tidy5eActorSheetQuadroneBase,
+      event: Event,
+      target: HTMLElement,
+    ) {
+      const slot = target.closest<HTMLElement>('[data-slot]')?.dataset.slot;
+
+      if (slot) {
+        return await this._adjustSlots(slot, -1);
+      }
+    }
+
+    _adjustSlots(slot: string, amount: number) {
+      const prop = `system.spells.${slot}.value`;
+
+      const existingValue = FoundryAdapter.getProperty<number>(
+        this.document,
+        prop,
+      );
+
+      if (!Number.isNumeric(existingValue)) {
+        return;
+      }
+
+      return this.document.update({
+        [prop]: existingValue + amount,
+      });
+    }
+
+    /* -------------------------------------------- */
+
     /**
-     * Handle finding an available item of a given type.
+     * Handle finding an available item of a given type and drop/creating it to this sheet.
      */
     static async #findItem(
       this: Tidy5eActorSheetQuadroneBase,
@@ -2067,12 +2110,15 @@ export function getTidy5eActorSheetQuadroneBase<
         ];
       }
 
-      if (type === 'facility' && facilityType) {
-        const otherType = facilityType === 'basic' ? 'special' : 'basic';
-        filters.locked.additional = {
-          type: { [facilityType]: 1, [otherType]: -1 },
-          level: { max: this.actor.system.details.level },
-        };
+      if (type === CONSTANTS.ITEM_TYPE_FACILITY && facilityType) {
+        return await Bastion.addFacility({
+          actor: this.actor,
+          facilityType,
+          event,
+          detachOptions: this._detachOptions(),
+          onSelected: (itemData, ev) =>
+            this._onDropItemCreate(itemData, ev, 'copy'),
+        });
       }
 
       let result = await dnd5e.applications.CompendiumBrowser.selectOne(
@@ -2105,6 +2151,55 @@ export function getTidy5eActorSheetQuadroneBase<
         options: { sheet: item.parent?.sheet ?? item.container?.sheet },
       });
     }
+
+    /* -------------------------------------------- */
+
+    static async #increaseInspiration(
+      this: Tidy5eActorSheetQuadroneBase,
+      event: Event,
+      target: HTMLElement,
+    ) {
+      const { uuid } =
+        target.closest<HTMLElement>('[data-uuid]')?.dataset ?? {};
+      const actor = uuid ? await fromUuid(uuid) : this.document;
+      const inspirationSource =
+        await CONFIG.TIDY5E.utils.actorInspiration.tryGetInspirationSource(
+          actor,
+        );
+      return await inspirationSource?.change(1);
+    }
+
+    /* -------------------------------------------- */
+
+    static async #increaseSlots(
+      this: Tidy5eActorSheetQuadroneBase,
+      event: Event,
+      target: HTMLElement,
+    ) {
+      const slot = target.closest<HTMLElement>('[data-slot]')?.dataset.slot;
+
+      if (slot) {
+        return await this._adjustSlots(slot, 1);
+      }
+    }
+
+    /* -------------------------------------------- */
+
+    static async #rest(
+      this: Tidy5eActorSheetQuadroneBase,
+      event: Event,
+      target: HTMLElement,
+    ) {
+      this.actor.initiateRest({ type: target.dataset.type });
+    }
+
+    /* -------------------------------------------- */
+
+    static async #restoreTransformation(this: Tidy5eActorSheetQuadroneBase) {
+      this.actor.revertOriginalForm();
+    }
+
+    /* -------------------------------------------- */
 
     /**
      * Handle known rolls.
@@ -2214,6 +2309,22 @@ export function getTidy5eActorSheetQuadroneBase<
      */
     _roll(event: Event, target: HTMLElement): boolean | void {}
 
+    /* -------------------------------------------- */
+
+    static async #showArtwork(this: Tidy5eActorSheetQuadroneBase) {
+      const { src } = await this._preparePortrait(this.actor);
+
+      this._renderChild(
+        new foundry.applications.apps.ImagePopout({
+          src,
+          uuid: this.actor.uuid,
+          window: { title: this.actor.name },
+        }),
+      );
+    }
+
+    /* -------------------------------------------- */
+
     static async #showConfiguration(
       this: Tidy5eActorSheetQuadroneBase,
       event: Event,
@@ -2319,6 +2430,45 @@ export function getTidy5eActorSheetQuadroneBase<
      * @abstract
      */
     _showConfiguration(event: Event, target: HTMLElement): boolean | void {}
+
+    /* -------------------------------------------- */
+
+    static async #toggleInspiration(
+      this: Tidy5eActorSheetQuadroneBase,
+      event: Event,
+      target: HTMLElement,
+    ) {
+      const { uuid } =
+        target.closest<HTMLElement>('[data-uuid]')?.dataset ?? {};
+
+      const actor = uuid ? await fromUuid(uuid) : this.document;
+
+      const prop = 'system.attributes.inspiration';
+
+      const inspired = FoundryAdapter.getProperty<boolean>(actor, prop);
+
+      actor.update({
+        [prop]: !inspired,
+      });
+    }
+
+    /* -------------------------------------------- */
+
+    static async #useFacility(
+      this: Tidy5eActorSheetQuadroneBase,
+      event: Event,
+      target: HTMLElement,
+    ) {
+      const { facilityId } =
+        target.closest<HTMLElement>('[data-facility-id]')?.dataset ?? {};
+
+      Bastion.useFacility({
+        actor: this.actor,
+        facilityId,
+        event,
+        sheet: this,
+      });
+    }
 
     /* -------------------------------------------- */
     /* SheetTabCacheable

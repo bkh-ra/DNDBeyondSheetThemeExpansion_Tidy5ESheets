@@ -11,7 +11,8 @@
   }
 
   let { favorite }: Props = $props();
-
+  
+  const localize = FoundryAdapter.localize;
   let context = $derived(getCharacterSheetQuadroneContext());
 
   let subtitle = $derived(
@@ -34,10 +35,6 @@
   data-key={favorite.id}
   data-context-menu={CONSTANTS.CONTEXT_MENU_TYPE_KEYED_FAVORITE}
   data-slots
-  onmousedown={(event) =>
-    FoundryAdapter.doActionOnMiddleClick(event, () =>
-      FoundryAdapter.openSpellSlotsConfig(context.actor),
-    )}
   data-tidy-sheet-part="favorite-entry"
 >
   <FavoriteRollButton
@@ -65,7 +62,7 @@
         {/if}
         <span class="divider color-text-gold">/</span>
         <span class="uses-max color-text-lighter">
-          {favorite.uses.max ?? "?"}
+          {favorite.uses.max ?? localize('TIDY5E.Table.UnidentifiedPlaceholder')}
         </span>
       </span>
     </span>

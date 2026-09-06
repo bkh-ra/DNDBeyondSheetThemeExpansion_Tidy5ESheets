@@ -44,6 +44,8 @@
       getSheetContext<ActorSheetQuadroneContext | ItemSheetQuadroneContext>(),
     );
 
+  let identified = $derived(item?.identified !== false);
+
   /**
    * The Effects tab splits effects across several sections. Inline, they are a
    * flat list with a category label for each entry
@@ -64,7 +66,7 @@
     const riderParentNames = ActiveEffectsHelper.getRiderEffectParentNames(item);
 
     return Object.values(categories)
-      .filter((category) => !category.isEnchantment)
+      .filter((category) => !category.isEnchantment && category.type !== 'passive')
       .flatMap((category) =>
         category.effects.map((effect) => ({
           effect,
@@ -78,7 +80,7 @@
   });
 </script>
 
-{#if effectEntries.length}
+{#if identified && effectEntries.length}
   <div class="pills inline-effects-list" data-item-id={item?.id}>
     {#each effectEntries as entry (entry.effect.id)}
       <EffectPillSwitch

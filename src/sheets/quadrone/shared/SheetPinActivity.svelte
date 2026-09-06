@@ -1,17 +1,12 @@
 <script lang="ts">
-  import TextInput from 'src/components/inputs/TextInput.svelte';
+  import { InputAttachments } from 'src/attachments/input-attachments.svelte';
   import { CONSTANTS } from 'src/constants';
   import { SheetPinsProvider } from 'src/features/sheet-pins/SheetPinsProvider';
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
-  import {
-    getActorSheetQuadroneContext,
-    getSheetContext,
-  } from 'src/sheets/sheet-context.svelte';
+  import { getActorSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
   import type { SheetPinActivityContext } from 'src/types/types';
   import { isNil } from 'src/utils/data';
-  import { EventHelper } from 'src/utils/events';
   import { coalesce } from 'src/utils/formatting';
-  import { getContext } from 'svelte';
 
   interface Props {
     ctx: SheetPinActivityContext;
@@ -30,53 +25,17 @@
       : ctx.document.img,
   );
 
-  const { usesDocument, value, maxText } = $derived.by(() => {
+  const { value, maxText } = $derived.by(() => {
     const uses = ctx.document.uses;
 
     return {
-      usesDocument: ctx.document,
       uses: uses,
       value: (uses.max ?? 0) - uses.spent,
       maxText: isNil(uses.max, '') ? '—' : uses.max.toString(),
     };
   });
 
-  function saveValueChange(
-    ev: Event & { currentTarget: EventTarget & HTMLInputElement },
-  ): boolean {
-    FoundryAdapter.handleDocumentUsesChanged(
-      ev,
-      usesDocument,
-      'uses.value',
-      'uses.spent',
-      'uses.max',
-    );
-    return false;
-  }
-
   let context = $derived(getActorSheetQuadroneContext());
-
-  const isSpell = $derived(ctx.document.type === CONSTANTS.ITEM_TYPE_SPELL);
-
-  function getType() {
-    if (isSpell) {
-      const spellMethod = FoundryAdapter.getSpellMethodConfig(ctx.document);
-
-      if (
-        spellMethod.key !== CONSTANTS.SPELL_PREPARATION_METHOD_INNATE &&
-        spellMethod.key !== CONSTANTS.SPELL_PREPARATION_METHOD_ATWILL
-      ) {
-        return 'spell-slots';
-      }
-      return 'none';
-    }
-    if (ctx.document.uses.max) {
-      return 'limited-uses';
-    }
-    return 'none';
-  }
-
-  let pinType = $derived(getType());
 </script>
 
 {#snippet pinName()}
@@ -98,20 +57,15 @@
   data-item-id={ctx.document.item.id}
   data-activity-id={ctx.document.id}
   data-context-menu={CONSTANTS.CONTEXT_MENU_TYPE_ACTIVITIES}
-  data-info-card={'activity'}
-  data-info-card-entity-uuid={ctx.document.uuid}
   data-configurable="true"
   data-pin-id={ctx.id}
-  onmousedown={(ev) => FoundryAdapter.editOnMiddleClick(ev, ctx.document)}
 >
   <div class="pin-document-image">
     <a
       role="button"
       tabindex="0"
       class={['tidy-table-row-use-button', { disabled: !context.editable }]}
-      onclick={(event) =>
-        context.editable &&
-        ctx.document.use({ event, options: { sheet: context.sheet } })}
+      data-action="activity-use"
       data-has-roll-modes
     >
       <img class="item-image" alt={ctx.document.name} src={img} />
@@ -172,28 +126,20 @@
         {/if}
       </div>
       <div class="pin-context {ctx.resource}">
-        {#if pinType === 'limited-uses'}
+        {#if ctx.presentation === 'limited-uses'}
           <span class="inline-uses">
-            <TextInput
+            <input
+              type="text"
+              inputmode="numeric"
               class={['uninput uses-value', { diminished: value < 1 }]}
-              document={usesDocument}
-              field="uses.spent"
+              data-name="uses.value"
+              {@attach InputAttachments.selectOnFocus}
               {value}
-              onSaveChange={(ev) => saveValueChange(ev)}
-              selectOnFocus={true}
             />
             <span class="divider">/</span>
             <span class="uses-max">{maxText}</span>
           </span>
-        {:else if pinType === 'quantity'}
-          <TextInput
-            class={['uninput uses-value centered', { diminished: value < 1 }]}
-            document={ctx.document}
-            field={'system.quantity'}
-            value={ctx.document.system.quantity}
-            selectOnFocus={true}
-          />
-        {:else if pinType === 'none'}
+        {:else if ctx.presentation === 'none'}
           <span class="subtitle font-default-medium color-text-lighter"
             >{ctx.document.parent.parent.name}</span
           >

@@ -127,6 +127,8 @@ export const CONSTANTS = {
   CONTEXT_MENU_TYPE_ENCOUNTER_MEMBER: 'encounter-member',
   CONTEXT_MENU_TYPE_ENCOUNTER_PLACEHOLDER: 'encounter-placeholder',
   CONTEXT_MENU_TYPE_FACILITY_OCCUPANTS: 'facility-occupants',
+  CONTEXT_MENU_TYPE_GROUP_BASTION_FACILITY: 'group-bastion-facility',
+  CONTEXT_MENU_TYPE_GROUP_BASTION_MEMBER: 'group-bastion-member',
   CONTEXT_MENU_TYPE_GROUP_MEMBER: 'group-member',
   CONTEXT_MENU_TYPE_GROUP_SKILL_ROLL: 'group-skill-roll',
   CONTEXT_MENU_TYPE_VEHICLE_MEMBER: 'vehicle-member',
@@ -190,8 +192,9 @@ export const CONSTANTS = {
   TAB_ITEM_DETAILS: 'details',
   TAB_NPC_ABILITIES: 'attributes',
   TAB_NPC_JOURNAL: 'journal',
+  TAB_SIDEBAR_SKILLS_AND_TRAITS: 'sidebar-skills-and-traits',
   TAB_STATBLOCK: 'statblock',
-  TAB_TRAITS: 'sidebar-traits',
+  TAB_SIDEBAR_TRAITS: 'sidebar-traits',
   TAB_USER_SETTINGS_ACTIONS_LIST: 'user-settings-actions-list',
   TAB_USER_SETTINGS_ACTIVITIES: 'user-settings-activities',
   TAB_USER_SETTINGS_NPCS: 'user-settings-npcs',
@@ -514,6 +517,7 @@ export const CONSTANTS = {
     LOCATION: 'location',
     MEMBER_IDS_TO_SHOW: 'memberIdsToShow',
     MESSAGE_BUS: 'messageBus',
+    OCCUPANT_SUMMARY_TOOLTIP: 'occupantSummaryTooltip',
     ON_FILTER_CLEAR_ALL: 'onFilterClearAll',
     ON_FILTER: 'onFilter',
     ON_ITEM_TABLE_TOGGLE: 'onItemTableToggle',
@@ -534,7 +538,7 @@ export const CONSTANTS = {
   },
   WIKI_LINK: 'https://github.com/kgar/foundry-vtt-tidy-5e-sheets/wiki',
   WIKI_LINK_CHANGE_ALL_SHEETS_GUIDE:
-    'https://github.com/kgar/foundry-vtt-tidy-5e-sheets/wiki/1.-Getting-Started#set-the-default-for-all-sheets',
+    'https://github.com/kgar/foundry-vtt-tidy-5e-sheets/wiki/01.-Getting-Started#set-the-default-for-all-sheets',
   WIKI_LINK_CHANGE_SHEET_GUIDE:
-    'https://github.com/kgar/foundry-vtt-tidy-5e-sheets/wiki/1.-Getting-Started#change-an-existing-sheet-to-tidy',
+    'https://github.com/kgar/foundry-vtt-tidy-5e-sheets/wiki/01.-Getting-Started#change-an-existing-sheet-to-tidy',
 } as const;

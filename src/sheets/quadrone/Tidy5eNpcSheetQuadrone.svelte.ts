@@ -90,6 +90,8 @@ export class Tidy5eNpcSheetQuadrone extends getTidy5eActorSheetQuadroneBase<NpcS
       return this._context.data;
     }
 
+    this._concentration = this.actor.concentration;
+
     const actorContext = (await super._prepareContext(
       options,
     )) as ActorSheetQuadroneContext;
@@ -413,6 +415,12 @@ export class Tidy5eNpcSheetQuadrone extends getTidy5eActorSheetQuadroneBase<NpcS
         dataset: dataset,
         canCreate: true,
         columns,
+        custom: !isNil(customSectionName)
+          ? {
+              section: customSectionName,
+              creationItemTypes: [CONSTANTS.ITEM_TYPE_FEAT],
+            }
+          : undefined,
       };
     };
 

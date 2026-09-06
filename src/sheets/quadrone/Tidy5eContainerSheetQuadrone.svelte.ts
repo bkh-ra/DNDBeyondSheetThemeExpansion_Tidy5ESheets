@@ -41,7 +41,7 @@ import { isNil } from 'src/utils/data';
 import { TidyFlags } from 'src/foundry/TidyFlags';
 import { mapGetOrInsert } from 'src/utils/map';
 import SectionActions from 'src/features/sections/SectionActions';
-import { TidySheetSettingsQuadroneApplication } from 'src/applications/settings/sheet/TidySheetSettingsQuadroneApplication.svelte';
+import { SheetSections } from 'src/features/sections/SheetSections';
 
 export class Tidy5eContainerSheetQuadrone
   extends getTidyExtensibleDocumentSheetMixin<
@@ -56,7 +56,6 @@ export class Tidy5eContainerSheetQuadrone
   )
   implements SheetTabCacheable
 {
-  currentTabId: string = '';
   searchFilters: LocationToSearchTextMap = new Map<string, string>();
   expandedItems: ExpandedItemIdToLocationsMap = new Map<string, Set<string>>();
   expandedItemData: ExpandedItemData = new Map<string, ItemChatData>();
@@ -116,23 +115,8 @@ export class Tidy5eContainerSheetQuadrone
       height: 580,
     },
     actions: {
-      sheetSettings: async function (this: Tidy5eContainerSheetQuadrone) {
-        this.openSheetSettings();
-      },
-      // TODO: Item and Container Sheets duplicate this functionality; consolidate somewhere
-      showIcon: async function (this: Tidy5eContainerSheetQuadrone) {
-        const title =
-          this.item.system.identified === false
-            ? this.item.system.unidentified.name
-            : this.item.name;
-        this._renderChild(
-          new foundry.applications.apps.ImagePopout({
-            src: this.item.img,
-            uuid: this.item.uuid,
-            window: { title },
-          }),
-        );
-      },
+      showConfiguration: Tidy5eContainerSheetQuadrone.#showConfiguration,
+      showIcon: Tidy5eContainerSheetQuadrone.#showIcon,
     },
     dragDrop: [
       {
@@ -146,11 +130,6 @@ export class Tidy5eContainerSheetQuadrone
     ],
     submitOnClose: true,
   };
-
-  selectTab(tabId: string) {
-    this.onTabSelected(tabId);
-    this.render();
-  }
 
   _createComponent(node: HTMLElement): Record<string, any> {
     const context = new Map<any, any>([
@@ -260,7 +239,7 @@ export class Tidy5eContainerSheetQuadrone
     if (isIdentifiable) {
       itemDescriptions.push({
         enriched: enriched.unidentified,
-        content: documentSheetContext.source.unidentified.description,
+        content: documentSheetContext.source.unidentified?.description ?? '',
         field: 'system.unidentified.description',
         label: FoundryAdapter.localize('DND5E.DescriptionUnidentified'),
       });
@@ -296,6 +275,10 @@ export class Tidy5eContainerSheetQuadrone
     const owner = this.item.isOwner;
 
     const context: ContainerSheetQuadroneContext = {
+      actionSectionEnabled: SheetSections.showActionSectionConfig(
+        this.document.parent,
+      ),
+      canIdentify: FoundryAdapter.canIdentify(this.document),
       capacity: capacityContext,
       concealDetails:
         !game.user.isGM && this.document.system.identified === false,
@@ -325,8 +308,6 @@ export class Tidy5eContainerSheetQuadrone
       items: Array.from(await this.item.system.contents),
       itemType: game.i18n.localize(CONFIG.Item.typeLabels[this.item.type]),
       labels: this.document.labels,
-      lockItemQuantity: FoundryAdapter.shouldLockItemQuantity(),
-      lockMoneyChanges: FoundryAdapter.shouldLockMoneyChanges(),
       modernRules: FoundryAdapter.checkIfModernRules(this.item),
       name: {
         value: this.item.name,
@@ -438,6 +419,38 @@ export class Tidy5eContainerSheetQuadrone
     delete game.user.apps[this.id];
 
     return await super.close(options);
+  }
+
+  /* -------------------------------------------- */
+  /*  Sheet Actions                               */
+  /* -------------------------------------------- */
+
+  static async #showConfiguration(
+    this: Tidy5eContainerSheetQuadrone,
+    event: Event,
+    target: HTMLElement,
+  ) {
+    switch (target.dataset.config) {
+      case 'source':
+        return FoundryAdapter.renderSourceConfig(this.item, 'system.source');
+    }
+  }
+
+  /* -------------------------------------------- */
+
+  // TODO: Item and Container Sheets duplicate this functionality; consolidate somewhere
+  static async #showIcon(this: Tidy5eContainerSheetQuadrone) {
+    const title =
+      this.item.system.identified === false
+        ? this.item.system.unidentified.name
+        : this.item.name;
+    this._renderChild(
+      new foundry.applications.apps.ImagePopout({
+        src: this.item.img,
+        uuid: this.item.uuid,
+        window: { title },
+      }),
+    );
   }
 
   /* -------------------------------------------- */

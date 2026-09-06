@@ -7,7 +7,7 @@
     createSearchResultsState,
     setSearchResultsContext,
   } from 'src/features/search/search.svelte';
-  import { ItemVisibility } from 'src/features/sections/ItemVisibility';
+  import { SectionVisibility } from 'src/features/sections/SectionVisibility';
   import { SheetSections } from 'src/features/sections/SheetSections';
   import { UserSheetPreferencesService } from 'src/features/user-preferences/SheetPreferencesService';
   import { getGroupSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
@@ -42,8 +42,7 @@
   );
 
   $effect(() => {
-    searchResults.uuids = ItemVisibility.getItemsToShowAtDepth({
-      criteria: searchCriteria,
+    SectionVisibility.syncItemTabSearchResults(searchResults, searchCriteria, {
       itemContext: context.itemContext,
       sections: inventory,
       tabId: tabId,
@@ -75,8 +74,6 @@
       data-keyboard-focus
       data-action="showDocument"
       data-uuid={member.actor.uuid}
-      onmousedown={(event) =>
-        FoundryAdapter.editOnMiddleClick(event, member.actor)}
       tabindex={0}
       onmouseenter={() => (hoveredMember = member.actor.uuid)}
       onmouseleave={() => (hoveredMember = null)}
@@ -130,7 +127,11 @@
                 >
               </span>
             </div>
-            <ActorEncumbranceBar actor={member.actor} />
+            <ActorEncumbranceBar
+              actor={member.actor}
+              encumbrance={member.actor.system.attributes.encumbrance}
+              hasBreakpoints={false}
+            />
           {:else if member.actor.system.isVehicle}
             <div class="separated-list">
               <span class="actor-cargo separated-list">

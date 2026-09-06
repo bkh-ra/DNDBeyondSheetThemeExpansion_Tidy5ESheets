@@ -32,7 +32,7 @@ import type { Activity5e, CharacterFavorite } from 'src/foundry/dnd5e.types';
 import { error } from 'src/utils/logging';
 import { getSortedActions } from '../actions/actions.svelte';
 import { SpellUtils } from 'src/utils/SpellUtils';
-import { settings } from 'src/settings/settings.svelte';
+import { settings, SettingsProvider } from 'src/settings/settings.svelte';
 import { FoundryAdapter } from 'src/foundry/foundry-adapter';
 import UserPreferencesService from '../user-preferences/UserPreferencesService';
 import type { SpellcastingConfigEntry } from 'src/foundry/config.types';
@@ -936,7 +936,9 @@ export class SheetSections {
 
   static getActionSectionLabel(item: Item5e) {
     return item.parent?.system.isCharacter
-      ? FoundryAdapter.localize('Sheet')
+      ? FoundryAdapter.localize(
+          game.release.generation < 14 ? 'Sheet' : 'DOCUMENT.Sheet',
+        )
       : FoundryAdapter.localize('TIDY5E.Actions.TabName');
   }
 
@@ -984,6 +986,24 @@ export class SheetSections {
         CONSTANTS.ITEM_TYPE_RACE,
         CONSTANTS.ITEM_TYPE_FACILITY,
       ].includes(item.type) && !Inventory.isItemInventoryType(item)
+    );
+  }
+
+  static showActionSectionConfig(actor: Actor5e | undefined) {
+    return (
+      actor &&
+      actor.type === CONSTANTS.SHEET_TYPE_CHARACTER &&
+      this.getSheetTabSectionOrganizationForDocument(actor) ===
+        CONSTANTS.SECTION_ORGANIZATION_ACTION
+    );
+  }
+
+  static getSheetTabSectionOrganizationForDocument(
+    document: any,
+  ): 'action' | 'origin' {
+    return (
+      TidyFlags.characterSheetTabSectionOrganization.get(document) ??
+      SettingsProvider.settings.characterSheetTabOrganization.get()
     );
   }
 }

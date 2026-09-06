@@ -55,6 +55,7 @@
   const localize = FoundryAdapter.localize;
 </script>
 
+{#if activities?.length}
 <TidyTable
   key="activities-{item.name}"
   toggleable={false}
@@ -79,15 +80,12 @@
           'data-item-id': ctx.activity.item.id,
           'data-activity-id': ctx.activity.id,
           'data-configurable': configurable,
-          'data-info-card': 'activity',
-          'data-info-card-entity-uuid': ctx.activity.uuid,
           'data-context-menu': CONSTANTS.CONTEXT_MENU_TYPE_ACTIVITIES,
           'data-tidy-always-draggable': '',
         }}
         rowClass="activity"
-        onmousedown={(event) =>
-          FoundryAdapter.editOnMiddleClick(event, ctx.activity)}
       >
+        <!-- svelte-ignore a11y_missing_attribute -->
         <a
           class={['tidy-table-row-use-button', { disabled: !context.editable }]}
           data-action="activity-use"
@@ -130,3 +128,4 @@
     {/each}
   {/snippet}
 </TidyTable>
+{/if}
