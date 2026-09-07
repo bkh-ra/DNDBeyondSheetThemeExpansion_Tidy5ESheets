@@ -13,6 +13,9 @@ import { getThemeSettingsEditor } from 'src/settings/editors/theme-settings-edit
 import { getWorldTabConfigurationSettingsEditor } from 'src/settings/editors/world-tab-configuration-settings-editor.svelte';
 import { getWorldHeaderControlConfigurationSettingsEditor } from 'src/settings/editors/world-header-control-configuration-settings-editor.svelte';
 import { getHomebrewSettingsEditor } from 'src/settings/editors/homebrew-settings-editor.svelte';
+// DDB-FORK: `globalCustomSections` is consumed by every layout but was only
+// editable in the legacy classic menu, which "Hide Classic" removes.
+import { getGlobalCustomSectionsSettingsEditor } from 'src/settings/editors/global-custom-sections-settings-editor.svelte';
 import { getDefaultSheetPreferencesSettingsEditor } from 'src/settings/editors/default-sheet-preferences-settings-editor.svelte';
 import {
   confirmUseDefault,
@@ -32,6 +35,8 @@ export const WorldSettingsTabIds = {
   headerControls: 'settings:header-controls',
   homebrew: 'settings:homebrew',
   sheetPreferences: 'settings:sheet-preferences',
+  // DDB-FORK
+  customSections: 'settings:custom-sections',
 } as const;
 
 export type WorldSettingsTabInfo = {
@@ -102,6 +107,8 @@ export class WorldSettingsQuadroneApplication
       headerControlsTab: getWorldHeaderControlConfigurationSettingsEditor(),
       homebrewTab: getHomebrewSettingsEditor(),
       sheetPreferencesTab: getDefaultSheetPreferencesSettingsEditor(),
+      // DDB-FORK: participates in the shared Save / undo / reset loops below.
+      customSectionsTab: getGlobalCustomSectionsSettingsEditor(),
     } satisfies Record<string, SettingsEditor<unknown>>;
 
     // Create composite sheet editors
@@ -153,6 +160,9 @@ export class WorldSettingsQuadroneApplication
         return this.editors.sheetPreferencesTab;
       case WorldSettingsTabIds.homebrew:
         return this.editors.homebrewTab;
+      // DDB-FORK
+      case WorldSettingsTabIds.customSections:
+        return this.editors.customSectionsTab;
     }
 
     // Sheet Settings

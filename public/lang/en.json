@@ -9,6 +9,7 @@
   "TIDY5E.Tidy5eEncounterSheetClassic": "Tidy 5e Classic Encounter Sheet",
   "TIDY5E.Tidy5eCharacterSheetQuadrone": "Tidy 5e Character Sheet",
   "TIDY5E.Tidy5eCharacterSheetDdb": "DDB Character Sheet (D&D Beyond Style)",
+  "TIDY5E.DdbLayout.Title": "Character (DDB layout)",
   "TIDY5E.Tidy5eNpcSheetQuadrone": "Tidy 5e NPC Sheet",
   "TIDY5E.Tidy5eContainerSheetQuadrone": "Tidy 5e Container Sheet",
   "TIDY5E.Tidy5eItemSheetQuadrone": "Tidy 5e Item Sheet",
@@ -177,6 +178,9 @@
 
   "TIDY5E.ItemCardsMouseHint": "middle mouse to view/edit item",
 
+  "TIDY5E.Ddb.Skills.ShowAll": "Show all skills",
+  "TIDY5E.Ddb.Skills.ShowProficientOnly": "Show proficient skills only",
+
   "TIDY5E.AbbrMod": "Mod",
   "TIDY5E.AbbrSavingThrow": "Save",
   "TIDY5E.AttackMod": "Attack Mod",
@@ -330,7 +334,8 @@
     "ShowWhenEmptyLabel": "Show Section When Empty",
     "ShowWhenEmptyTooltip": "All tabs with item tables have a set of default sections which are always shown even when there are no items in the section. Always show this section, even when empty.",
     "LimitToSpecificSheetsLabel": "Limit Shown Section to Specific Sheets",
-    "LimitToSpecificTabsLabel": "Limit Shown Section to Specific Tabs"
+    "LimitToSpecificTabsLabel": "Limit Shown Section to Specific Tabs",
+    "EmptyHint": "No global custom sections yet. Create one to make it available in every sheet's Section Selector."
   },
   "TIDY5E.WorldSettings.label": "Tidy Sheet Settings",
   "TIDY5E.WorldSettings.hint": "Configure global settings for Tidy Sheets.",

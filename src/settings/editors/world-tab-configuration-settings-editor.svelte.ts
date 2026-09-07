@@ -8,6 +8,8 @@ import { CONSTANTS } from 'src/constants';
 import { FoundryAdapter } from 'src/foundry/foundry-adapter';
 import { CharacterSheetQuadroneRuntime } from 'src/runtime/actor/CharacterSheetQuadroneRuntime.svelte';
 import { CharacterSheetQuadroneSidebarRuntime } from 'src/runtime/actor/CharacterSheetQuadroneSidebarRuntime.svelte';
+// DDB-FORK: the DDB layout gets its own world tab-configuration entry.
+import { CharacterSheetDdbRuntime } from 'src/runtime/actor/CharacterSheetDdbRuntime.svelte';
 import { EncounterSheetQuadroneRuntime } from 'src/runtime/actor/EncounterSheetQuadroneRuntime.svelte';
 import { GroupSheetQuadroneRuntime } from 'src/runtime/actor/GroupSheetQuadroneRuntime.svelte';
 import { NpcSheetQuadroneRuntime } from 'src/runtime/actor/NpcSheetQuadroneRuntime.svelte';
@@ -81,6 +83,22 @@ export function getWorldTabConfigurationSettingsEditor(): WorldTabConfigurationS
     );
 
     config.push(characterSidebarContext);
+
+    // DDB-FORK: the DDB character layout keeps its own world entry
+    // (`Actor['character-ddb']`) so a quadrone tab order never re-orders the
+    // DDB tab bar. Wired exactly like the character-sidebar entry above.
+    const characterDdbContext = getActorTabContext({
+      runtime: CharacterSheetDdbRuntime,
+      type: CONSTANTS.SHEET_TYPE_CHARACTER,
+      settings: actorConfigs?.[CONSTANTS.WORLD_TAB_CONFIG_KEY_CHARACTER_DDB],
+      docTypeKeyOverride: CONSTANTS.WORLD_TAB_CONFIG_KEY_CHARACTER_DDB,
+    });
+
+    characterDdbContext.title = FoundryAdapter.localize(
+      'TIDY5E.DdbLayout.Title',
+    );
+
+    config.push(characterDdbContext);
 
     config.push(
       getActorTabContext({

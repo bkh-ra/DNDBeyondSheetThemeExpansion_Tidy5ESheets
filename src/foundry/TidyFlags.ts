@@ -1550,6 +1550,46 @@ export class TidyFlags {
   };
 
   /**
+   * DDB-FORK: Tab configuration for the DDB character layout. Kept separate
+   * from `tabConfiguration` so a saved quadrone tab order never overrides the
+   * DDB tab bar (and vice versa). Same schema and shims as `tabConfiguration`.
+   */
+  static ddbTabConfiguration = {
+    key: 'ddb-tab-configuration',
+    prop: TidyFlags.getFlagPropertyPath('ddb-tab-configuration'),
+    /** Gets the DDB layout tab configuration. */
+    get(doc: any): SheetTabsConfiguration {
+      let rawConfig = TidyFlags.tryGetFlag<Partial<SheetTabsConfiguration>>(
+        doc,
+        TidyFlags.ddbTabConfiguration.key,
+      ) ?? { tabs: {} };
+
+      rawConfig.tabs ??= {};
+
+      return SettingsShims.tryMapSheetTabConfigurationFromLegacyV1(
+        rawConfig,
+        doc.documentName,
+      );
+    },
+    /** Sets the DDB layout tab configuration. */
+    set(doc: any, config: SheetTabsConfiguration) {
+      const toSave = TabConfigurationSchema.clean(config);
+      TabConfigurationSchema.validate(toSave, { fallback: true });
+
+      return TidyFlags.setFlag(
+        doc,
+        TidyFlags.ddbTabConfiguration.key,
+        toSave,
+        true,
+      );
+    },
+    /** Clears the DDB layout tab configuration. */
+    unset(doc: any) {
+      return TidyFlags.unsetFlag(doc, TidyFlags.ddbTabConfiguration.key);
+    },
+  };
+
+  /**
    * The trait of an actor.
    * This is informational and not used for game logic.
    */

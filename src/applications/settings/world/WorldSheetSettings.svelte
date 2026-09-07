@@ -30,6 +30,9 @@
 
   let sidebarTabConfigEntry = $derived(editor.value.sidebarTabConfig);
 
+  // DDB-FORK: the DDB character layout's own world tab configuration.
+  let ddbTabConfigEntry = $derived(editor.value.ddbTabConfig);
+
   let headerControlEntry = $derived(editor.value.headerControlConfig);
 
   let tabs: Tab[] = $derived.by(() => {
@@ -69,6 +72,21 @@
       result.push({
         id: `${prefix}-sidebar`,
         title: 'TIDY5E.Character.Sidebar.Title',
+        content: {
+          type: 'svelte',
+          component: TabConfigurationSortableListbox,
+          getProps: () => ({ tabConfigEntry: entry }),
+        },
+      });
+    }
+
+    // DDB-FORK: mirrors the sidebar entry above; only the character pane has one.
+    if (ddbTabConfigEntry) {
+      const entry = ddbTabConfigEntry;
+
+      result.push({
+        id: `${prefix}-ddb`,
+        title: 'TIDY5E.DdbLayout.Title',
         content: {
           type: 'svelte',
           component: TabConfigurationSortableListbox,

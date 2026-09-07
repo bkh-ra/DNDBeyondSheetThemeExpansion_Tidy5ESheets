@@ -1025,6 +1025,12 @@ export function getTidy5eActorSheetQuadroneBase<
     /*  Component Management                        */
     /* -------------------------------------------- */
 
+    // DDB-FORK: seam - whether the window header hosts the sheet-lock toggle.
+    // The DDB layout renders its own toggle in the banner and returns false.
+    get mountsWindowHeaderModeToggle(): boolean {
+      return true;
+    }
+
     _createAdditionalComponents(node: HTMLElement) {
       if (this.actor.limited) {
         return [];
@@ -1035,6 +1041,7 @@ export function getTidy5eActorSheetQuadroneBase<
       const headerStart = mount(ActorHeaderStart, {
         target: windowHeader,
         anchor: windowHeader.querySelector('.window-title'),
+        props: { hideModeToggle: !this.mountsWindowHeaderModeToggle }, // DDB-FORK
         context: new Map<string, any>([
           [CONSTANTS.SVELTE_CONTEXT.CONTEXT, this._context],
         ]),

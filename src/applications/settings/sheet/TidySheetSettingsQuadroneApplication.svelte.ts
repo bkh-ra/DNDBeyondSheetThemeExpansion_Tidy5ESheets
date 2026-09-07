@@ -24,6 +24,7 @@ import { error } from 'src/utils/logging';
 import TidySheetSettings from './TidySheetSettings.svelte';
 import { ItemSheetQuadroneRuntime } from 'src/runtime/item/ItemSheetQuadroneRuntime.svelte';
 import type {
+  ActorTabConfigurationSeam,
   RegisteredTab,
   SheetSectionConfiguration,
 } from 'src/runtime/types';
@@ -93,6 +94,12 @@ export class TidySheetSettingsQuadroneApplication
 
   themeSettingsTab: ThemeSettingsEditor;
   sheetTabsConfigurationSettingsTab: SheetTabsConfigurationSettingsEditor;
+  /**
+   * DDB-FORK: the tab-configuration seam of the document's OWN sheet layout,
+   * when it exposes one. It supplies the tab registry, the per-actor flag, and
+   * the world config key so this app never assumes the quadrone layout.
+   */
+  tabConfigurationSeam?: ActorTabConfigurationSeam;
   headerControlsTab?: WorldHeaderControlConfigurationSettingsEditor;
   sidebarTabDisplaySettingsTab?: SheetTabsConfigurationSettingsEditor;
   specialTraitsChildApp?: SpecialTraitsSettingsEditor;
@@ -177,10 +184,48 @@ export class TidySheetSettingsQuadroneApplication
       );
     }
 
-    this.sheetTabsConfigurationSettingsTab =
-      getSheetTabsConfigurationSettingsEditor({
-        document: this.document,
-      });
+    // DDB-FORK: resolve the layout seam once; every registry / flag / world-key
+    // lookup below (and `_getRuntime`) goes through it.
+    this.tabConfigurationSeam =
+      this.document?.documentName === CONSTANTS.DOCUMENT_NAME_ACTOR
+        ? ((this.document.sheet as any)?.tabConfigurationSeam as
+            | ActorTabConfigurationSeam
+            | undefined)
+        : undefined;
+
+    const seam = this.tabConfigurationSeam;
+
+    // DDB-FORK: a layout that owns its own world entry (the DDB layout) also
+    // owns its own per-actor flag, so the editor is pointed at both. Quadrone
+    // and every other sheet keep the upstream default wiring.
+    this.sheetTabsConfigurationSettingsTab = seam?.worldDocTypeKey
+      ? getSheetTabsConfigurationSettingsEditor({
+          document: this.document,
+          customTabConfigProvider: {
+            getTabConfig: seam.flag.get,
+            setTabConfig: seam.flag.set,
+            unsetTabConfig: seam.flag.unset,
+            getTabContext: (doc, setting, defaultSetting) =>
+              getActorTabContext({
+                runtime: seam.runtime,
+                type: doc.type,
+                settings: setting,
+                // The editor resolves this from the world config under
+                // `docTypeKeyOverride`, falling back to the runtime defaults.
+                defaultSettings: defaultSetting,
+                docTypeKeyOverride: seam.worldDocTypeKey,
+              }),
+          },
+          title: seam.layoutTitleKey
+            ? FoundryAdapter.localize('TIDY5E.TabConfiguration.Title', {
+                documentName: FoundryAdapter.localize(seam.layoutTitleKey),
+              })
+            : undefined,
+          docTypeKeyOverride: seam.worldDocTypeKey,
+        })
+      : getSheetTabsConfigurationSettingsEditor({
+          document: this.document,
+        });
 
     this.sheetTabsConfigurationSettingsTab.value.entry.tabs.forEach((tab) => {
       const config = this.createSheetTabOptionsSettingsEditor(
@@ -444,6 +489,16 @@ export class TidySheetSettingsQuadroneApplication
     }
 
     if (this.document?.documentName === CONSTANTS.DOCUMENT_NAME_ACTOR) {
+      // DDB-FORK: prefer the registry of the sheet's own layout (DDB vs
+      // quadrone). The type switch below remains the fallback for actors whose
+      // sheet class predates the seam.
+      const seamRuntime = this.tabConfigurationSeam?.runtime;
+      if (seamRuntime) {
+        return {
+          getAllRegisteredTabs: () => seamRuntime.getAllRegisteredTabs(),
+        };
+      }
+
       let runtime: ActorSheetQuadroneRuntime<any> | undefined;
       switch (this.document.type) {
         case CONSTANTS.SHEET_TYPE_CHARACTER:
