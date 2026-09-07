@@ -101,6 +101,7 @@ function registerSheetToggleKeybinding() {
         (x) =>
           x.toLocaleLowerCase().includes('tidy') &&
           !x.toLocaleLowerCase().includes('quadrone') &&
+          !x.toLocaleLowerCase().includes('ddb') && // DDB-FORK
           !x.toLocaleLowerCase().includes('debug'),
       ),
     downKey: 'KeyT',

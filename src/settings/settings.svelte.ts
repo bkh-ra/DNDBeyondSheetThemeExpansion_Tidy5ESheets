@@ -207,7 +207,7 @@ export function createSettings() {
       },
       migrations: {
         options: {
-          hideClassic: true,
+          // DDB-FORK: no hideClassic - the journal migration feeds the quadrone/DDB Notes tab.
           name: `TIDY5E.Settings.Migrations.name`,
           label: 'TIDY5E.Settings.Migrations.buttonLabel',
           hint: `TIDY5E.Settings.Migrations.hint`,
@@ -1939,13 +1939,13 @@ export function createSettings() {
       // Icons
       useTidySpellSchoolIcons: {
         options: {
-          hideClassic: true,
+          // DDB-FORK: consumed by every layout (SpellSchool.ts); was only editable in the classic menu.
           name: 'TIDY5E.Settings.UseTidySpellSchoolIcons.name',
           hint: 'TIDY5E.Settings.UseTidySpellSchoolIcons.hint',
           scope: 'world',
           type: Boolean,
           default: true,
-          config: false,
+          config: true,
         },
         get() {
           return FoundryAdapter.getTidySetting<boolean>(

@@ -6,6 +6,9 @@ export type SheetPreferenceOption = {
   documentName: string;
   subType: string;
   sheetClassIdentifier: string;
+  /** DDB-FORK: identifier of the DDB layout class for this subtype, if registered. */
+  ddbSheetClassIdentifier?: string;
+  isDdbDefault: boolean;
   selected: boolean;
 };
 
@@ -31,6 +34,8 @@ export function getDefaultSheetPreferencesSettingsEditor(): DefaultSheetPreferen
         label: m.typeLabel,
         selected: m.isDefault,
         sheetClassIdentifier: m.sheetClassIdentifier,
+        ddbSheetClassIdentifier: m.ddbSheetClassIdentifier,
+        isDdbDefault: m.isDdbDefault,
         subType: m.documentSubtype,
       }))
       .sort((a, b) => a.label.localeCompare(b.label, game.i18n.lang));
@@ -51,13 +56,24 @@ export function getDefaultSheetPreferencesSettingsEditor(): DefaultSheetPreferen
       // When selected, assign the Tidy class to the subtype of the document name.
       if (o.selected) {
         const documents = (settings[o.documentName] ??= {});
+        // DDB-FORK: keep an existing DDB default; only assign the quadrone
+        // class when the subtype is not already on the DDB variant.
+        if (
+          o.ddbSheetClassIdentifier &&
+          documents[o.subType] === o.ddbSheetClassIdentifier
+        ) {
+          return;
+        }
         documents[o.subType] = o.sheetClassIdentifier;
         return;
       }
 
       // When not selected, we want to remove any Tidy assignment.
       const currentSetting = settings[o.documentName]?.[o.subType];
-      if (currentSetting !== o.sheetClassIdentifier) {
+      if (
+        currentSetting !== o.sheetClassIdentifier &&
+        currentSetting !== o.ddbSheetClassIdentifier // DDB-FORK
+      ) {
         // Unselected and the setting does not reference Tidy. Leave it.
         return;
       }

@@ -27,6 +27,7 @@ import { ConfigApi } from './config/ConfigApi';
 import { HeaderControlsRuntime } from 'src/runtime/header-controls/HeaderControlsRuntime';
 import { ItemSheetQuadroneRuntime } from 'src/runtime/item/ItemSheetQuadroneRuntime.svelte';
 import { CharacterSheetQuadroneRuntime } from 'src/runtime/actor/CharacterSheetQuadroneRuntime.svelte';
+import { CharacterSheetDdbRuntime } from 'src/runtime/actor/CharacterSheetDdbRuntime.svelte'; // DDB-FORK
 import GroupSheetClassicRuntime from 'src/runtime/actor/GroupSheetClassicRuntime.svelte';
 import { GroupSheetQuadroneRuntime } from 'src/runtime/actor/GroupSheetQuadroneRuntime.svelte';
 import NpcSheetClassicRuntime from 'src/runtime/actor/NpcSheetClassicRuntime.svelte';
@@ -124,13 +125,17 @@ export class Tidy5eSheetsApi {
     return this.config.exhaustion;
   }
 
+  // DDB-FORK: sheets carry the CSS root class (SHEET_CSS_CLASS = 'tidy5e-sheet'),
+  // not the module id, so every isTidy5e*Sheet predicate checks that class.
+  // (Upstream's module id and root class are the same string; the fork's differ.)
+
   /**
    * Determines whether the provided sheet is a Tidy 5e Character sheet.
    * @param app an actor sheet
    * @returns boolean indicating if the sheet is a Tidy 5e Character sheet
    */
   isTidy5eCharacterSheet(app: any) {
-    return [CONSTANTS.MODULE_ID, 'sheet', CONSTANTS.SHEET_TYPE_CHARACTER].every(
+    return [CONSTANTS.SHEET_CSS_CLASS, 'sheet', CONSTANTS.SHEET_TYPE_CHARACTER].every(
       (cls) => !!app.options?.classes?.includes(cls)
     );
   }
@@ -141,7 +146,7 @@ export class Tidy5eSheetsApi {
    * @returns boolean indicating if the sheet is a Tidy 5e Container sheet
    */
   isTidy5eContainerSheet(app: any) {
-    return [CONSTANTS.MODULE_ID, 'sheet', CONSTANTS.SHEET_TYPE_CONTAINER].every(
+    return [CONSTANTS.SHEET_CSS_CLASS, 'sheet', CONSTANTS.SHEET_TYPE_CONTAINER].every(
       (cls) => !!app.options?.classes?.includes(cls)
     );
   }
@@ -152,7 +157,7 @@ export class Tidy5eSheetsApi {
    * @returns boolean indicating if the sheet is a Tidy 5e Group sheet
    */
   isTidy5eGroupSheet(app: any) {
-    return [CONSTANTS.MODULE_ID, 'sheet', CONSTANTS.SHEET_TYPE_GROUP].every(
+    return [CONSTANTS.SHEET_CSS_CLASS, 'sheet', CONSTANTS.SHEET_TYPE_GROUP].every(
       (cls) => !!app.options?.classes?.includes(cls)
     );
   }
@@ -163,7 +168,7 @@ export class Tidy5eSheetsApi {
    * @returns boolean indicating if the sheet is a Tidy 5e Item sheet
    */
   isTidy5eItemSheet(app: any) {
-    return [CONSTANTS.MODULE_ID, 'sheet', CONSTANTS.SHEET_TYPE_ITEM].every(
+    return [CONSTANTS.SHEET_CSS_CLASS, 'sheet', CONSTANTS.SHEET_TYPE_ITEM].every(
       (cls) => !!app.options?.classes?.includes(cls)
     );
   }
@@ -174,7 +179,7 @@ export class Tidy5eSheetsApi {
    * @returns boolean indicating if the sheet is a Tidy 5e NPC sheet
    */
   isTidy5eNpcSheet(app: any) {
-    return [CONSTANTS.MODULE_ID, 'sheet', CONSTANTS.SHEET_TYPE_NPC].every(
+    return [CONSTANTS.SHEET_CSS_CLASS, 'sheet', CONSTANTS.SHEET_TYPE_NPC].every(
       (cls) => !!app.options?.classes?.includes(cls)
     );
   }
@@ -185,7 +190,7 @@ export class Tidy5eSheetsApi {
    * @returns boolean indicating if the sheet is any Tidy 5e sheet
    */
   isTidy5eSheet(app: any) {
-    return [CONSTANTS.MODULE_ID, 'sheet'].every(
+    return [CONSTANTS.SHEET_CSS_CLASS, 'sheet'].every(
       (cls) => !!app.options?.classes?.includes(cls)
     );
   }
@@ -196,7 +201,7 @@ export class Tidy5eSheetsApi {
    * @returns boolean indicating if the sheet is a Tidy 5e Vehicle sheet
    */
   isTidy5eVehicleSheet(app: any) {
-    return [CONSTANTS.MODULE_ID, 'sheet', CONSTANTS.SHEET_TYPE_VEHICLE].every(
+    return [CONSTANTS.SHEET_CSS_CLASS, 'sheet', CONSTANTS.SHEET_TYPE_VEHICLE].every(
       (cls) => !!app.options?.classes?.includes(cls)
     );
   }
@@ -281,6 +286,7 @@ export class Tidy5eSheetsApi {
 
     for (let registeredTab of registeredTabs) {
       if (
+        registeredTab.layout === CONSTANTS.SHEET_LAYOUT_DDB || // DDB-FORK: sidebar runtime is shared with the DDB layout
         registeredTab.layout === CONSTANTS.SHEET_LAYOUT_QUADRONE ||
         registeredTab.layout === CONSTANTS.SHEET_LAYOUT_ALL
       ) {
@@ -376,6 +382,17 @@ export class Tidy5eSheetsApi {
         registeredTab.layout === CONSTANTS.SHEET_LAYOUT_ALL
       ) {
         CharacterSheetQuadroneRuntime.registerTab(registeredTab, options);
+      }
+
+      // DDB-FORK: the DDB layout is quadrone-family; it receives registrations
+      // targeted at 'ddb', 'quadrone', and 'all' so third-party tabs and the
+      // shipped extension tabs reach it without a separate registration.
+      if (
+        registeredTab.layout === CONSTANTS.SHEET_LAYOUT_DDB ||
+        registeredTab.layout === CONSTANTS.SHEET_LAYOUT_QUADRONE ||
+        registeredTab.layout === CONSTANTS.SHEET_LAYOUT_ALL
+      ) {
+        CharacterSheetDdbRuntime.registerTab(registeredTab, options);
       }
     }
   }
@@ -567,6 +584,15 @@ export class Tidy5eSheetsApi {
         NpcSheetQuadroneRuntime.registerContent(registeredContent);
         VehicleSheetQuadroneRuntime.registerContent(registeredContent);
       }
+
+      // DDB-FORK: quadrone-family routing for the DDB character layout.
+      if (
+        registeredContent.layout === CONSTANTS.SHEET_LAYOUT_DDB ||
+        registeredContent.layout === CONSTANTS.SHEET_LAYOUT_QUADRONE ||
+        registeredContent.layout === CONSTANTS.SHEET_LAYOUT_ALL
+      ) {
+        CharacterSheetDdbRuntime.registerContent(registeredContent);
+      }
     }
   }
 
@@ -628,6 +654,15 @@ export class Tidy5eSheetsApi {
         registeredContent.layout === CONSTANTS.SHEET_LAYOUT_ALL
       ) {
         CharacterSheetQuadroneRuntime.registerContent(registeredContent);
+      }
+
+      // DDB-FORK: quadrone-family routing for the DDB character layout.
+      if (
+        registeredContent.layout === CONSTANTS.SHEET_LAYOUT_DDB ||
+        registeredContent.layout === CONSTANTS.SHEET_LAYOUT_QUADRONE ||
+        registeredContent.layout === CONSTANTS.SHEET_LAYOUT_ALL
+      ) {
+        CharacterSheetDdbRuntime.registerContent(registeredContent);
       }
     }
   }
