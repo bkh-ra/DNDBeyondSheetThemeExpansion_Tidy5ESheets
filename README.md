@@ -20,6 +20,12 @@ This module **replaces** Tidy 5e Sheets rather than running beside it (it contai
 
 Requirements: Foundry VTT v13 or v14, dnd5e system 5.3.x.
 
+## Importing from Tidy 5e Sheets
+
+Document flags written by the original module are read automatically, but its **settings** are not: a world converted from `tidy5e-sheet` starts every module setting at its default. Run **Game Settings → Configure Settings → DDB 5e Sheets → Import from Tidy 5e Sheets** once, as GM, after switching modules.
+
+The tool always shows a dry run first — every world, user, and client setting plus every actor, owned item, world item, and user flag it would copy, grouped by category with the reasons it skipped anything. Press **Import** to apply it. It never overwrites a value that already exists in the new scope, never deletes or edits anything in the `tidy5e-sheet` scope, and is safe to run repeatedly: a second run proposes nothing. Compendium content is not touched, client settings are per browser (re-run it on each browser you use), and importing `hideClassic` or `truesight` needs a Foundry reload to take effect.
+
 ## Building
 
 ```

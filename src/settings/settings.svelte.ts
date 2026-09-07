@@ -26,6 +26,8 @@ import {
 import { WorldSettingsQuadroneApplication } from 'src/applications/settings/world/TidyWorldSettingsQuadroneApplication.svelte';
 import { MakeAllSheetsTidyDialog } from './MakeAllSheetsTidyDialog';
 import { SettingsShims } from './settings-shims';
+// DDB-FORK: legacy Tidy 5e Sheets data importer, registered as a settings menu below.
+import { LegacyImportApplication } from 'src/applications/settings/legacy-import/LegacyImportApplication.svelte';
 
 export type Tidy5eSettings = {
   [settingKey: string]: Tidy5eSetting;
@@ -223,6 +225,20 @@ export function createSettings() {
           hint: `TIDY5E.SettingsMenu.Defaults.hint`,
           icon: 'fa-solid fa-scroll',
           type: MakeAllSheetsTidyDialog,
+          restricted: true,
+        },
+      },
+      // DDB-FORK: GM-run importer for worlds coming from the original
+      // Tidy 5e Sheets module. Settings and per-user preferences have no
+      // legacy fallback, so they need an explicit, idempotent copy.
+      // No hideClassic - this applies to every layout.
+      importLegacyTidyData: {
+        options: {
+          name: `TIDY5E.Settings.ImportLegacyTidyData.name`,
+          label: 'TIDY5E.Settings.ImportLegacyTidyData.label',
+          hint: `TIDY5E.Settings.ImportLegacyTidyData.hint`,
+          icon: 'fa-solid fa-file-import',
+          type: LegacyImportApplication,
           restricted: true,
         },
       },
