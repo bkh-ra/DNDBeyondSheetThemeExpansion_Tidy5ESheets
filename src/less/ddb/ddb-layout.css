@@ -48,6 +48,23 @@
     var(--ddb-page-bg);
 }
 
+/* DDB-FORK (matrix-sheet new finding 7): "Use Header Background: off" and
+ * "Use Basic Theme: on" both mark the sheet root `.theme-parchment`
+ * (`Tidy5eActorSheetQuadroneBase._applySheetThemeClasses`), and quadrone's
+ * `.theme-parchment` block re-points `--t5e-sheet-header-bg` at the dnd5e NPC
+ * banner (`quadrone/header.css:91-97`). The rule above reads that variable, so
+ * turning the header background OFF used to swap the DDB backdrop to an NPC
+ * banner instead of removing it. Both states now paint the plain DDB page
+ * surface, with no backdrop image at all.
+ *
+ * `actorHeaderBackground` (custom image) and `headerBackgroundColor` are
+ * unaffected: the theme provider only emits them while the header background
+ * is enabled / a color is set, i.e. while this rule does not apply. */
+.tidy5e-sheet.application.ddb.theme-parchment .ddb-sheet,
+.tidy5e-sheet.application.ddb.theme-basic .ddb-sheet {
+  background: var(--ddb-page-bg);
+}
+
 .tidy5e-sheet.application.ddb .ddb-sheet > :not(.ddb-sheet-body) {
   flex: 0 0 auto;
 }

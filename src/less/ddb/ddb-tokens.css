@@ -211,3 +211,20 @@
   color: var(--ddb-text);
   background: var(--ddb-page-bg);
 }
+
+/* DDB-FORK (matrix-client N2): performance mode. `getTidyPerformanceSettings`
+ * toggles `disable-shadows` / `disable-transitions` on the sheet window
+ * (`SvelteApplicationMixin._updateFrame`), but the only CSS that reacted was
+ * quadrone's, which zeroes `--t5e-transition-*` (`quadrone/apps.css:813-817`).
+ * Every DDB transition is declared against `--ddb-transition` and every DDB
+ * elevation against the `--ddb-shadow-*` pair, so those are neutralized here.
+ * Note `disable-shadows` has no quadrone rule at all — this is the first
+ * layer to honor it. */
+.tidy5e-sheet.application.ddb.disable-transitions {
+  --ddb-transition: 0s;
+}
+
+.tidy5e-sheet.application.ddb.disable-shadows {
+  --ddb-shadow-elevated: none;
+  --ddb-shadow-hairline: none;
+}

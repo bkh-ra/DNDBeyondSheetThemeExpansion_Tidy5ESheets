@@ -14,6 +14,7 @@
 -->
 <script lang="ts">
   import Dnd5eIcon from 'src/components/icon/Dnd5eIcon.svelte';
+  import { CONSTANTS } from 'src/constants';
   import { clickOutside } from 'src/events/clickOutside.svelte';
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
   import type { Dnd5eActorCondition } from 'src/foundry/foundry-and-system';
@@ -260,6 +261,28 @@
     managingConditions = false;
   }
 
+  /*
+    DDB-FORK (matrix-sheet 6.16): the picker had no focus entry, so the
+    condition control could be opened but not operated from the keyboard.
+    Opening it now moves focus into the search field, and Escape (below) still
+    closes it.
+  */
+  let conditionSearchInput = $state<HTMLInputElement>();
+
+  $effect(() => {
+    if (managingConditions) {
+      conditionSearchInput?.focus();
+    }
+  });
+
+  /** Escape closes the picker from anywhere inside it. */
+  function onConditionPickerKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') {
+      event.stopPropagation();
+      closeConditionMenu();
+    }
+  }
+
   /**
    * Exhaustion is a level, not a toggle. Quadrone sets it from the vitals row
    * (ActorExhaustionBar -> `system.attributes.exhaustion`); the DDB strip owns
@@ -407,13 +430,31 @@
     {#if activeConditions.length}
       <ul class="ddb-condition-list">
         {#each activeConditions as entry (entry.key)}
-          <li class="ddb-condition active">
+          <!--
+            DDB-FORK (matrix-client N3): "Show Condition reference tooltip"
+            populates `condition.reference` (ConditionsAndEffects.ts:36-40) and
+            quadrone turns the row into a rule link with it
+            (ActorConditionsQuadrone.svelte:31-39). Same hooks here, so the
+            user setting reaches the always-visible DDB strip; the chip's own
+            look is preserved in primary-box.css.
+          -->
+          {@const reference = entry.condition?.reference}
+          <li
+            class={['ddb-condition', 'active', { 'content-link': !!reference }]}
+            data-uuid={reference}
+            data-condition-id={entry.statusId}
+          >
             {#if context.editable}
+              <!-- DDB-FORK (matrix-sheet 6.16): keep quadrone's
+                   `condition-toggle` sheet part so modules that key on it find
+                   the DDB strip's toggles too
+                   (cf. ConditionToggleQuadrone.svelte:33). -->
               <button
                 type="button"
                 class="ddb-condition-toggle"
                 data-tooltip={entry.name}
                 data-tooltip-direction="UP"
+                data-tidy-sheet-part={CONSTANTS.SHEET_PARTS.CONDITION_TOGGLE}
                 aria-pressed="true"
                 onclick={() => handleConditionToggle(entry)}
               >
@@ -467,35 +508,43 @@
       content that would grow the strip.
     -->
     {#if managingConditions && context.editable}
+      <!--
+        DDB-FORK (matrix-sheet 6.16): the popover was one element with
+        role="menu", a search field nested inside it (invalid ARIA) and no
+        focus entry, so the condition control could be opened but not operated
+        from the keyboard. The menu role now belongs to the option list alone,
+        opening the popover moves focus to the search field, and Escape closes
+        it from either the field or an option.
+      -->
       <div
         class="ddb-condition-picker"
-        role="menu"
-        tabindex="-1"
+        role="group"
         aria-label={localize('DND5E.Conditions')}
         use:clickOutside={{ callback: closeConditionMenu }}
-        onkeydown={(ev) => {
-          if (ev.key === 'Escape') {
-            ev.stopPropagation();
-            closeConditionMenu();
-          }
-        }}
       >
         <input
+          bind:this={conditionSearchInput}
           type="search"
           class="ddb-condition-search"
           placeholder={localize('TIDY5E.Search')}
           aria-label={localize('TIDY5E.Search')}
+          onkeydown={onConditionPickerKeydown}
           bind:value={conditionFilter}
         />
-        <ul class="ddb-condition-options">
+        <ul
+          class="ddb-condition-options"
+          role="menu"
+          aria-label={localize('DND5E.Conditions')}
+        >
           {#each filteredConditions as entry (entry.key)}
-            <li>
+            <li role="none">
               <button
                 type="button"
                 role="menuitemcheckbox"
                 class={['ddb-condition-option', { active: entry.active }]}
                 aria-checked={entry.active}
                 data-condition-id={entry.statusId}
+                onkeydown={onConditionPickerKeydown}
                 onclick={() => handleConditionToggle(entry)}
               >
                 <i

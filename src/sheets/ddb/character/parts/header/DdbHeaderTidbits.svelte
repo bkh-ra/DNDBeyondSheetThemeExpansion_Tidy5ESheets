@@ -70,9 +70,13 @@
         so it never lands on the species/class/DC line directly beneath it —
         hovering the name to read it was covering the very row it belongs with.
       -->
+      <!-- DDB-FORK (matrix-sheet 6.3): the locked name is also the copy-name
+           affordance quadrone offers at CharacterSheet.svelte:159, routed
+           through the same registered `copyInnerText` action. -->
       <h1
         class="ddb-character-name"
         data-tidy-sheet-part="actor-name"
+        data-action="copyInnerText"
         data-tooltip={context.actor.name}
         data-tooltip-direction="UP"
       >

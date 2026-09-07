@@ -18,12 +18,33 @@
   import { isNil } from 'src/utils/data';
   import SelectQuadrone from 'src/components/inputs/SelectQuadrone.svelte';
   import SelectOptions from 'src/components/inputs/SelectOptions.svelte';
+  import { SettingsProvider } from 'src/settings/settings.svelte';
   import DdbBox from './DdbBox.svelte';
   import DdbProficiencyPip from './DdbProficiencyPip.svelte';
 
   let context = $derived(getCharacterSheetQuadroneContext());
 
   const localize = FoundryAdapter.localize;
+
+  /*
+    DDB-FORK (matrix-client N3): "Show Tool reference tooltip". Same derivation
+    as `quadrone/actor/parts/ToolsCard.svelte:37-49`; the tooltip itself is
+    attached by the sheet's `_applyTooltips` pass over
+    `[data-reference-tooltip]`.
+  */
+  let toolReferences = $derived(
+    SettingsProvider.settings.referenceTooltipTool.get()
+      ? context.tools.reduce<Record<string, string>>((prev, tool) => {
+          const id = CONFIG.DND5E.tools[tool.key]?.id;
+
+          if (!isNil(id, '')) {
+            prev[tool.key] = dnd5e.documents.Trait.getBaseItemUUID(id);
+          }
+
+          return prev;
+        }, {})
+      : {},
+  );
 
   let armor = $derived(context.traits.armor ?? []);
   let weapons = $derived(context.traits.weapon ?? []);
@@ -139,6 +160,7 @@
                 data-action="roll"
                 data-type="tool"
                 data-key={tool.key}
+                data-reference-tooltip={toolReferences[tool.key]}
                 data-tidy-sheet-part={CONSTANTS.SHEET_PARTS.TOOL_ROLLER}
                 data-tidy-draggable
                 data-context-menu={CONSTANTS.CONTEXT_MENU_TYPE_KEYED_FAVORITE}
@@ -174,6 +196,7 @@
               data-action="roll"
               data-type="tool"
               data-key={tool.key}
+              data-reference-tooltip={toolReferences[tool.key]}
               data-tidy-sheet-part={CONSTANTS.SHEET_PARTS.TOOL_ROLLER}
               data-tidy-draggable
               data-context-menu={CONSTANTS.CONTEXT_MENU_TYPE_KEYED_FAVORITE}

@@ -60,6 +60,17 @@
   overflow: hidden;
 }
 
+/* DDB-FORK (matrix-sheet Table 2 row 6): Sheet Settings > Theme > "Header
+ * Background Color" emits `--t5e-theme-color-header`, which quadrone paints on
+ * its sheet header (`quadrone/header.css:48`) — a header DDB suppresses, so the
+ * setting did nothing here. The DDB banner is that header, so it consumes the
+ * variable, falling back to the capture-verified dark strip when unset. Gated
+ * on `:not(.theme-parchment)` exactly like quadrone, so it applies only while
+ * the header background is enabled. */
+.tidy5e-sheet.application.ddb:not(.theme-parchment) .ddb-header-banner {
+  background: var(--t5e-theme-color-header, var(--ddb-header-bg));
+}
+
 .tidy5e-sheet.application.ddb .ddb-header-banner .ddb-header-group {
   display: flex;
   flex: 0 0 auto;
@@ -94,8 +105,11 @@
   background: var(--ddb-panel-bg-solid);
 }
 
-/* Force the round DDB shape regardless of the actor's quadrone portrait
-   shape preference, and neutralize the larger quadrone portrait framing. */
+/* ROUND is the DDB default (and the base every shape starts from); it also
+   neutralizes the larger quadrone portrait framing. The shape variants below
+   key on `[data-portrait-shape]`, published by DdbPortrait.svelte — the bare
+   `.actor-image` class quadrone emits cannot be used, because an unset
+   preference resolves to `transparent` there while DDB defaults to round. */
 .tidy5e-sheet.application.ddb .ddb-portrait .actor-image {
   width: 100%;
   height: 100%;
@@ -121,12 +135,124 @@
   box-shadow: none;
 }
 
+/* DDB-FORK (F11): SQUARE — the same framed, cropped portrait on the chip
+   radius instead of the pill. The wrapper keeps its accent ring. */
+.tidy5e-sheet.application.ddb .ddb-portrait[data-portrait-shape='square'],
+.tidy5e-sheet.application.ddb
+  .ddb-portrait[data-portrait-shape='square']
+  .actor-image,
+.tidy5e-sheet.application.ddb
+  .ddb-portrait[data-portrait-shape='square']
+  .actor-image
+  img,
+.tidy5e-sheet.application.ddb
+  .ddb-portrait[data-portrait-shape='square']
+  .actor-image
+  video,
+.tidy5e-sheet.application.ddb
+  .ddb-portrait[data-portrait-shape='square']
+  .actor-image
+  .dead-overlay {
+  border-radius: var(--ddb-radius-control);
+}
+
+/* DDB-FORK (F11): TRANSPARENT — quadrone's meaning is "no plate behind the
+   art": the fill and the crop go away and the artwork is shown whole inside
+   the ring (`object-fit: contain`), which is what makes cut-out portraits
+   read. TOKEN gets the same treatment plus quadrone's token drop shadow
+   (`quadrone/header.css:713-719`), since token art is nearly always a
+   transparent cut-out. */
+.tidy5e-sheet.application.ddb .ddb-portrait[data-portrait-shape='transparent'],
+.tidy5e-sheet.application.ddb .ddb-portrait[data-portrait-shape='token'] {
+  background: none;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-portrait[data-portrait-shape='transparent']
+  .actor-image,
+.tidy5e-sheet.application.ddb
+  .ddb-portrait[data-portrait-shape='token']
+  .actor-image {
+  overflow: visible;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-portrait[data-portrait-shape='transparent']
+  .actor-image
+  :is(img, video),
+.tidy5e-sheet.application.ddb
+  .ddb-portrait[data-portrait-shape='token']
+  .actor-image
+  :is(img, video) {
+  border-radius: 0;
+  object-fit: contain;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-portrait[data-portrait-shape='token']
+  .actor-image
+  :is(img, video) {
+  filter: var(--t5e-filter-drop-shadow-token);
+}
+
+/* DDB-FORK (new finding 8): the dead-actor wash. Quadrone paints it in
+   `quadrone/header.css:723-745`, nested under `.actor-vitals-container`, which
+   never matches on DDB — the DDB portrait only inherited the radius, so the
+   overlay rendered invisible. Same construction (red multiply + gold lighten),
+   in DDB tokens. `.transparent`/`.token` are excluded exactly as quadrone
+   excludes them; there the image itself is desaturated instead. */
 .tidy5e-sheet.application.ddb .ddb-portrait .actor-image .dead-overlay {
+  position: absolute;
+  inset: 0;
   border-radius: var(--ddb-radius-pill);
+  pointer-events: none;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-portrait[data-portrait-shape='round']
+  .actor-image.dead
+  .dead-overlay,
+.tidy5e-sheet.application.ddb
+  .ddb-portrait[data-portrait-shape='square']
+  .actor-image.dead
+  .dead-overlay {
+  background-color: var(--ddb-negative);
+  opacity: 0.6;
+  mix-blend-mode: multiply;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-portrait[data-portrait-shape='round']
+  .actor-image.dead
+  .dead-overlay::after,
+.tidy5e-sheet.application.ddb
+  .ddb-portrait[data-portrait-shape='square']
+  .actor-image.dead
+  .dead-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-color: var(--ddb-accent);
+  opacity: 0.2;
+  mix-blend-mode: lighten;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-portrait[data-portrait-shape='transparent']
+  .actor-image.dead
+  :is(img, video),
+.tidy5e-sheet.application.ddb
+  .ddb-portrait[data-portrait-shape='token']
+  .actor-image.dead
+  :is(img, video) {
+  filter: grayscale(1);
+  opacity: 0.75;
 }
 
 /* The portrait-shape cycler and the death-saves overlay belong to the large
-   quadrone portrait; the DDB strip is too small to host either. */
+   quadrone portrait; the DDB strip is too small to host either. The shape is
+   still changeable from Sheet Settings > Theme > Portrait Shape. */
 .tidy5e-sheet.application.ddb .ddb-portrait > .button-config,
 .tidy5e-sheet.application.ddb .ddb-portrait > .death-saves-overlay {
   display: none;
@@ -180,6 +306,13 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* DDB-FORK (matrix-sheet 6.3): the locked name copies itself on click
+ * (`data-action="copyInnerText"`), as quadrone's does. Only the cursor marks
+ * it — the name's type and color are untouched. */
+.tidy5e-sheet.application.ddb h1.ddb-character-name {
+  cursor: pointer;
 }
 
 /* Editable name uses TextInputQuadrone, which renders an <input>. */

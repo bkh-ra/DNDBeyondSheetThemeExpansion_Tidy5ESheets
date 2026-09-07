@@ -16,12 +16,57 @@
   import { getModifierData } from 'src/utils/formatting';
   import { isNil } from 'src/utils/data';
   import { SettingsProvider } from 'src/settings/settings.svelte';
+  import { TidyFlags } from 'src/foundry/TidyFlags';
   import DdbBox from './DdbBox.svelte';
   import DdbProficiencyPip from './DdbProficiencyPip.svelte';
 
   let context = $derived(getCharacterSheetQuadroneContext());
 
   const localize = FoundryAdapter.localize;
+
+  /*
+    DDB-FORK (F10): honor `TidyFlags.skillsExpanded`, exactly as
+    `quadrone/actor/parts/skills/SkillsCard.svelte:42-50` does — collapsed
+    shows proficient skills only. Without this the left column and the DDB
+    sidebar's Skills & Traits card (which hosts the quadrone SkillsCard) could
+    show two disagreeing lists on one sheet.
+
+    `localExpanded` reproduces SkillsCardHeader's optimistic toggle for viewers
+    who cannot write the flag; the effect clears it whenever the stored value
+    changes, so a toggle made anywhere else on the sheet always wins — the same
+    net behavior as quadrone re-passing its `expanded` prop.
+  */
+  let flagExpanded = $derived(
+    TidyFlags.skillsExpanded.get(context.actor) ?? true,
+  );
+
+  let localExpanded = $state<boolean | undefined>(undefined);
+
+  $effect(() => {
+    flagExpanded;
+    localExpanded = undefined;
+  });
+
+  let expanded = $derived(localExpanded ?? flagExpanded);
+
+  let skills = $derived(
+    expanded ? context.skills : context.skills.filter((s) => s.proficient !== 0),
+  );
+
+  let expandCollapseLabel = $derived(
+    expanded
+      ? localize('TIDY5E.Ddb.Skills.ShowProficientOnly')
+      : localize('TIDY5E.Ddb.Skills.ShowAll'),
+  );
+
+  async function toggleExpanded() {
+    const newValue = !expanded;
+    localExpanded = newValue;
+
+    if (context.editable) {
+      await TidyFlags.skillsExpanded.set(context.actor, newValue);
+    }
+  }
 
   let references = $derived(
     SettingsProvider.settings.referenceTooltipSkill.get()
@@ -45,7 +90,21 @@
     <!-- Abbreviated, like DDB's own "MOD": the ability column is only wide
          enough for the three-letter abbreviations it holds. -->
     <span class="ddb-skills-col-mod">{localize('TIDY5E.AbbrMod')}</span>
-    <span class="ddb-skills-col-skill">{localize('DND5E.Skill')}</span>
+    <!-- DDB-FORK (F10): the SKILL column label doubles as the expand/collapse
+         control, the DDB-token equivalent of quadrone's SkillsCardHeader. -->
+    <span class="ddb-skills-col-skill">
+      <button
+        type="button"
+        class="ddb-skills-expand"
+        aria-expanded={expanded}
+        aria-label={expandCollapseLabel}
+        data-tooltip={expandCollapseLabel}
+        onclick={toggleExpanded}
+      >
+        {localize('DND5E.Skill')}
+        <i class={['fa-solid fa-angle-right', { expanded }]}></i>
+      </button>
+    </span>
     <span class="ddb-skills-col-bonus">{localize('DND5E.Bonus')}</span>
     {#if context.unlocked}
       <span class="ddb-skills-col-config" aria-hidden="true"></span>
@@ -56,7 +115,7 @@
     class="ddb-skills-list"
     data-tidy-sheet-part={CONSTANTS.SHEET_PARTS.SKILLS_LIST}
   >
-    {#each context.skills as skill (skill.key)}
+    {#each skills as skill (skill.key)}
       {@const modifier = getModifierData(skill.total)}
       <li
         class="ddb-skill-row"

@@ -290,6 +290,114 @@
   box-shadow: var(--ddb-focus-ring);
 }
 
+/* ---- DDB-FORK (F12): swapAbilityScoreAndBonus ----------------------
+ * With the homebrew setting on, the well holds the SCORE (edited in place) and
+ * the badge holds the modifier as the roller. Both slots keep their original
+ * classes, so the frame geometry above is untouched; only the interactivity
+ * moves. */
+
+/* The well is no longer a button in swapped mode. */
+.tidy5e-sheet.application.ddb .ddb-ability-box__roller--static {
+  cursor: default;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-ability-box__roller--static:hover
+  .ddb-ability-box__modifier {
+  color: var(--ddb-text);
+}
+
+/* The score input takes the well figure's type, not the badge's. */
+.tidy5e-sheet.application.ddb
+  .ddb-ability-box
+  .ddb-ability-box__primary-input {
+  height: 100%;
+  font-size: var(--ddb-size-value-lg);
+  letter-spacing: var(--ddb-letterspacing-value-lg);
+  line-height: 1;
+}
+
+/* The badge roller must look exactly like the score readout it replaces. */
+.tidy5e-sheet.application.ddb .ddb-ability-box__score-roller {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  box-shadow: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-body);
+  font-weight: var(--ddb-weight-value);
+  line-height: 1;
+  color: var(--ddb-text);
+  cursor: pointer;
+  transition: color var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-ability-box__score-roller:hover:not(:disabled) {
+  color: var(--ddb-accent);
+  box-shadow: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-ability-box__score-roller:disabled {
+  cursor: default;
+  color: var(--ddb-text-disabled);
+}
+
+.tidy5e-sheet.application.ddb .ddb-ability-box__score-roller:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* ---- DDB-FORK: saving-throw roller ---------------------------------
+ * The DDB box has no shield button (saves live in the left column's SAVING
+ * THROWS box), but the roll still has to travel quadrone's registered `roll`
+ * action so `_rollSavingThrow`, its hooks and the modifier-key roll options
+ * all apply. The button is therefore present but visually hidden — it backs
+ * the right-click gesture on the ability roller and gives the box a keyboard
+ * path to the save. Focusing it (keyboard only) brings it into view over the
+ * badge, so it is never an invisible focus stop. */
+.tidy5e-sheet.application.ddb .ddb-ability-box__save-roller {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-ability-box__save-roller:focus-visible {
+  z-index: 1;
+  width: 2.125rem;
+  height: 1.3125rem;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ddb-radius-control);
+  background: var(--ddb-panel-bg-solid);
+  opacity: 1;
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+  color: var(--ddb-accent);
+  pointer-events: auto;
+}
+
 /* NOTE: save proficiency is deliberately NOT marked on the ability box. DDB
  * does not mark it here either — it lives on the pip in the SAVING THROWS box,
  * which the left column already renders — and a tinted card only made two of
