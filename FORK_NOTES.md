@@ -2,7 +2,7 @@
 
 Fork of [Tidy 5e Sheets](https://github.com/kgar/foundry-vtt-tidy-5e-sheets) (kgar, MIT).
 Adds a third character-sheet layout, **DDB** (D&D Beyond desktop style), alongside Classic and Quadrone.
-Base: tag `v13.7.0`, merged through `v13.10.3` (2026-09-06). Branch layout: `main` mirrors `upstream/main` (never edited); all work on `ddb`.
+Base: tag `v13.7.0`, merged through `v13.10.5` (2026-09-14; upstream's `dnd5e-5.3.x` maintenance line — the v14.x line requires Foundry 14 + dnd5e 6.0.x and is NOT merged while the campaign runs dnd5e 5.3.x). Branch layout: `main` mirrors `upstream/main` (never edited); all work on `ddb`.
 Repository: `origin` = https://github.com/bkh-ra/DNDBeyondSheetThemeExpansion_Tidy5ESheets (this fork); `upstream` = kgar's repo, pull-only. Research material (D&D Beyond page captures, harvested style data, character backdrop art) is deliberately NOT in the repo — see `.gitignore`.
 
 ## Design decisions
