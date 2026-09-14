@@ -2,7 +2,7 @@
   "id": "ddb5e-sheets",
   "title": "DDB 5e Sheets",
   "description": "D&D Beyond-style character sheet layout for Foundry VTT. A fork of Tidy 5e Sheets by kgar (MIT) that adds a third \"DDB\" sheet layout alongside Classic and Quadrone. Contains no D&D Beyond assets.",
-  "version": "13.10.3-ddb.0",
+  "version": "13.10.5-ddb.0",
   "authors": [
     {
       "id": "bkh-ra",
