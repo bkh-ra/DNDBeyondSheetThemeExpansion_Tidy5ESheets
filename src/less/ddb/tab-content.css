@@ -685,3 +685,25 @@
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tab-content {
   padding-block-end: calc(var(--ddb-space-5) + var(--ddb-radius-panel));
 }
+
+/* ------------------------------------------------------------------ */
+/* 10. Inventory footer pinned to the pane                            */
+/* ------------------------------------------------------------------ */
+
+/* The scroller is `.tidy-tab` (section 9), so quadrone's inventory footer —
+ * a plain block AFTER `.tab-content` — scrolls away with the list and is only
+ * reachable at the very end. The spellbook footer stays visible because it is
+ * `.sticky-footer` (quadrone/actors.css). Give the inventory footer the same
+ * behaviour: sticky to the bottom of the scroller, pushed to the bottom when
+ * the list is short (margin-block-start: auto in the flex column), and backed
+ * with the solid pane colour so rows never show through the gaps between the
+ * currency chips. A list-divider hairline separates it from the last row. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab .sheet-footer.inventory-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  flex: 0 0 auto;
+  margin-block-start: auto;
+  background: var(--ddb-panel-bg-solid);
+  border-top: 1px solid var(--ddb-list-border);
+}
