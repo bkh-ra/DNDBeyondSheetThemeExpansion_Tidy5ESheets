@@ -5,8 +5,14 @@
   src/sheets/quadrone/actor/character-parts/InspirationBadge.svelte:
     - no inspiration source configured -> boolean toggle on
       system.attributes.inspiration
-    - banked inspiration source configured -> value with -/+ controls driven by
-      inspirationSource.change()
+    - banked inspiration source configured -> value with -/+ controls
+
+  DDB-FORK (matrix-sheet 6.11): every control routes through the sheet's
+  registered actions (`toggleInspiration` / `increaseInspiration` /
+  `decreaseInspiration`, Tidy5eActorSheetQuadroneBase:165-180) instead of
+  calling `actor.update` / `inspirationSource.change()` inline, so the
+  inspiration source is resolved freshly on each press and the `[data-uuid]`
+  delegation those handlers support keeps working.
 -->
 <script lang="ts">
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
@@ -70,7 +76,7 @@
           aria-label={localize('TIDY5E.InspirationRemove')}
           data-tooltip={localize('TIDY5E.InspirationRemove')}
           disabled={banked.value === 0}
-          onclick={() => banked?.change(-1)}
+          data-action="decreaseInspiration"
           data-tidy-sheet-part="banked-inspiration-decrementer"
         >
           <i class="fas fa-hexagon-minus"></i>
@@ -81,7 +87,7 @@
           aria-label={localize('TIDY5E.InspirationAdd')}
           data-tooltip={localize('TIDY5E.InspirationAdd')}
           disabled={banked.value === banked.max}
-          onclick={() => banked?.change(1)}
+          data-action="increaseInspiration"
           data-tidy-sheet-part="banked-inspiration-incrementer"
         >
           <i class="fas fa-hexagon-plus"></i>
@@ -94,10 +100,7 @@
       class="ddb-inspiration-box__content ddb-inspiration-box__toggle"
       aria-label={localize('DND5E.Inspiration')}
       data-tooltip={localize('DND5E.Inspiration')}
-      onclick={() =>
-        context.actor.update({
-          ['system.attributes.inspiration']: !inspired,
-        })}
+      data-action="toggleInspiration"
       disabled={!context.actor.isOwner}
       data-tidy-sheet-part="inspiration-tracker-toggle"
     >

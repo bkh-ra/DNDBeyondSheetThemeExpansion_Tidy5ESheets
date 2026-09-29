@@ -12,6 +12,8 @@ import { FoundryAdapter } from 'src/foundry/foundry-adapter';
 export type WorldSheetConfigurationContext = {
   tabConfig?: TabConfigContextEntry;
   sidebarTabConfig?: TabConfigContextEntry;
+  /** DDB-FORK: the DDB character layout's own world tab-configuration entry. */
+  ddbTabConfig?: TabConfigContextEntry;
   headerControlConfig?: HeaderControlConfigContextItem;
 };
 
@@ -57,6 +59,14 @@ export function getWorldSheetConfigurationSettingsEditor(
         c.docTypeKeyOverride ===
           CONSTANTS.WORLD_TAB_CONFIG_KEY_CHARACTER_SIDEBAR,
     ),
+    // DDB-FORK: same lookup as the sidebar entry, keyed on the DDB world key.
+    // Only the character sheet has one, so every other pane resolves undefined.
+    ddbTabConfig: tabConfigEditor.value.find(
+      (c) =>
+        c.documentName === documentName &&
+        c.documentType === documentType &&
+        c.docTypeKeyOverride === CONSTANTS.WORLD_TAB_CONFIG_KEY_CHARACTER_DDB,
+    ),
     headerControlConfig: headerControlsEditor.value.find(
       (c) => c.documentName === documentName && c.documentType === documentType,
     ),
@@ -81,6 +91,12 @@ export function getWorldSheetConfigurationSettingsEditor(
       sidebarTabConfig: {
         ...(snapshotConfig.sidebarTabConfig
           ? getCanonicalTabSelection(snapshotConfig.sidebarTabConfig)
+          : {}),
+      },
+      // DDB-FORK
+      ddbTabConfig: {
+        ...(snapshotConfig.ddbTabConfig
+          ? getCanonicalTabSelection(snapshotConfig.ddbTabConfig)
           : {}),
       },
       headerControlConfig: snapshotConfig.headerControlConfig,
@@ -112,6 +128,12 @@ export function getWorldSheetConfigurationSettingsEditor(
         documentType,
         CONSTANTS.WORLD_TAB_CONFIG_KEY_CHARACTER_SIDEBAR,
       );
+      // DDB-FORK
+      tabConfigEditor.resetEntryToDefault(
+        documentName,
+        documentType,
+        CONSTANTS.WORLD_TAB_CONFIG_KEY_CHARACTER_DDB,
+      );
     },
 
     async save() {
@@ -127,6 +149,12 @@ export function getWorldSheetConfigurationSettingsEditor(
         documentName,
         documentType,
         CONSTANTS.WORLD_TAB_CONFIG_KEY_CHARACTER_SIDEBAR,
+      );
+      // DDB-FORK
+      tabConfigEditor.undoEntryChanges(
+        documentName,
+        documentType,
+        CONSTANTS.WORLD_TAB_CONFIG_KEY_CHARACTER_DDB,
       );
     },
 

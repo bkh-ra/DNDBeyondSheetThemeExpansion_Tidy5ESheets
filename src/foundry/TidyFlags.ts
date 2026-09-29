@@ -1550,6 +1550,46 @@ export class TidyFlags {
   };
 
   /**
+   * DDB-FORK: Tab configuration for the DDB character layout. Kept separate
+   * from `tabConfiguration` so a saved quadrone tab order never overrides the
+   * DDB tab bar (and vice versa). Same schema and shims as `tabConfiguration`.
+   */
+  static ddbTabConfiguration = {
+    key: 'ddb-tab-configuration',
+    prop: TidyFlags.getFlagPropertyPath('ddb-tab-configuration'),
+    /** Gets the DDB layout tab configuration. */
+    get(doc: any): SheetTabsConfiguration {
+      let rawConfig = TidyFlags.tryGetFlag<Partial<SheetTabsConfiguration>>(
+        doc,
+        TidyFlags.ddbTabConfiguration.key,
+      ) ?? { tabs: {} };
+
+      rawConfig.tabs ??= {};
+
+      return SettingsShims.tryMapSheetTabConfigurationFromLegacyV1(
+        rawConfig,
+        doc.documentName,
+      );
+    },
+    /** Sets the DDB layout tab configuration. */
+    set(doc: any, config: SheetTabsConfiguration) {
+      const toSave = TabConfigurationSchema.clean(config);
+      TabConfigurationSchema.validate(toSave, { fallback: true });
+
+      return TidyFlags.setFlag(
+        doc,
+        TidyFlags.ddbTabConfiguration.key,
+        toSave,
+        true,
+      );
+    },
+    /** Clears the DDB layout tab configuration. */
+    unset(doc: any) {
+      return TidyFlags.unsetFlag(doc, TidyFlags.ddbTabConfiguration.key);
+    },
+  };
+
+  /**
    * The trait of an actor.
    * This is informational and not used for game logic.
    */
@@ -1619,11 +1659,16 @@ export class TidyFlags {
     // DDB-FORK: read-only fallback to legacy Tidy 5e Sheets flag data so
     // favorites, notes, sections, and theme settings written by the original
     // module survive the fork's new flag scope. Writes always target the new
-    // scope; legacy data is never modified. Raw property access is used
-    // because getFlag() rejects scopes of inactive modules.
-    return foundry.utils.getProperty(
-      flagged,
-      `flags.${CONSTANTS.LEGACY_FLAG_SCOPE}.${flagName}`,
+    // scope. The value is deep-cloned so callers that mutate what they read
+    // (e.g. the section-config "use default" path) never edit the legacy
+    // source object in place. Raw property access is used because getFlag()
+    // rejects scopes of inactive modules. The only write to the legacy scope
+    // is the explicit removal in unsetFlag(), so a user reset actually resets.
+    return foundry.utils.deepClone(
+      foundry.utils.getProperty(
+        flagged,
+        `flags.${CONSTANTS.LEGACY_FLAG_SCOPE}.${flagName}`,
+      ),
     ) as T | null | undefined;
   }
 
@@ -1658,7 +1703,20 @@ export class TidyFlags {
    * @param flagName The name of the flag to clear.
    * @returns A promise that resolves when the flag is cleared.
    */
-  static unsetFlag(flagged: any, flagName: string): Promise<void> {
-    return flagged.unsetFlag(CONSTANTS.MODULE_ID, flagName);
+  static async unsetFlag(flagged: any, flagName: string): Promise<void> {
+    await flagged.unsetFlag(CONSTANTS.MODULE_ID, flagName);
+
+    // DDB-FORK: tryGetFlag() falls back to the legacy tidy5e-sheet scope, so
+    // clearing only the new scope would let the legacy value resurface and a
+    // user-initiated reset would appear not to work. Remove the legacy key too.
+    const legacyPath = `flags.${CONSTANTS.LEGACY_FLAG_SCOPE}.${flagName}`;
+    if (foundry.utils.getProperty(flagged, legacyPath) !== undefined) {
+      const parts = flagName.split('.');
+      const leaf = parts.pop();
+      const deletionKey =
+        ['flags', CONSTANTS.LEGACY_FLAG_SCOPE, ...parts].join('.') +
+        `.-=${leaf}`;
+      await flagged.update({ [deletionKey]: null });
+    }
   }
 }

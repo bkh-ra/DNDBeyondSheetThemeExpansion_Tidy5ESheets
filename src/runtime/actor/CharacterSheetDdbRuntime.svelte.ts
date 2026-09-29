@@ -1,6 +1,7 @@
 import type { CharacterSheetQuadroneContext } from 'src/types/types';
 import { ActorSheetQuadroneRuntime } from '../ActorSheetQuadroneRuntime.svelte';
 import { CONSTANTS } from 'src/constants';
+import { TidyFlags } from 'src/foundry/TidyFlags';
 import ActorEffectsTab from 'src/sheets/quadrone/actor/tabs/ActorEffectsTab.svelte';
 import ActorInventoryTab from 'src/sheets/quadrone/actor/tabs/ActorInventoryTab.svelte';
 import ActorJournalTab from 'src/sheets/quadrone/actor/tabs/ActorJournalTab.svelte';
@@ -141,4 +142,10 @@ export const CharacterSheetDdbRuntime =
       CONSTANTS.TAB_CHARACTER_BASTION,
       CONSTANTS.TAB_CHARACTER_ATTRIBUTES,
     ],
+    {
+      // Own per-actor flag + world key so DDB and quadrone tab configurations
+      // never collide (a saved quadrone order used to re-order the DDB bar).
+      getTabConfig: TidyFlags.ddbTabConfiguration.get,
+      docTypeKeyOverride: CONSTANTS.WORLD_TAB_CONFIG_KEY_CHARACTER_DDB,
+    },
   );

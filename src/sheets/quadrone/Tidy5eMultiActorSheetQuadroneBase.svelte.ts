@@ -63,6 +63,16 @@ export function getTidy5eMultiActorSheetQuadroneBase<
         }),
       });
 
+      // DDB-FORK: the first-ever primary-party assignment creates the Setting.
+      this._hookSubscriptions.push({
+        name: 'createSetting',
+        id: Hooks.on('createSetting', (setting: any) => {
+          if (setting?.key === 'dnd5e.primaryParty') {
+            this.render();
+          }
+        }),
+      });
+
       return result;
     }
 

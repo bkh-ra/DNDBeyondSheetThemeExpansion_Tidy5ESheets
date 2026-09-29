@@ -9,6 +9,10 @@
     type VehicleSheetQuadroneContext,
   } from 'src/types/types';
 
+  // DDB-FORK: layouts that render their own lock toggle (DDB banner) opt out
+  // of the window-header one so the sheet never shows two live toggles.
+  let { hideModeToggle = false }: { hideModeToggle?: boolean } = $props();
+
   const context =
     $derived(
       getSheetContext<
@@ -31,7 +35,9 @@
 </script>
 
 <div class="actor-header-start">
-  <SheetHeaderEditModeToggleV2 class="header-control" />
+  {#if !hideModeToggle}
+    <SheetHeaderEditModeToggleV2 class="header-control" />
+  {/if}
 </div>
 
 {#if showSource}

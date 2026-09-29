@@ -299,6 +299,20 @@
   color: var(--ddb-text);
 }
 
+/* DDB-FORK (matrix-client N3): a condition chip carrying a rule reference gets
+ * `content-link` for parity with quadrone. Quadrone's enricher styling
+ * (`quadrone/apps.css:452-465`: pill background, padding, underline) would
+ * otherwise repaint the chip, so it is neutralized here — the chip keeps DDB's
+ * plain comma-separated run, and the toggle's hover state remains the only
+ * decoration. */
+.tidy5e-sheet.application.ddb .ddb-condition.content-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ddb-text);
+  text-decoration: none;
+}
+
 /* DDB renders active conditions as a comma-separated run of text. */
 .tidy5e-sheet.application.ddb .ddb-condition:not(:last-child)::after {
   content: ',';

@@ -216,6 +216,8 @@ export const CONSTANTS = {
   TAB_WORLD_SETTINGS_SHEETLOCK: 'world-settings-sheet-lock',
   TAB_WORLD_SETTINGS_VEHICLE: 'world-settings-vehicle',
   WORLD_TAB_CONFIG_KEY_CHARACTER_SIDEBAR: 'character-sidebar',
+  WORLD_TAB_CONFIG_KEY_CHARACTER_DDB: 'character-ddb', // DDB-FORK: DDB layout's own world tab-config entry
+  SHEET_PREFERENCES_KEY_CHARACTER_DDB: 'character-ddb', // DDB-FORK: DDB layout's own remembered window size
   THEME_EXTENSION_WITH_DOT: '.tidy5e-theme',
   THEME_ID_DEFAULT_LIGHT: 'light',
   THEME_ID_DEFAULT_DARK: 'dark',

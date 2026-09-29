@@ -1,3 +1,5 @@
+import type { ActorSheetQuadroneRuntime } from './ActorSheetQuadroneRuntime.svelte'; // DDB-FORK (type-only)
+import type { SheetTabsConfiguration } from 'src/settings/settings.types'; // DDB-FORK (type-only)
 import type {
   CustomContentInjectParams,
   OnContentReadyParams,
@@ -235,4 +237,22 @@ export type ContainerContentsRowActionsContext = {
   unlocked: boolean;
   owner: boolean;
   editable: boolean;
+};
+
+// DDB-FORK: seam exposed by character sheet classes so the settings apps
+// (Sheet Settings, world tab configuration) resolve the tab registry, the
+// per-actor flag, and the world config key for the sheet's OWN layout instead
+// of assuming quadrone. See Tidy5eCharacterSheetQuadrone.tabConfigurationSeam.
+export type ActorTabConfigurationSeam = {
+  runtime: ActorSheetQuadroneRuntime<any>;
+  flag: {
+    key: string;
+    get: (doc: any) => SheetTabsConfiguration;
+    set: (doc: any, config: SheetTabsConfiguration) => Promise<unknown>;
+    unset: (doc: any) => Promise<unknown>;
+  };
+  /** World `tabConfiguration.Actor[<key>]` entry; undefined means the document type. */
+  worldDocTypeKey?: string;
+  /** Localization key naming the layout in configuration UIs (undefined = plain document type). */
+  layoutTitleKey?: string;
 };

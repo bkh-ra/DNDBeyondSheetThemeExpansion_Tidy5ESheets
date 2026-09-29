@@ -8,6 +8,8 @@
   import WorldSettingsOverview from 'src/applications/settings/world-settings-overview/WorldSettingsOverview.svelte';
   import ThemeSettingsQuadrone from 'src/applications/settings/theme/ThemeSettingsQuadrone.svelte';
   import HomebrewSettings from 'src/applications/settings/homebrew-settings/HomebrewSettings.svelte';
+  // DDB-FORK
+  import GlobalCustomSectionsSettings from './GlobalCustomSectionsSettings.svelte';
   import ApplyTidySheetPreferences from 'src/applications/settings/default-sheet-preferences/DefaultSheetPreferences.svelte';
   import WorldSheetSettings from './WorldSheetSettings.svelte';
   import SettingsFooter from 'src/applications/settings/SettingsFooter.svelte';
@@ -62,6 +64,13 @@
       title: localize('TIDY5E.WorldSettings.Homebrew.tabLabel'),
       iconClass: 'fa-solid fa-beer-mug',
       hasChanges: app.editors.homebrewTab.hasChanges,
+    },
+    {
+      // DDB-FORK: world custom sections, previously only in the classic menu.
+      id: WorldSettingsTabIds.customSections,
+      title: localize('TIDY5E.WorldSettings.TabCustomSections.tabLabel'),
+      iconClass: 'fa-solid fa-list-tree',
+      hasChanges: app.editors.customSectionsTab.hasChanges,
     },
   ]);
 
@@ -188,6 +197,9 @@
       />
     {:else if activeSelectedId === WorldSettingsTabIds.homebrew}
       <HomebrewSettings app={app.editors.homebrewTab} />
+    {:else if activeSelectedId === WorldSettingsTabIds.customSections}
+      <!-- DDB-FORK -->
+      <GlobalCustomSectionsSettings app={app.editors.customSectionsTab} />
     {:else if activeSelectedId === WorldSettingsTabIds.sheetPreferences}
       <ApplyTidySheetPreferences
         onMakeAllSheetsTidy={async () => await app.save()}

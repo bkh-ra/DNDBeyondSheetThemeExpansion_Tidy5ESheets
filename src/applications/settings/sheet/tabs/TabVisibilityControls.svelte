@@ -38,8 +38,13 @@
     CONSTANTS.SHEET_TYPE_VEHICLE,
   ]);
 
+  // DDB-FORK: `docTypeKeyOverride` marks a pseudo tab set (the character
+  // sidebar, the DDB layout) whose editor never seeds or persists
+  // `sidebarExpandedByTabId` — see `supportsSidebarExpanded()` in
+  // sheet-tabs-configuration-settings-editor. Hide the dead toggle there.
   let showSidebarExpandedControl = $derived(
-    entry.documentName === CONSTANTS.DOCUMENT_NAME_ACTOR &&
+    !entry.docTypeKeyOverride &&
+      entry.documentName === CONSTANTS.DOCUMENT_NAME_ACTOR &&
       sidebarExpandableSheetTypes.has(entry.documentType),
   );
 

@@ -29,10 +29,13 @@ export type SheetTabsConfigurationContext = {
 };
 
 type GetTabConfigFn = (actor: any) => SheetTabsConfiguration | null | undefined;
+// DDB-FORK: widened to `Promise<unknown>` so a layout seam's flag accessors
+// (TidyFlags.ddbTabConfiguration.set/unset) can be handed over verbatim.
 type SetTabConfigFn = (
   actor: any,
   config: SheetTabsConfiguration,
-) => Promise<void> | undefined;
+) => Promise<unknown> | undefined;
+type UnsetTabConfigFn = (actor: any) => Promise<unknown> | undefined;
 type GetTabContextFn = (
   doc: any,
   setting: SheetTabsConfiguration,
@@ -52,6 +55,12 @@ type SheetTabsConfigurationSettingsEditorParams = {
     getTabConfig: GetTabConfigFn;
     setTabConfig: SetTabConfigFn;
     getTabContext: GetTabContextFn;
+    /**
+     * DDB-FORK: when supplied, saving a configuration that matches the default
+     * clears the backing flag outright instead of writing an empty tab map, so
+     * "Use Default" / reset truly un-sets the layout's own flag.
+     */
+    unsetTabConfig?: UnsetTabConfigFn;
   };
   title?: string;
   docTypeKeyOverride?: string;
@@ -77,6 +86,9 @@ export function getSheetTabsConfigurationSettingsEditor(
 
   const getTabContext =
     customTabConfigProvider?.getTabContext ?? getConfigFromRuntime;
+
+  // DDB-FORK: optional; only layout seams that own their flag supply it.
+  const unsetTabConfig = customTabConfigProvider?.unsetTabConfig;
 
   const inclusionTabTitle =
     title ??
@@ -137,6 +149,12 @@ export function getSheetTabsConfigurationSettingsEditor(
     return context;
   }
 
+  /**
+   * DDB-FORK: fallback only. A caller passing a layout seam supplies its own
+   * `getTabContext`, so this type switch (which always resolves `character` to
+   * the quadrone registry) is never reached for the DDB layout. It remains the
+   * path for NPC / vehicle / group / encounter and for quadrone characters.
+   */
   function getActorRuntime(type: string) {
     return type === CONSTANTS.SHEET_TYPE_CHARACTER
       ? CharacterSheetQuadroneRuntime
@@ -312,10 +330,16 @@ export function getSheetTabsConfigurationSettingsEditor(
           return FoundryAdapter.foundry13Equals(defaultMap.get(tab.id), tab);
         });
 
-      await setTabConfig(document, {
-        // Full per-tab arrangement (preserves hidden-tab order).
-        tabs: matchesDefault ? {} : buildTabConfigMap(curr.tabs),
-      });
+      if (matchesDefault && unsetTabConfig) {
+        // DDB-FORK: clear the layout's own flag so the sheet falls back to the
+        // world entry / runtime defaults rather than an empty override.
+        await unsetTabConfig(document);
+      } else {
+        await setTabConfig(document, {
+          // Full per-tab arrangement (preserves hidden-tab order).
+          tabs: matchesDefault ? {} : buildTabConfigMap(curr.tabs),
+        });
+      }
 
       await applySidebarExpanded(curr);
 

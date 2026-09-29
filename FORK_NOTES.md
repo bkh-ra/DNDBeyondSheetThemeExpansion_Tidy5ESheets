@@ -2,7 +2,7 @@
 
 Fork of [Tidy 5e Sheets](https://github.com/kgar/foundry-vtt-tidy-5e-sheets) (kgar, MIT).
 Adds a third character-sheet layout, **DDB** (D&D Beyond desktop style), alongside Classic and Quadrone.
-Base: tag `v13.7.0`, merged through `v13.10.3` (2026-09-06). Branch layout: `main` mirrors `upstream/main` (never edited); all work on `ddb`.
+Base: tag `v13.7.0`, merged through `v13.10.5` (2026-09-14; upstream's `dnd5e-5.3.x` maintenance line — the v14.x line requires Foundry 14 + dnd5e 6.0.x and is NOT merged while the campaign runs dnd5e 5.3.x). Branch layout: `main` mirrors `upstream/main` (never edited); all work on `ddb`.
 Repository: `origin` = https://github.com/bkh-ra/DNDBeyondSheetThemeExpansion_Tidy5ESheets (this fork); `upstream` = kgar's repo, pull-only. Research material (D&D Beyond page captures, harvested style data, character backdrop art) is deliberately NOT in the repo — see `.gitignore`.
 
 ## Design decisions
@@ -31,6 +31,17 @@ Repository: `origin` = https://github.com/bkh-ra/DNDBeyondSheetThemeExpansion_Ti
 | `find-preloaded-images.js` | scan regex updated to `modules/ddb5e-sheets/images` |
 | `vite.config.ts` | `s_PACKAGE_ID = 'modules/ddb5e-sheets'` |
 | `public/module.json` | id/title/description/version; conflict with `tidy5e-sheet`; `manifest`/`download` removed |
+| `src/api/Tidy5eSheetsApi.ts` | `isTidy5e*Sheet` predicates check `SHEET_CSS_CLASS`; character tab/content registration also routes `'ddb'` / `'quadrone'` / `'all'` to `CharacterSheetDdbRuntime` (sidebar runtime accepts `'ddb'`) |
+| `src/foundry/TidyFlags.ts` | legacy fallback values deep-cloned; `unsetFlag` also removes the legacy key; `ddbTabConfiguration` accessor (`ddb-tab-configuration`) |
+| `src/foundry/foundry-adapter.ts` | sheet-class metadata recognises the DDB class (`ddbSheetClass*`, `isDdbDefault`) |
+| `src/settings/settings.svelte.ts` | `migrations` menu no longer `hideClassic` (its journal migration feeds the quadrone/DDB Notes tab); `importLegacyTidyData` menu. (`useTidySpellSchoolIcons` stays classic-only: the quadrone/DDB spell-school column always draws the dnd5e icon, and upstream's v14 line deleted the setting.) |
+| `src/settings/editors/*` | default-sheet-preferences never reverts a DDB default; sheet-tabs editor accepts `unsetTabConfig`; world tab-config/sheet-config editors carry the `character-ddb` entry; new `global-custom-sections-settings-editor` |
+| `src/applications/settings/**` | Sheet Settings resolves `document.sheet.tabConfigurationSeam`; World Settings gains the "Character (DDB layout)" sub-tab and a "Custom Sections" pane; `legacy-import/**` is new |
+| `src/runtime/types.ts` | `SheetLayout` includes `'ddb'`; `ActorTabConfigurationSeam` type |
+| `src/mixins/TidyDocumentSheetMixin.svelte.ts` | `sheetSizePreferenceKey` seam for the remembered window size |
+| `src/sheets/quadrone/Tidy5eActorSheetQuadroneBase.svelte.ts` | `mountsWindowHeaderModeToggle` seam (passed to `ActorHeaderStart` as `hideModeToggle`) |
+| `src/sheets/quadrone/Tidy5eCharacterSheetQuadrone.svelte.ts` | seam getters `tabRuntime` / `sidebarTabRuntime` / `rootComponent` / `contextMenuLayout` / `tabConfigurationSeam` |
+| `src/keybindings/keybind-init.ts` | debug quick-sheet-switch classic matcher excludes the DDB class |
 
 ## DDB layer specificity contract
 
@@ -43,6 +54,34 @@ DDB rules. **Every selector in `src/less/ddb/*.css` MUST start with
 adding new DDB styles or merging upstream changes that touch quadrone's broad
 selectors, preserve this contract — a bare `.ddb-foo` or `.tidy5e-sheet.ddb`
 prefix will silently lose to quadrone.
+
+## Settings identity of the DDB layout
+
+The DDB layout is a **quadrone-family** layout: it reuses quadrone tab components, the
+character sidebar runtime, header-control configuration, per-tab sort preferences, and the
+world theme, but it owns whatever differs structurally:
+
+| Concern | Quadrone | DDB |
+|---|---|---|
+| Main tab registry | `CharacterSheetQuadroneRuntime` | `CharacterSheetDdbRuntime` |
+| Per-actor tab config flag | `tab-configuration` | `ddb-tab-configuration` |
+| World tab config entry | `tabConfiguration.Actor.character` | `tabConfiguration.Actor['character-ddb']` |
+| Remembered window size | `sheetPreferences.character` | `sheetPreferences['character-ddb']` |
+| Sidebar tab config | shared (`sidebar-tab-configuration`, `character-sidebar`) | shared |
+| Sidebar open/closed | per tab | single, `sheetPreferences.character.tabs['ddb-sidebar']` |
+| Window-header lock toggle | mounted | not mounted (the DDB banner has its own) |
+
+The settings apps never hardwire a layout: they read `document.sheet.tabConfigurationSeam`
+(`{ runtime, flag, worldDocTypeKey?, layoutTitleKey? }`). API registrations targeted at
+`'all'`, `'quadrone'`, or `'ddb'` reach the DDB registry.
+
+Legacy data: document flags fall back read-only to `flags.tidy5e-sheet.*`; a user reset
+(`TidyFlags.unsetFlag`) removes the legacy key too. Settings and user preferences have no
+fallback — the GM-only **Import from Tidy 5e Sheets** menu copies them once, non-destructively.
+
+Verification: `design/tools/audit/` (gitignored, local) drives a headless Foundry on the
+test world and checks every setting/flag/control against the DDB sheet; the static matrices
+live in `design/audit/`.
 
 ## New files (no upstream conflict surface)
 

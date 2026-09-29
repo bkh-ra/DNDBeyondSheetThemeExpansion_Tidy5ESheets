@@ -27,6 +27,7 @@ import type { getTidyExtensibleDocumentSheetMixin } from 'src/mixins/TidyDocumen
 import type { CurrencyItemConfig } from './config.types';
 
 const quadroneSheetRegex = /Tidy.*Quadrone/;
+const ddbSheetRegex = /Tidy.*Ddb/; // DDB-FORK
 export type DocumentSheetConstructor = new (
   ...args: any[]
 ) => InstanceType<ReturnType<typeof getTidyExtensibleDocumentSheetMixin>>;
@@ -35,7 +36,12 @@ export type TidySheetClassMetadata = {
   documentName: string;
   documentSubtype: string;
   isDefault: boolean;
+  /** DDB-FORK: true when the world default for this subtype is the DDB layout class. */
+  isDdbDefault: boolean;
   sheetClass: DocumentSheetConstructor;
+  /** DDB-FORK: the DDB layout class registered for this subtype, when one exists. */
+  ddbSheetClass?: DocumentSheetConstructor;
+  ddbSheetClassIdentifier?: string;
   sheetClassIdentifier: string;
   typeLabel: string;
 };
@@ -1707,6 +1713,16 @@ export const FoundryAdapter = {
           continue;
         }
 
+        // DDB-FORK: recognise the DDB layout class registered for this subtype
+        // (character only today) so the default-sheet editors can see it.
+        const ddbClassName = Object.keys(defaultClasses).find((c: string) =>
+          ddbSheetRegex.test(c),
+        );
+        const ddbSheetClassDetails = ddbClassName
+          ? // @ts-ignore - same CONFIG typing gap as below
+            CONFIG[documentName]?.sheetClasses[subType]?.[ddbClassName]
+          : undefined;
+
         const sheetClassDetails =
           // @ts-expect-error - todo: make this somehow work with TS
           CONFIG[documentName]?.sheetClasses[subType]?.[className];
@@ -1715,13 +1731,20 @@ export const FoundryAdapter = {
           // @ts-expect-error - todo: make this somehow work with TS
           CONFIG[documentName]?.documentClass;
 
-        const isDefault = className === setting[documentName]?.[subType];
+        const currentDefault = setting[documentName]?.[subType];
+        // DDB-FORK: a DDB default counts as "Tidy is the default" so the sheet
+        // preference editors never revert a hand-picked DDB default to quadrone.
+        const isDdbDefault = !!ddbClassName && ddbClassName === currentDefault;
+        const isDefault = className === currentDefault || isDdbDefault;
 
         result.push({
           documentClass,
           documentName,
           documentSubtype: subType,
           isDefault,
+          isDdbDefault,
+          ddbSheetClass: ddbSheetClassDetails?.cls,
+          ddbSheetClassIdentifier: ddbSheetClassDetails?.id,
           sheetClass: sheetClassDetails?.cls,
           sheetClassIdentifier: sheetClassDetails?.id,
           typeLabel: FoundryAdapter.localize(

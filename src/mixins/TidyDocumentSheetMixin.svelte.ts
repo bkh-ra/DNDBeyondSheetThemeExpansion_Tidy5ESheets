@@ -341,6 +341,13 @@ export function getTidyExtensibleDocumentSheetMixin<
       this.element.querySelector(`[data-tab-id="${tabId}"]`)?.click();
     }
 
+    // DDB-FORK: the sheetPreferences bucket that stores this sheet's
+    // remembered window size. Defaults to the document type; layouts with a
+    // different default footprint (DDB) override it.
+    get sheetSizePreferenceKey(): string {
+      return sheetType;
+    }
+
     async #persistSheetPositionPreferences(position?: ApplicationPosition) {
       if (
         !position ||
@@ -353,11 +360,11 @@ export function getTidyExtensibleDocumentSheetMixin<
       const { width, height } = position;
 
       const { width: configuredWidth, height: configuredHeight } =
-        UserSheetPreferencesService.getByType(sheetType);
+        UserSheetPreferencesService.getByType(this.sheetSizePreferenceKey);
 
       if (width !== configuredWidth) {
         await UserSheetPreferencesService.setDocumentTypePreference(
-          sheetType,
+          this.sheetSizePreferenceKey,
           'width',
           width,
         );
@@ -365,7 +372,7 @@ export function getTidyExtensibleDocumentSheetMixin<
 
       if (height !== configuredHeight) {
         await UserSheetPreferencesService.setDocumentTypePreference(
-          sheetType,
+          this.sheetSizePreferenceKey,
           'height',
           height,
         );
@@ -938,7 +945,7 @@ export function getTidyExtensibleDocumentSheetMixin<
 
       try {
         const { width, height } =
-          UserSheetPreferencesService.getByType(sheetType);
+          UserSheetPreferencesService.getByType(this.sheetSizePreferenceKey);
 
         const position = (updatedOptions.position ??= {});
 

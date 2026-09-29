@@ -1,4 +1,5 @@
 import { CONSTANTS } from 'src/constants';
+import type { ActorTabConfigurationSeam } from 'src/runtime/types'; // DDB-FORK
 import type {
   ApplicationConfiguration,
   ApplicationRenderOptions,
@@ -94,6 +95,16 @@ export class Tidy5eCharacterSheetQuadrone extends getTidy5eActorSheetQuadroneBas
   // DDB-FORK: overridable seams so subclass layouts (e.g. the DDB layout) can
   // swap the tab registry, root component, and context-menu layout while
   // inheriting all character context preparation from this class.
+  // DDB-FORK: seam consumed by the settings apps (Sheet Settings, world tab
+  // configuration) so they resolve the registry / flag / world key for THIS
+  // layout instead of assuming quadrone. Layout subclasses override it.
+  get tabConfigurationSeam(): ActorTabConfigurationSeam {
+    return {
+      runtime: this.tabRuntime,
+      flag: TidyFlags.tabConfiguration,
+    };
+  }
+
   protected get tabRuntime(): typeof CharacterSheetQuadroneRuntime {
     return CharacterSheetQuadroneRuntime;
   }

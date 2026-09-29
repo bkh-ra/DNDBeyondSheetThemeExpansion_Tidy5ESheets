@@ -712,6 +712,52 @@
   color: var(--ddb-label);
 }
 
+/* DDB-FORK (F10): the SKILL header label is the expand/collapse control. It
+ * has to look exactly like the label it replaced — the header row's own
+ * typography is inherited, and only the chevron marks it as interactive. */
+.tidy5e-sheet.application.ddb .ddb-skills-expand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ddb-space-half);
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  box-shadow: none;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  line-height: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: color var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-skills-expand:hover {
+  color: var(--ddb-accent);
+  box-shadow: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-skills-expand:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* Collapsed points right, expanded points down — the same affordance
+ * quadrone's skill-expand-button uses. */
+.tidy5e-sheet.application.ddb .ddb-skills-expand .fa-angle-right {
+  font-size: var(--ddb-size-label);
+  transition: transform var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-skills-expand .fa-angle-right.expanded {
+  transform: rotate(90deg);
+}
+
 .tidy5e-sheet.application.ddb .ddb-skills-list {
   display: flex;
   flex-direction: column;
