@@ -34,7 +34,7 @@ Repository: `origin` = https://github.com/bkh-ra/DNDBeyondSheetThemeExpansion_Ti
 | `src/api/Tidy5eSheetsApi.ts` | `isTidy5e*Sheet` predicates check `SHEET_CSS_CLASS`; character tab/content registration also routes `'ddb'` / `'quadrone'` / `'all'` to `CharacterSheetDdbRuntime` (sidebar runtime accepts `'ddb'`) |
 | `src/foundry/TidyFlags.ts` | legacy fallback values deep-cloned; `unsetFlag` also removes the legacy key; `ddbTabConfiguration` accessor (`ddb-tab-configuration`) |
 | `src/foundry/foundry-adapter.ts` | sheet-class metadata recognises the DDB class (`ddbSheetClass*`, `isDdbDefault`) |
-| `src/settings/settings.svelte.ts` | `migrations` menu + `useTidySpellSchoolIcons` no longer `hideClassic` (icons setting now `config:true`); `importLegacyTidyData` menu |
+| `src/settings/settings.svelte.ts` | `migrations` menu no longer `hideClassic` (its journal migration feeds the quadrone/DDB Notes tab); `importLegacyTidyData` menu. (`useTidySpellSchoolIcons` stays classic-only: the quadrone/DDB spell-school column always draws the dnd5e icon, and upstream's v14 line deleted the setting.) |
 | `src/settings/editors/*` | default-sheet-preferences never reverts a DDB default; sheet-tabs editor accepts `unsetTabConfig`; world tab-config/sheet-config editors carry the `character-ddb` entry; new `global-custom-sections-settings-editor` |
 | `src/applications/settings/**` | Sheet Settings resolves `document.sheet.tabConfigurationSeam`; World Settings gains the "Character (DDB layout)" sub-tab and a "Custom Sections" pane; `legacy-import/**` is new |
 | `src/runtime/types.ts` | `SheetLayout` includes `'ddb'`; `ActorTabConfigurationSeam` type |

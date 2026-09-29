@@ -1955,13 +1955,13 @@ export function createSettings() {
       // Icons
       useTidySpellSchoolIcons: {
         options: {
-          // DDB-FORK: consumed by every layout (SpellSchool.ts); was only editable in the classic menu.
+          hideClassic: true,
           name: 'TIDY5E.Settings.UseTidySpellSchoolIcons.name',
           hint: 'TIDY5E.Settings.UseTidySpellSchoolIcons.hint',
           scope: 'world',
           type: Boolean,
           default: true,
-          config: true,
+          config: false,
         },
         get() {
           return FoundryAdapter.getTidySetting<boolean>(
