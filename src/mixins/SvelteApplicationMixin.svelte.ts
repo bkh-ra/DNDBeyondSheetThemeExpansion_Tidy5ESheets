@@ -179,6 +179,21 @@ export function getSvelteApplicationMixin<
         }),
       });
 
+      // DDB-FORK: the first-ever save of a world/user setting CREATES its
+      // Setting document (createSetting, not updateSetting), so open sheets
+      // used to stay stale until reopened after e.g. a GM's first World Tab
+      // Configuration save.
+      this._hookSubscriptions.push({
+        name: 'createSetting',
+        id: Hooks.on('createSetting', (setting: any) => {
+          if (setting.key.startsWith(`${CONSTANTS.MODULE_ID}.`)) {
+            debug('Tidy setting created. Requesting sheet re-render');
+            this.#debouncedRerenderForSettings();
+            this.applyTidyTheming();
+          }
+        }),
+      });
+
       return element;
     }
 
@@ -454,6 +469,24 @@ export function getSvelteApplicationMixin<
      * Augments the base toggleControls with handling for closing menu when focus is lost.
      */
     toggleControls(expanded: boolean | undefined) {
+      // DDB-FORK: core v14's ApplicationV2 has no toggleControls() and no
+      // .controls-dropdown; header controls are a core ContextMenu opened by
+      // clicking the window's toggle button. Calling super here threw, which
+      // broke the Toggle Header Menu keybinding (Alt+B) on every Tidy window.
+      if (typeof super.toggleControls !== 'function') {
+        const toggle: HTMLElement | null =
+          (this as any).window?.controls ??
+          this.element?.querySelector(HEADER_CONTROLS_DROPDOWN_TOGGLE_SELECTOR);
+        const isOpen = !!toggle?.classList.contains('context');
+        const shouldOpen = expanded ?? !isOpen;
+        if (shouldOpen && !isOpen) {
+          toggle?.click();
+        } else if (!shouldOpen && isOpen) {
+          (ui as any).context?.close?.();
+        }
+        return;
+      }
+
       super.toggleControls(expanded, { animate: false });
 
       const controlsDropdown = this.element.querySelector(
