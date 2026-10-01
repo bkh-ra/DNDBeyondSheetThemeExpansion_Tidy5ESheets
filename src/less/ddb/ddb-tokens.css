@@ -103,6 +103,11 @@
    * Must stay wide enough that the pair never optically merges. */
   --ddb-panel-double-gap: 4px;
   --ddb-border-width-panel: 1.125px; /* user choice: 25% lighter than 1.5px */
+  /* PANEL OUTLINE (user choice 2026-10-01): every panel / info-card outline is a
+   * SINGLE bold line at this width — the former double outlines keep only their
+   * outermost line, so no silhouette moved. Floating menus use it too. Interior
+   * hairlines, row dividers and control shapes stay on --ddb-border-width-panel. */
+  --ddb-outline-width: 2px;
   --ddb-stroke-echo-opacity: 0.65; /* decorative second strokes (frames, shield) */
   --ddb-rarity-bar-width: 3px;
   --ddb-transition: 0.1s ease-in-out;

@@ -51,6 +51,7 @@
    */
   let radius = $state(10);
   let doubleGap = $state(4);
+  let strokeWidth = $state(2);
 
   $effect(() => {
     if (!element) {
@@ -69,6 +70,12 @@
     if (!Number.isNaN(nextGap)) {
       doubleGap = nextGap;
     }
+    const nextStroke = parseFloat(
+      styles.getPropertyValue('--ddb-outline-width'),
+    );
+    if (!Number.isNaN(nextStroke)) {
+      strokeWidth = nextStroke;
+    }
   });
 </script>
 
@@ -78,7 +85,7 @@
   bind:clientWidth={width}
   bind:clientHeight={height}
 >
-  <DdbPanelFrame {width} {height} {radius} {doubleGap} />
+  <DdbPanelFrame {width} {height} {radius} {doubleGap} {strokeWidth} />
   <div class="ddb-box-body">
     {@render children()}
   </div>

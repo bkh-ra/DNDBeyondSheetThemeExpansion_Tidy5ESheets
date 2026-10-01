@@ -500,7 +500,7 @@
  * single-lined. */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .button-with-options-wrapper menu {
   background: var(--ddb-panel-bg-solid);
-  border: var(--ddb-border-width-panel) solid var(--ddb-panel-ring);
+  border: var(--ddb-outline-width) solid var(--ddb-panel-ring);
   border-radius: var(--ddb-radius-panel);
   box-shadow: var(--ddb-shadow-elevated);
   color: var(--ddb-text);

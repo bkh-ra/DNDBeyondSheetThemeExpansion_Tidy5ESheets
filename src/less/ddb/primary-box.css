@@ -40,7 +40,11 @@
   color: var(--ddb-text);
 }
 
-/* ---- shared double outline -------------------------------------------
+/* ---- shared outline (single bold line since 2026-10-01) ---------------
+ * Only the OUTER line (::before) is drawn now, at --ddb-outline-width, inward
+ * from the same outer edge it always had — so the panel silhouette did not move.
+ * The former inner silhouette (::after) is disabled below. History follows. */
+/* ---- (historical) shared double outline -------------------------------
  * Two concentric rounded lines per panel: the silhouette (::after, sitting
  * exactly where the element's border would be) and one parallel line OUTSIDE
  * it (::before), offset by --ddb-panel-double-gap. Outside, not inside: an
@@ -80,9 +84,7 @@
  * across the (transparent) border area. */
 .tidy5e-sheet.application.ddb .ddb-conditions-defenses::after,
 .tidy5e-sheet.application.ddb .ddb-primary-box::after {
-  inset: calc(-1 * var(--ddb-border-width-panel));
-  border-radius: var(--ddb-radius-panel);
-  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-ring);
+  content: none; /* single-outline: the inner line is gone */
 }
 
 /* Outward parallel line: its inner edge sits one --ddb-panel-double-gap beyond
@@ -97,7 +99,7 @@
     var(--ddb-radius-panel) + var(--ddb-panel-double-gap) +
       var(--ddb-border-width-panel)
   );
-  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-ring);
+  box-shadow: inset 0 0 0 var(--ddb-outline-width) var(--ddb-panel-ring);
 }
 
 /* The outward line is painted outside the panel, and BOTH panels live in
@@ -392,7 +394,7 @@
   background: var(--ddb-panel-bg-solid);
   /* Panel-level surface, so the ring token (the neutral hairline is invisible
    * against the solid light panel). */
-  border: var(--ddb-border-width-panel) solid var(--ddb-panel-ring);
+  border: var(--ddb-outline-width) solid var(--ddb-panel-ring);
   /* Floating panel surface — panel radius, but single-lined: it is an overlay,
    * not part of the sheet's framed composition. */
   border-radius: var(--ddb-radius-panel);

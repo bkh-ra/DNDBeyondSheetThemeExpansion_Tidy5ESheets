@@ -132,15 +132,13 @@
 .tidy5e-sheet.application.ddb .ddb-sidebar::before {
   inset: 0;
   border-radius: var(--ddb-radius-panel);
-  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-ring);
+  box-shadow: inset 0 0 0 var(--ddb-outline-width) var(--ddb-panel-ring);
 }
 
 /* Inner line. Concentric with the silhouette: the gap comes off the radius as
  * well as the inset, exactly as `DdbPanelFrame.roundedRect()` does it. */
 .tidy5e-sheet.application.ddb .ddb-sidebar::after {
-  inset: var(--ddb-panel-double-gap);
-  border-radius: calc(var(--ddb-radius-panel) - var(--ddb-panel-double-gap));
-  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-ring);
+  content: none; /* single-outline (2026-10-01): the inner line is gone */
 }
 
 /* Collapsed: the pane shrinks to a rail holding only the toggle. The grid

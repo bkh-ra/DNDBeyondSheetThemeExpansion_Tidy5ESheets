@@ -74,15 +74,14 @@
 .tidy5e-sheet.application.ddb .ddb-panel-frame__panel {
   fill: var(--ddb-panel-bg);
   stroke: var(--ddb-panel-ring);
-  stroke-width: var(--ddb-border-width-panel);
+  stroke-width: var(--ddb-outline-width);
   stroke-linejoin: round;
 }
 
+/* Single-outline (2026-10-01): DdbPanelFrame no longer draws the echo; this
+ * keeps it hidden should an older bundle's markup ever appear. */
 .tidy5e-sheet.application.ddb .ddb-panel-frame__echo {
-  fill: none;
-  stroke: var(--ddb-panel-ring);
-  stroke-width: var(--ddb-border-width-panel);
-  stroke-linejoin: round;
+  display: none;
 }
 
 /* Content sits above the frame; both need a stacking context of their own so

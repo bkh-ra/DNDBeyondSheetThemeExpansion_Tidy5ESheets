@@ -47,7 +47,17 @@
 .tidy5e-sheet.application.ddb .ddb-box-background__path {
   fill: var(--ddb-box-bg);
   stroke: var(--ddb-panel-ring);
-  stroke-width: var(--ddb-border-width-panel);
+  stroke-width: var(--ddb-outline-width);
+}
+
+/* Single-outline (2026-10-01): the parallel second lines are not drawn — the
+ * stat boxes' inner echo, the shield's inner line, and the ability cards'
+ * corner chamfer echoes. The ability card keeps its score well and modifier
+ * badge (content frames, not second outlines), at the same bold width. */
+.tidy5e-sheet.application.ddb .ddb-stat-box-shape__echo,
+.tidy5e-sheet.application.ddb .ddb-shield-shape__inner,
+.tidy5e-sheet.application.ddb .ddb-ability-box-shape__corner {
+  display: none;
 }
 
 /* Only the outermost silhouette of each frame is filled; everything drawn on
@@ -973,7 +983,7 @@
   position: absolute;
   inset: calc(-1 * var(--ddb-border-width-panel));
   border-radius: var(--ddb-radius-panel);
-  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-ring);
+  box-shadow: inset 0 0 0 var(--ddb-outline-width) var(--ddb-panel-ring);
   pointer-events: none;
 }
 
@@ -982,12 +992,7 @@
  * single-lined one. Inset far enough that the applicator still clears it, and
  * concentric with the panel: the corner tightens by exactly the offset. */
 .tidy5e-sheet.application.ddb .ddb-hp-block::before {
-  content: '';
-  position: absolute;
-  inset: var(--ddb-panel-double-gap);
-  border-radius: calc(var(--ddb-radius-panel) - var(--ddb-panel-double-gap));
-  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-panel-ring);
-  pointer-events: none;
+  content: none; /* single-outline (2026-10-01): the inner second edge is gone */
 }
 
 /* Both interiors sit above the panel surface. */

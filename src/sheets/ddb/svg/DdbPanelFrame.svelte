@@ -55,6 +55,13 @@
     radius?: number;
     /** Silhouette-to-inner-line offset in px, from `--ddb-panel-double-gap`. */
     doubleGap?: number;
+    /**
+     * Outline stroke width in px, from `--ddb-outline-width`. The path is
+     * inset by half of it so the line sits wholly inside the box on whole pixels.
+     */
+    strokeWidth?: number;
+    /** Draw the inner parallel line. Off since the single-outline change. */
+    double?: boolean;
   };
 
   let {
@@ -63,13 +70,15 @@
     height = 0,
     radius = 10,
     doubleGap = 4,
+    strokeWidth = 2,
+    double = false,
   }: Props = $props();
 
   /**
    * Half the stroke, so an edge lands on the pixel grid instead of straddling
    * it — the 0.5 convention shared across every `src/sheets/ddb/svg/` shape.
    */
-  const inset = 0.5;
+  let inset = $derived(strokeWidth / 2);
 
   let echoGap = $derived(doubleGap);
 
@@ -110,7 +119,7 @@
 
   /** Only draw the inner line when the box is big enough to hold it clearly. */
   let showEcho = $derived(
-    ready && width > 4 * echoGap && height > 4 * echoGap,
+    double && ready && width > 4 * echoGap && height > 4 * echoGap,
   );
   let echo = $derived(showEcho ? roundedRect(echoGap) : '');
 </script>
