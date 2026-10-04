@@ -1,3 +1,4 @@
+// DDB-FORK: mechanical rename only (SHEET_CSS_CLASS); no behaviour change
 import { mount } from 'svelte';
 import TabSelection from './TabSelection.svelte';
 import type { Actor5e } from 'src/types/types';

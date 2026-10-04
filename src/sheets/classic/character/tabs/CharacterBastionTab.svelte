@@ -1,4 +1,5 @@
 <script lang="ts">
+  // DDB-FORK: mechanical rename only (asset URL); no behaviour change
   import TextInput from 'src/components/inputs/TextInput.svelte';
   import { CONSTANTS } from 'src/constants';
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';

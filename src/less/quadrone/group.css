@@ -1,3 +1,4 @@
+/* DDB-FORK: asset URLs point at modules/ddb5e-sheets */
 .tidy5e-sheet.application:where(.quadrone.group, .quadrone.encounter) {
   --portrait-size: 10rem;
   --t5e-group-sidebar-width: 14.25rem;

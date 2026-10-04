@@ -1,3 +1,4 @@
+// DDB-FORK: mechanical rename only (SHEET_CSS_CLASS); no behaviour change
 import { mount } from 'svelte';
 import WorldSettings from './WorldSettings.svelte';
 import {

@@ -1,3 +1,4 @@
+// DDB-FORK: mechanical rename only (SHEET_CSS_CLASS); no behaviour change
 import { mount } from 'svelte';
 import MaxPreparedSpellsConfig from './MaxPreparedSpellsConfig.svelte';
 import type { MaxPreparedSpellFormula } from 'src/types/types';

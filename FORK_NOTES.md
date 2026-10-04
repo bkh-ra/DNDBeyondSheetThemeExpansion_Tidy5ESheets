@@ -99,6 +99,8 @@ live in `design/audit/`.
 5. Re-run the mechanical seds (asset URLs, classes arrays) over any NEW upstream files
 6. `npm run build` green → publish → smoke test
 
+`node scripts/check-fork-markers.mjs` (`npm run check-fork-markers`) automates step 4 once the merge is committed: it takes every file under `src/`, `vite.config.ts`, `find-preloaded-images.js`, `public/module.json` and `public/lang/` that differs between HEAD and the newest `v13.*` tag reachable from it (override with `--base <tag>`) and also exists in that tag, and exits 1 if any lacks a `DDB-FORK` marker. Files that carry only the step-5 renames are marked too (`// DDB-FORK: mechanical rename only (SHEET_CSS_CLASS)` or `(asset URL)`, and `/* DDB-FORK: asset URLs point at modules/ddb5e-sheets */` in styles), so mark newly renamed upstream files the same way. JSON files (no comment syntax) and the generated `src/utils/preloaded-images.generated.ts` are allowlisted in the script with reasons; `--list` prints every file's status, `--json` is for tooling.
+
 ## Environment notes
 
 - If the checkout lives in a synced folder (OneDrive etc.), junction `node_modules` to a local path outside it to avoid sync churn

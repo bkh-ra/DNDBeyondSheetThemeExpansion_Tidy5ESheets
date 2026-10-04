@@ -1,4 +1,5 @@
 <script lang="ts">
+  // DDB-FORK: mechanical rename only (asset URL); no behaviour change
   import SheetEditorV2 from 'src/components/editor/SheetEditorV2.svelte';
   import { CONSTANTS } from 'src/constants';
   import type { Ref } from 'src/features/reactivity/reactivity.types';
