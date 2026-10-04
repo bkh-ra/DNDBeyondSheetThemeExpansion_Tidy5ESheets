@@ -37,7 +37,17 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  /* full-sheet backdrop: page tint over the character's theme image */
+  /* full-sheet backdrop: page tint over the character's theme image, over the
+   * sheet's header colour.
+   *
+   * DDB-FORK (look flip): Sheet Settings > Theme > "Header Background Color"
+   * (`--t5e-theme-color-header`) now has quadrone's semantics
+   * (`quadrone/header.css`, `&:not(.theme-parchment)`): it is the ground UNDER
+   * the header image, not a fill for the banner strip (which stays
+   * --ddb-header-bg, see header.css). It shows wherever the art does not
+   * cover, and fully if no image resolves; unset, the ground is the page
+   * colour as before. The parchment/basic rule below still paints the plain
+   * page surface, matching quadrone, which drops the header colour there too. */
   background:
     linear-gradient(
       color-mix(in srgb, var(--ddb-page-bg) var(--ddb-backdrop-tint-top), transparent),
@@ -45,7 +55,7 @@
     ),
     var(--t5e-sheet-header-bg, var(--t5e-background-image, none)) top center /
       cover no-repeat,
-    var(--ddb-page-bg);
+    var(--t5e-theme-color-header, var(--ddb-page-bg));
 }
 
 /* DDB-FORK (matrix-sheet new finding 7): "Use Header Background: off" and
@@ -57,9 +67,11 @@
  * banner instead of removing it. Both states now paint the plain DDB page
  * surface, with no backdrop image at all.
  *
- * `actorHeaderBackground` (custom image) and `headerBackgroundColor` are
- * unaffected: the theme provider only emits them while the header background
- * is enabled / a color is set, i.e. while this rule does not apply. */
+ * `actorHeaderBackground` (custom image) is unaffected: the theme provider only
+ * emits it while the header background is enabled, i.e. while this rule does
+ * not apply. `headerBackgroundColor` is deliberately dropped here as well —
+ * quadrone only paints it under `:not(.theme-parchment)`, and the setting's
+ * input is hidden while the header background is off. */
 .tidy5e-sheet.application.ddb.theme-parchment .ddb-sheet,
 .tidy5e-sheet.application.ddb.theme-basic .ddb-sheet {
   background: var(--ddb-page-bg);

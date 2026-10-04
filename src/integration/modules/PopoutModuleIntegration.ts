@@ -81,7 +81,12 @@ export class PopoutModuleIntegration implements ModuleIntegrationBase {
     node: HTMLHtmlElement,
     controller: AbortController
   ) {
-    if ('toggleSheetMode' in app) {
+    // DDB-FORK: layouts that do not mount the window-header toggle (DDB) keep
+    // their own toggle, whose Svelte handler survives the pop-out; no shim.
+    if (
+      'toggleSheetMode' in app &&
+      (app as any).mountsWindowHeaderModeToggle !== false
+    ) {
       node
         .querySelector('.window-header .header-sheet-edit-mode-toggle input')
         ?.addEventListener(

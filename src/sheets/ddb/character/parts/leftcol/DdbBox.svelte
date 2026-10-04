@@ -31,9 +31,12 @@
     children: Snippet;
     /** Optional control (conventionally a gear button) beside the bottom title. */
     gear?: Snippet;
+    /** `data-tidy-sheet-part` hook for the box root (e.g. `ddb-senses`). */
+    sheetPart?: string;
   };
 
-  let { title, class: classValue, children, gear }: Props = $props();
+  let { title, class: classValue, children, gear, sheetPart }: Props =
+    $props();
 
   let width = $state(0);
   let height = $state(0);
@@ -81,6 +84,7 @@
 
 <section
   class={['ddb-box', classValue]}
+  data-tidy-sheet-part={sheetPart}
   bind:this={element}
   bind:clientWidth={width}
   bind:clientHeight={height}

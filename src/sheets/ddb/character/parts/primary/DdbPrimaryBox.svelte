@@ -46,7 +46,10 @@
     tabContext={{ context, actor: context.actor }}
   />
 
-  <div class="ddb-primary-box-content">
+  <div
+    class="ddb-primary-box-content"
+    data-tidy-sheet-part="ddb-primary-box-content"
+  >
     <TabContents
       tabs={context.tabs}
       {selectedTabId}

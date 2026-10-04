@@ -50,6 +50,22 @@
   let xpPct = $derived(Math.clamp(xp?.pct ?? 0, 0, 100));
 
   let appId = $derived(context.actor.uuid.slugify());
+
+  /**
+   * Keyboard activation for the locked name's copy affordance. Re-dispatching
+   * the click sends it through the delegated `copyValue` action (not `copyInnerText`: the
+   * mouse uses, so both paths copy exactly the same text.
+   */
+  function onNameKeydown(
+    event: KeyboardEvent & { currentTarget: HTMLElement },
+  ) {
+    if ((event.key !== 'Enter' && event.key !== ' ') || event.repeat) {
+      return;
+    }
+
+    event.preventDefault();
+    event.currentTarget.click();
+  }
 </script>
 
 <div class="ddb-header-tidbits" data-tidy-sheet-part="ddb-header-tidbits">
@@ -72,13 +88,22 @@
       -->
       <!-- DDB-FORK (matrix-sheet 6.3): the locked name is also the copy-name
            affordance quadrone offers at CharacterSheet.svelte:159, routed
-           through the same registered `copyInnerText` action. -->
+           through the registered `copyValue` action with the raw name (innerText would
+           carry the CSS uppercase). Like quadrone's
+           anchor it is a focusable button (Enter / Space copy); the role sits
+           on the h1 itself so the element, its sheet part and its look are
+           unchanged. -->
+      <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
       <h1
         class="ddb-character-name"
         data-tidy-sheet-part="actor-name"
-        data-action="copyInnerText"
+        data-action="copyValue"
+        data-value={context.actor.name}
         data-tooltip={context.actor.name}
         data-tooltip-direction="UP"
+        role="button"
+        tabindex="0"
+        onkeydown={onNameKeydown}
       >
         {context.actor.name}
       </h1>

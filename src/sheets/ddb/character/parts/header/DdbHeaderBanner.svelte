@@ -14,10 +14,13 @@
   The campaign slot renders the Foundry world name instead.
 -->
 <script lang="ts">
+  import { FoundryAdapter } from 'src/foundry/foundry-adapter';
   import DdbHeaderControls from './DdbHeaderControls.svelte';
   import DdbHeaderTidbits from './DdbHeaderTidbits.svelte';
   import DdbPortrait from './DdbPortrait.svelte';
   import DdbRestButtons from './DdbRestButtons.svelte';
+
+  const localize = FoundryAdapter.localize;
 
   // The Foundry world stands in for DDB's campaign. Hidden when unavailable.
   let campaignName = $derived<string | undefined>(game.world?.title);
@@ -38,7 +41,9 @@
   {#if campaignName}
     <div class="ddb-header-group ddb-header-group-campaign">
       <div class="ddb-header-campaign" data-tooltip={campaignName}>
-        <span class="ddb-header-campaign-label">Campaign</span>
+        <span class="ddb-header-campaign-label">
+          {localize('TIDY5E.DdbLayout.Campaign')}
+        </span>
         <span class="ddb-header-campaign-name">{campaignName}</span>
       </div>
     </div>

@@ -17,7 +17,9 @@
 -->
 <script lang="ts">
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
+  import { SettingsProvider } from 'src/settings/settings.svelte';
   import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
+  import type { ActorTraitContext } from 'src/types/types';
   import { isNil } from 'src/utils/data';
   import DdbBox from './DdbBox.svelte';
 
@@ -34,7 +36,50 @@
     ),
   );
 
-  let senseEntries = $derived(context.senses.traitEntries);
+  /*
+    DDB-FORK: the ranged senses are the entries keyed by `CONFIG.DND5E.senses`.
+    `_getSenses()` also folds the free-text `system.attributes.senses.special`
+    into `traitEntries` as `custom1..n` pieces whose position comes out of a
+    range sort they have no range for; they are dropped here and the field is
+    rendered verbatim as ONE trailing row below instead.
+  */
+  let senseEntries = $derived(
+    context.senses.traitEntries.filter(
+      (sense): sense is ActorTraitContext & { key: string } =>
+        !isNil(sense.key, '') && sense.key in CONFIG.DND5E.senses,
+    ),
+  );
+
+  let specialSenses = $derived(
+    String(context.system.attributes?.senses?.special ?? '').trim(),
+  );
+
+  /*
+    DDB-FORK: rule-reference tooltips for the ranged senses
+    (`CONFIG.DND5E.rules.darkvision` etc., attached by the sheet's
+    `_applyTooltips` pass over `[data-reference-tooltip]`). Tidy has no
+    sense-specific toggle; these pages sit in the same PHB Rules Glossary
+    journal as the condition references, so "Show system Condition tooltips"
+    governs them, the way the skill/tool settings govern the boxes beside this
+    one.
+  */
+  let senseReferences = $derived.by<Record<string, string>>(() => {
+    if (!SettingsProvider.settings.referenceTooltipCondition.get()) {
+      return {};
+    }
+
+    const rules = CONFIG.DND5E.rules as Record<string, string | undefined>;
+
+    return senseEntries.reduce<Record<string, string>>((prev, sense) => {
+      const reference = rules[sense.key];
+
+      if (!isNil(reference, '')) {
+        prev[sense.key] = reference;
+      }
+
+      return prev;
+    }, {});
+  });
 
   /** The one speed DdbQuickInfoBand already renders as a stat box. */
   let bandSpeedKey = $derived(context.speeds.main[0]?.key);
@@ -44,7 +89,11 @@
   );
 </script>
 
-<DdbBox class="ddb-senses-box" title={localize('DND5E.Senses')}>
+<DdbBox
+  class="ddb-senses-box"
+  title={localize('DND5E.Senses')}
+  sheetPart="ddb-senses"
+>
   <ul class="ddb-senses-passives">
     {#each passives as skill (skill.key)}
       <li class="ddb-sense-row">
@@ -63,8 +112,12 @@
   </ul>
 
   <div class="ddb-senses-special">
-    {#each senseEntries as sense (sense.key ?? sense.label)}
-      <div class="ddb-sense-special-row">
+    {#each senseEntries as sense (sense.key)}
+      <div
+        class="ddb-sense-special-row"
+        data-sense-key={sense.key}
+        data-reference-tooltip={senseReferences[sense.key]}
+      >
         <span class="ddb-sense-special-label">{sense.label}</span>
         {#if !isNil(sense.value, '')}
           <span class="ddb-sense-special-value">
@@ -72,11 +125,16 @@
           </span>
         {/if}
       </div>
-    {:else}
+    {/each}
+    {#if specialSenses}
+      <div class="ddb-sense-special-row ddb-sense-special-custom">
+        <span class="ddb-sense-special-label">{specialSenses}</span>
+      </div>
+    {:else if !senseEntries.length}
       <div class="ddb-sense-special-row ddb-empty">
         {localize('TIDY5E.NoSpecialSenses')}
       </div>
-    {/each}
+    {/if}
   </div>
 
   <!--

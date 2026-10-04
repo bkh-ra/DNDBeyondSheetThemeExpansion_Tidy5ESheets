@@ -52,6 +52,10 @@
   --ddb-pip-filled: var(--ddb-accent);
   --ddb-dice-roll-border: var(--ddb-accent);
   --ddb-stat-modified: var(--ddb-accent);
+  /* Weapon-mastery star after a mastered weapon in PROFICIENCIES (quadrone
+   * tints it with its lighter theme accent). Aliases only, no new values. */
+  --ddb-mastery-icon-color: var(--ddb-accent);
+  --ddb-mastery-icon-size: var(--ddb-size-label);
 
   /* ---- typography (theme-invariant) ----
    * The type scale is exactly six steps; do not add sizes outside it.

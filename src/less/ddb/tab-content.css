@@ -143,10 +143,11 @@
   --t5e-theme-color-foreground-darker: var(--ddb-heading);
   --t5e-theme-color-foreground-darker-diminished: var(--ddb-text-muted);
   --t5e-theme-color-foreground-darker-disabled: var(--ddb-text-disabled);
-  /* `.spell-method` header rows derive their fill from `--t5e-method-color`
-   * (at-will / pact / innate / ritual spellcasting hues). Neutralize it so
-   * spell-level headers match every other group header. */
-  --t5e-method-color: transparent;
+  /* `.spell-method` header rows derive quadrone's gradient fill from
+   * `--t5e-method-color` (at-will / pact / innate / ritual / spell hues). The
+   * fill is flattened through the background vars below, but the method colour
+   * itself is deliberately NOT neutralized: it feeds the left bar on spell
+   * headers and method-tinted rows (section 4). */
   --t5e-table-header-background-left: transparent;
   --t5e-table-header-background-right: transparent;
 
@@ -163,6 +164,17 @@
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row.spell-method {
   background: transparent;
   color: var(--ddb-text-muted);
+}
+
+/* Spell group headers keep their preparation-method colour, as a left bar
+ * rather than quadrone's full gradient fill. `--t5e-method-color` comes from the
+ * header's own `.method-<key>` class (SpellTable.svelte; ThemeQuadrone.onReady
+ * and `quadrone/apps.css` map it to `--t5e-color-spellcasting-<key>`, and basic
+ * theme maps it to transparent). Same inset box-shadow device as the rarity bar
+ * in section 5: pixel-identical to a left border but no box-model width, and
+ * the flat fill above is untouched. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row.spell-method {
+  box-shadow: inset var(--ddb-rarity-bar-width) 0 0 0 var(--t5e-method-color, transparent);
 }
 
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row:hover {
@@ -260,6 +272,16 @@
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.equipped.expanded,
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.prepared.expanded {
   background: var(--ddb-table-row-alt-bg);
+}
+
+/* The rows quadrone tints by spellcasting method, `.spell-method:not(.diminished)`
+ * (prepared, always-prepared and non-preparable spells; an unprepared spell is
+ * `.diminished` and stays untinted), carry the same method left bar as their
+ * group header (section 2). The flat fill above is kept; the bar is an inset
+ * box-shadow, as for rarity. No :hover twin is needed because the hover rule
+ * below only changes the background. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.spell-method:not(.diminished) {
+  box-shadow: inset var(--ddb-rarity-bar-width) 0 0 0 var(--t5e-method-color, transparent);
 }
 
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.diminished {
@@ -511,8 +533,8 @@
 /* ------------------------------------------------------------------ */
 
 /* Header treatment for At-Will / Cantrips / 1st Level … is inherited from
- * section 2 (the `--t5e-method-color: transparent` re-point plus the flat
- * `.spell-method` background). Only the pips need their own tokens. */
+ * section 2 (the flat `.spell-method` background plus the method-colour left
+ * bar). Only the pips need their own tokens. */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .pips.spell-pips {
   --pip-color: var(--ddb-pip-border);
   --pip-border-color: var(--ddb-pip-border);
@@ -677,7 +699,8 @@
  * the inset goes on the scroller (.tidy-tab); the block-end padding on the
  * content inside it lets the last row clear the rounded corner instead of being
  * guillotined against it (defects #12, #13). Padding only — the flex/overflow
- * model is quadrone's and stays untouched. */
+ * model is quadrone's and stays untouched. The Actions tab, whose sticky footer
+ * is the last thing inside its `.tab-content`, opts out in section 10. */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab {
   padding-inline-end: var(--ddb-space-1);
 }
@@ -687,7 +710,7 @@
 }
 
 /* ------------------------------------------------------------------ */
-/* 10. Inventory footer pinned to the pane                            */
+/* 10. Inventory + Actions footers pinned to the pane                 */
 /* ------------------------------------------------------------------ */
 
 /* The scroller is `.tidy-tab` (section 9), so quadrone's inventory footer —
@@ -706,4 +729,52 @@
   margin-block-start: auto;
   background: var(--ddb-panel-bg-solid);
   border-top: 1px solid var(--ddb-list-border);
+}
+
+/* The Actions tab footer (section-organization switch, help, tab config) gets
+ * the same pin. Unlike the inventory footer it is rendered INSIDE
+ * `.tab-content`, as `.sheet-footer.sheet-tab-footer`
+ * (quadrone/actor/tabs/CharacterSheetTab.svelte), which changes two things:
+ *   - `.tab-content` is a plain block in this pane: quadrone's flex-column rule
+ *     for it is scoped to `.main-content > .tidy-tab`, and the DDB pane is not
+ *     `.main-content`. `margin-block-start: auto` would be inert there, so this
+ *     tab's `.tab-content` becomes the grow-to-fill flex column quadrone gives
+ *     it, which drops a short list's footer onto the pane floor exactly like the
+ *     inventory one.
+ *   - A sticky box can never leave its containing block's CONTENT box, so the
+ *     section-9 corner-clearance padding on `.tab-content` sat UNDER the pinned
+ *     footer and lifted it off the floor for the last stretch of the scroll.
+ *     That padding is dropped for this tab only: the footer is the last thing in
+ *     the pane and needs no clearance beneath it.
+ * `:has()` keys on the footer itself, so a tab without one is untouched. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab .tab-content:has(> .sheet-footer.sheet-tab-footer) {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
+  padding-block-end: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab .tab-content > .sheet-footer.sheet-tab-footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  flex: 0 0 auto;
+  margin-block-start: auto;
+  background: var(--ddb-panel-bg-solid);
+  border-top: 1px solid var(--ddb-list-border);
+}
+
+/* ------------------------------------------------------------------ */
+/* 11. Quantity stepper always visible                                */
+/* ------------------------------------------------------------------ */
+
+/* Quadrone hides the inventory QTY cell's -/+ commands until the cell is
+ * hovered (`quadrone/tables.css`: `.tidy-table-cell[data-tidy-column-key=
+ * "quantity"] .command { opacity: 0 }`, `:hover .command { opacity: 1 }`).
+ * DDB's quantity stepper is always on screen, so the commands stay visible here.
+ * Opacity only: the commands always occupied their layout slot, so nothing
+ * shifts. Their muted-to-full colour on hover still comes from quadrone's
+ * tracker rules via the section-1 text re-points. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell[data-tidy-column-key='quantity'] .command {
+  opacity: 1;
 }

@@ -84,7 +84,10 @@
      / MAX / TEMP has to be identical across the three, and MAX renders as a
      span rather than an input whenever the sheet is locked. See
      `.ddb-hp-block__value` in quick-info.css. -->
-<section class={['ddb-hp-block', { editable: context.editable }]}>
+<section
+  class={['ddb-hp-block', { editable: context.editable }]}
+  data-tidy-sheet-part="ddb-hp-block"
+>
   {#if context.editable}
     <div class="ddb-hp-block__applicator">
       <button

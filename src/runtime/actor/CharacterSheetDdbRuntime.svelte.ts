@@ -32,9 +32,9 @@ export const CharacterSheetDdbRuntime =
   new ActorSheetQuadroneRuntime<CharacterSheetQuadroneContext>(
     [
       {
-        // DDB tab labels: localization keys where dnd5e/Tidy provide an exact
-        // match, plain strings otherwise (Tabs.svelte runs every title through
-        // `localize()`, and Foundry echoes unknown keys back verbatim).
+        // DDB tab labels: dnd5e/Tidy localization keys where one is an exact
+        // match, `TIDY5E.DdbLayout.*` keys otherwise (Tabs.svelte runs every
+        // title through `localize()`).
         title: 'DND5E.ActionPl',
         content: {
           component: CharacterSheetTab,
@@ -68,8 +68,9 @@ export const CharacterSheetDdbRuntime =
         tabOptionsBuilder: buildActorInventoryTabOptions,
       },
       {
-        // No dnd5e key pairs "Features" with "Traits"; DDB's label is literal.
-        title: 'Features & Traits',
+        // No dnd5e key pairs "Features" with "Traits", so the DDB label has its
+        // own key.
+        title: 'TIDY5E.DdbLayout.Tab.FeaturesAndTraits',
         content: {
           component: CharacterFeaturesTab,
           type: 'svelte',

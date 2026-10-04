@@ -107,7 +107,11 @@
   );
 </script>
 
-<DdbBox class="ddb-saving-throws-box" title={localize('DND5E.ClassSaves')}>
+<DdbBox
+  class="ddb-saving-throws-box"
+  title={localize('DND5E.ClassSaves')}
+  sheetPart="ddb-saving-throws"
+>
   <div
     class="ddb-saves-grid"
     style="--ddb-save-gutter: {saveGutter}px; --ddb-save-circle: {saveCircle}px;"

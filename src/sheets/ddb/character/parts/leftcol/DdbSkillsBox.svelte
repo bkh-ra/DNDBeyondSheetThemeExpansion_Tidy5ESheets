@@ -84,6 +84,7 @@
 <DdbBox
   class={['ddb-skills-box', { unlocked: context.unlocked }]}
   title={localize('DND5E.Skills')}
+  sheetPart="ddb-skills-box"
 >
   <div class="ddb-skills-header">
     <span class="ddb-skills-col-prof">{localize('TIDY5E.AbbrProficiency')}</span>

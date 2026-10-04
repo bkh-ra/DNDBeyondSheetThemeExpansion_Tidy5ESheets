@@ -16,6 +16,7 @@
   import { CONSTANTS } from 'src/constants';
   import type { ActorTraitContext } from 'src/types/types';
   import { isNil } from 'src/utils/data';
+  import { getModifierData } from 'src/utils/formatting';
   import SelectQuadrone from 'src/components/inputs/SelectQuadrone.svelte';
   import SelectOptions from 'src/components/inputs/SelectOptions.svelte';
   import { SettingsProvider } from 'src/settings/settings.svelte';
@@ -45,6 +46,63 @@
         }, {})
       : {},
   );
+
+  type TraitIcon = { icon: string; label: string };
+
+  /*
+    DDB-FORK: weapon-mastery markers. `_prepareTraits`
+    (Tidy5eActorSheetQuadroneBase) adds a generic `fa-circle-star mastery` icon
+    to every weapon trait entry the character has mastered; quadrone's trait
+    pills draw it (ActorTraitPills.svelte). Those entries are keyed by BASE
+    WEAPON (`longsword`), while the mastery PROPERTY (`sap`) that
+    `CONFIG.DND5E.weaponMasteries` is keyed by lives on the weapon item — so it
+    is resolved from an owned weapon of that base type, the same
+    `weaponMasteries[item.system.mastery]` lookup InventoryTable.svelte makes
+    per row. Unresolved (no such weapon carried), the icon keeps its own generic
+    label. "Show system Weapon Mastery tooltips" swaps the plain tooltip for the
+    rule reference, attached by the sheet's `_applyTooltips` pass (which skips
+    any element that already has a `data-tooltip`).
+  */
+  let masteryByBaseWeapon = $derived.by(() => {
+    const showReference =
+      SettingsProvider.settings.referenceTooltipMastery.get();
+    const result: Record<string, { tooltip: string; reference?: string }> =
+      {};
+
+    for (const weapon of context.actor.itemTypes?.weapon ?? []) {
+      const baseItem: string | undefined = weapon.system?.type?.baseItem;
+      const mastery = CONFIG.DND5E.weaponMasteries?.[weapon.system?.mastery];
+
+      if (isNil(baseItem, '') || !mastery || result[baseItem!]) {
+        continue;
+      }
+
+      result[baseItem!] = {
+        tooltip: localize('TIDY5E.Weapon.Mastery.LabelWithMastery', {
+          mastery: mastery.label,
+        }),
+        reference: showReference ? mastery.reference : undefined,
+      };
+    }
+
+    return result;
+  });
+
+  /** Tooltip attributes for one trait icon: a rule reference or a plain label. */
+  function iconTooltipAttributes(
+    trait: string,
+    entry: ActorTraitContext,
+    icon: TraitIcon,
+  ): Record<string, string | undefined> {
+    const isMastery =
+      trait === 'weapon' && icon.icon.split(/\s+/).includes('mastery');
+    const mastery =
+      isMastery && entry.key ? masteryByBaseWeapon[entry.key] : undefined;
+
+    return mastery?.reference
+      ? { 'data-reference-tooltip': mastery.reference }
+      : { 'data-tooltip': mastery?.tooltip ?? icon.label };
+  }
 
   let armor = $derived(context.traits.armor ?? []);
   let weapons = $derived(context.traits.weapon ?? []);
@@ -86,9 +144,14 @@
       {/if}
     </div>
     <div class="ddb-prof-group-items">
+      <!-- Trait icons (in practice the weapon-mastery star) follow the label,
+           inside the comma-separated run. -->
       {#each entries as entry, i (entry.key ?? entry.label)}
         <span class="ddb-prof-item">
-          {entry.label}{#if i < entries.length - 1}<span class="ddb-prof-sep"
+          {entry.label}{#each entry.icons ?? [] as icon}<i
+              class={['ddb-prof-icon', icon.icon]}
+              {...iconTooltipAttributes(trait, entry, icon)}
+            ></i>{/each}{#if i < entries.length - 1}<span class="ddb-prof-sep"
               >,</span
             >{/if}
         </span>
@@ -102,6 +165,7 @@
 <DdbBox
   class="ddb-proficiencies-box"
   title={`${localize('DND5E.Proficiency')} & ${localize('DND5E.Languages')}`}
+  sheetPart="ddb-proficiencies"
 >
   <div class="ddb-prof-groups">
     {@render traitGroup(localize('DND5E.Armor'), armor, 'armor')}
@@ -189,7 +253,10 @@
         </ul>
       {:else}
         <div class="ddb-prof-group-items">
+          <!-- Each tool carries its check modifier, the figure quadrone's
+               ToolsCard prints in its MODIFIER column. -->
           {#each context.tools as tool, i (tool.key)}
+            {@const modifier = getModifierData(tool.total)}
             <button
               type="button"
               class="ddb-prof-item ddb-prof-item-rollable"
@@ -203,8 +270,10 @@
               data-has-roll-modes
               disabled={!context.owner}
             >
-              {tool.label}{#if i < context.tools.length - 1}<span
-                  class="ddb-prof-sep">,</span
+              {tool.label}
+              <span class="ddb-prof-mod">{modifier.sign}{modifier.value}</span
+              >{#if i < context.tools.length - 1}<span class="ddb-prof-sep"
+                  >,</span
                 >{/if}
             </button>
           {:else}

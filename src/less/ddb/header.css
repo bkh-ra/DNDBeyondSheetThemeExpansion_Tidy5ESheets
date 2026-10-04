@@ -60,16 +60,12 @@
   overflow: hidden;
 }
 
-/* DDB-FORK (matrix-sheet Table 2 row 6): Sheet Settings > Theme > "Header
- * Background Color" emits `--t5e-theme-color-header`, which quadrone paints on
- * its sheet header (`quadrone/header.css:48`) — a header DDB suppresses, so the
- * setting did nothing here. The DDB banner is that header, so it consumes the
- * variable, falling back to the capture-verified dark strip when unset. Gated
- * on `:not(.theme-parchment)` exactly like quadrone, so it applies only while
- * the header background is enabled. */
-.tidy5e-sheet.application.ddb:not(.theme-parchment) .ddb-header-banner {
-  background: var(--t5e-theme-color-header, var(--ddb-header-bg));
-}
+/* DDB-FORK (matrix-sheet Table 2 row 6, revised): Sheet Settings > Theme >
+ * "Header Background Color" (`--t5e-theme-color-header`) used to repaint this
+ * strip. It now follows quadrone's semantics instead — the colour is the ground
+ * UNDER the header image — so it lives at the bottom of the `.ddb-sheet`
+ * backdrop stack in ddb-layout.css, and the banner always keeps the
+ * capture-verified --ddb-header-bg declared above. */
 
 .tidy5e-sheet.application.ddb .ddb-header-banner .ddb-header-group {
   display: flex;
@@ -313,6 +309,16 @@
  * it — the name's type and color are untouched. */
 .tidy5e-sheet.application.ddb h1.ddb-character-name {
   cursor: pointer;
+}
+
+/* It is also keyboard-reachable (role=button, tabindex 0). Keyboard focus
+ * draws an inset accent rule under the name: inset, so the name row's
+ * `overflow: hidden` cannot clip it, and :focus-visible only, so a mouse click
+ * leaves the name exactly as it looks at rest. */
+.tidy5e-sheet.application.ddb h1.ddb-character-name:focus-visible {
+  outline: none;
+  box-shadow: inset 0 calc(-1 * var(--ddb-tab-indicator-width)) 0 0
+    var(--ddb-accent);
 }
 
 /* Editable name uses TextInputQuadrone, which renders an <input>. */

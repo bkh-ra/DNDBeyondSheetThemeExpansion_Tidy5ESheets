@@ -146,7 +146,7 @@
       {:else}
         <!-- Every sidebar tab was turned off in tab configuration. -->
         <div class="ddb-sidebar-empty">
-          {localize('TIDY5E.EmptyFavorites')}
+          {localize('TIDY5E.DdbLayout.Sidebar.AllTabsHidden')}
         </div>
       {/if}
     </div>

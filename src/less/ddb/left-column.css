@@ -644,6 +644,27 @@
   font-weight: var(--ddb-weight-value);
 }
 
+/* Trait icons after the label, inside the comma-separated run — in practice the
+ * weapon-mastery star (`fa-circle-star mastery`), which carries the mastery
+ * tooltip or rule reference. */
+.tidy5e-sheet.application.ddb .ddb-prof-item .ddb-prof-icon {
+  margin-inline-start: var(--ddb-space-half);
+  font-size: var(--ddb-mastery-icon-size);
+  color: var(--ddb-mastery-icon-color);
+}
+
+/* A tool's check modifier in the play-mode run, set like the passive scores in
+ * the SENSES box (`.ddb-sense-value`): body face at value weight. Colour is
+ * inherited, so it rests in body text and follows the roll button's hover
+ * accent with the tool name. */
+.tidy5e-sheet.application.ddb .ddb-prof-item .ddb-prof-mod {
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  font-weight: var(--ddb-weight-value);
+  color: inherit;
+  white-space: nowrap;
+}
+
 /* `display: inline` so a rollable tool sits in the wrapped prose run exactly
  * like the plain `.ddb-prof-item` spans beside it. */
 .tidy5e-sheet.application.ddb .ddb-prof-item-rollable {

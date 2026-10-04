@@ -269,17 +269,104 @@
   */
   let conditionSearchInput = $state<HTMLInputElement>();
 
+  /** The + / x control that opens the picker; Escape hands focus back to it. */
+  let conditionManageButton = $state<HTMLButtonElement>();
+
+  let conditionOptionsList = $state<HTMLUListElement>();
+
   $effect(() => {
     if (managingConditions) {
       conditionSearchInput?.focus();
     }
   });
 
-  /** Escape closes the picker from anywhere inside it. */
-  function onConditionPickerKeydown(event: KeyboardEvent) {
+  /**
+   * Escape closes the picker from anywhere inside it and returns focus to the
+   * trigger. The trigger stays rendered while the picker unmounts, so focusing
+   * it first keeps focus from falling back to the document body.
+   */
+  function closeConditionMenuFromKeyboard(event: KeyboardEvent) {
+    event.stopPropagation();
+    closeConditionMenu();
+    conditionManageButton?.focus();
+  }
+
+  /**
+   * DDB-FORK: roving focus over the option buttons, per the ARIA menu pattern.
+   * ArrowDown / ArrowUp step through them and wrap at either end; Home / End
+   * jump to the first / last. Re-queried on every key press because the search
+   * filter changes which options exist.
+   */
+  function focusConditionOption(
+    target: 'next' | 'previous' | 'first' | 'last',
+    from: Element | null,
+  ) {
+    const options = Array.from(
+      conditionOptionsList?.querySelectorAll<HTMLButtonElement>(
+        '.ddb-condition-option',
+      ) ?? [],
+    );
+
+    if (!options.length) {
+      return;
+    }
+
+    const current = options.indexOf(from as HTMLButtonElement);
+    const last = options.length - 1;
+
+    const indices = {
+      first: 0,
+      last,
+      // `current` is -1 when focus is not on an option yet.
+      next: (current + 1) % options.length,
+      previous: current <= 0 ? last : current - 1,
+    };
+
+    options[indices[target]].focus();
+  }
+
+  /** Keys on an option button: Escape plus the full roving-focus set. */
+  function onConditionOptionKeydown(event: KeyboardEvent) {
+    let move: 'next' | 'previous' | 'first' | 'last';
+
+    switch (event.key) {
+      case 'Escape':
+        closeConditionMenuFromKeyboard(event);
+        return;
+      case 'ArrowDown':
+        move = 'next';
+        break;
+      case 'ArrowUp':
+        move = 'previous';
+        break;
+      case 'Home':
+        move = 'first';
+        break;
+      case 'End':
+        move = 'last';
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    focusConditionOption(move, event.currentTarget as Element);
+  }
+
+  /**
+   * Keys in the search field: Escape, and ArrowDown / ArrowUp to enter the
+   * option list at its first / last entry. Home / End stay with the text
+   * field, where they move the caret.
+   */
+  function onConditionSearchKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
-      event.stopPropagation();
-      closeConditionMenu();
+      closeConditionMenuFromKeyboard(event);
+    } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      focusConditionOption(
+        event.key === 'ArrowDown' ? 'first' : 'last',
+        null,
+      );
     }
   }
 
@@ -410,6 +497,7 @@
       </h3>
       {#if context.editable}
         <button
+          bind:this={conditionManageButton}
           type="button"
           class="ddb-conditions-manage"
           aria-expanded={managingConditions}
@@ -476,7 +564,11 @@
       <span class="ddb-cd-empty">{noneLabel}</span>
     {/if}
 
-    {#if context.editable && (managingConditions || exhaustionLevel > 0)}
+    <!-- Always on while editable, as quadrone's vitals row offers its
+         exhaustion control (CharacterSheet.svelte: `context.editable ||
+         exhaustionLevel > 0`). A viewer who cannot edit still reads the level
+         from the "Exhaustion (Level N)" condition entry above. -->
+    {#if context.editable}
       <div
         class="ddb-exhaustion-track"
         role="group"
@@ -513,8 +605,10 @@
         role="menu", a search field nested inside it (invalid ARIA) and no
         focus entry, so the condition control could be opened but not operated
         from the keyboard. The menu role now belongs to the option list alone,
-        opening the popover moves focus to the search field, and Escape closes
-        it from either the field or an option.
+        opening the popover moves focus to the search field, the arrow keys
+        (plus Home / End on an option) move between options, and Escape closes
+        it from either the field or an option and returns focus to the + / x
+        trigger.
       -->
       <div
         class="ddb-condition-picker"
@@ -528,10 +622,11 @@
           class="ddb-condition-search"
           placeholder={localize('TIDY5E.Search')}
           aria-label={localize('TIDY5E.Search')}
-          onkeydown={onConditionPickerKeydown}
+          onkeydown={onConditionSearchKeydown}
           bind:value={conditionFilter}
         />
         <ul
+          bind:this={conditionOptionsList}
           class="ddb-condition-options"
           role="menu"
           aria-label={localize('DND5E.Conditions')}
@@ -544,7 +639,7 @@
                 class={['ddb-condition-option', { active: entry.active }]}
                 aria-checked={entry.active}
                 data-condition-id={entry.statusId}
-                onkeydown={onConditionPickerKeydown}
+                onkeydown={onConditionOptionKeydown}
                 onclick={() => handleConditionToggle(entry)}
               >
                 <i
