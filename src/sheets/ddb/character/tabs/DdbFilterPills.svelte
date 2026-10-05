@@ -25,7 +25,9 @@
                  pills follow it;
     showAll      false drops the ALL pill (a leading pill plays that part);
     showFilters  false renders the leading snippet alone (the row stays, so
-                 the sticky offset and the row height do not jump).
+                 the sticky offset and the row height do not jump);
+    dedupeTooltips  true omits a pill's tooltip when it only repeats the
+                 pill's own label (Inventory: ATTUNED / ATTUNABLE / EQUIPPED).
 -->
 <script lang="ts">
   import { CONSTANTS } from 'src/constants';
@@ -45,6 +47,7 @@
     leading?: Snippet;
     showAll?: boolean;
     showFilters?: boolean;
+    dedupeTooltips?: boolean;
   }
 
   let {
@@ -52,6 +55,7 @@
     leading,
     showAll = true,
     showFilters = true,
+    dedupeTooltips = false,
   }: Props = $props();
 
   const localize = FoundryAdapter.localize;
@@ -183,13 +187,17 @@
     {#each showFilters ? pills : [] as filter (filter.name)}
       {const state = $derived(stateOf(filter))}
       {const label = $derived(localize(filter.pillLabel ?? filter.text))}
+      {const tooltip = $derived(localize(filter.text))}
       <button
         type="button"
         class={['button', 'button-toggle', 'ddb-filter-pill', state]}
         data-ddb-filter={filter.name}
         data-ddb-filter-state={state}
         aria-pressed={state === 'include'}
-        data-tooltip={localize(filter.text)}
+        data-tooltip={dedupeTooltips &&
+        tooltip.localeCompare(label, undefined, { sensitivity: 'accent' }) === 0
+          ? undefined
+          : tooltip}
         onclick={(event) => onPillClick(filter, event)}
         oncontextmenu={(event) => onPillContextMenu(filter, event)}
       >

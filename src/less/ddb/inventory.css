@@ -74,6 +74,11 @@
   padding-block-end: var(--ddb-space-2);
 }
 
+/* Inset: the table group titles above (CONSUMABLES, CONTAINERS ...) start
+ * after their expand-chevron column, which quadrone sizes with
+ * --t5e-table-header-row-height (tables.css .expand-button). The section's
+ * header, prose and editor take the same inset; its hairline stays full width
+ * (the border is outside the padding). */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab > .ddb-other-possessions {
   order: 1;
   flex: 0 0 auto;
@@ -82,6 +87,7 @@
   gap: var(--ddb-space-1);
   margin-block: 0 calc(var(--ddb-space-5) + var(--ddb-radius-panel));
   padding-block-start: var(--ddb-space-2);
+  padding-inline-start: var(--t5e-table-header-row-height, 1.5rem);
   border-top: var(--ddb-border-width-panel) solid var(--ddb-list-border);
   font-family: var(--ddb-font-body);
   font-size: var(--ddb-size-body);
@@ -185,13 +191,23 @@
   padding-block-start: var(--ddb-space-1);
 }
 
+/* The view header (name, count, CAPACITY bar) stays at the top of the pane
+ * under the pill row while the list scrolls, like the Equipment view's
+ * search bar (actions-spells.css section 1): sticky to the scroller
+ * (`.tidy-tab`) by the pills' measured height, on the solid pane colour so
+ * rows never show through. It is the view's first child, so it stays pinned
+ * for the whole view. */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view .ddb-inventory-view-header {
+  position: sticky;
+  top: var(--ddb-pills-height, 0px);
+  z-index: 2;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--ddb-space-1) var(--ddb-space-3);
-  padding-block-end: var(--ddb-space-1);
+  padding-block: var(--ddb-space-1);
   border-bottom: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+  background: var(--ddb-panel-bg-solid);
 }
 
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view .ddb-inventory-view-title {
@@ -265,6 +281,14 @@
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view .ddb-inventory-capacity .meter {
   flex: 1 1 auto;
   min-width: 0;
+}
+
+/* The meter is always dark (`.meter.theme-dark`); its unit ("lb") carries
+ * `.color-text-lightest`, which tab-content.css section 4 maps to the disabled
+ * grey: unreadable on the red fill. It takes the numbers' light label colour,
+ * as tab-content.css already does for the meter's other utility classes. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view .ddb-inventory-capacity .meter.theme-dark .label .units {
+  color: inherit;
 }
 
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view :is(.ddb-inventory-container-contents, .ddb-inventory-party-contents) {

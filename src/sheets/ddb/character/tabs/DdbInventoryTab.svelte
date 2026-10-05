@@ -283,6 +283,7 @@
   leading={viewPills}
   showAll={false}
   showFilters={effectiveView === VIEW_EQUIPMENT}
+  dedupeTooltips={true}
 />
 
 {#if effectiveView === VIEW_PARTY && party}
