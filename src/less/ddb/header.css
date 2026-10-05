@@ -664,19 +664,22 @@
 /* Narrow widths — shed the least essential slots first                */
 /* ------------------------------------------------------------------ */
 
-@media (max-width: 62.5rem) {
-  .tidy5e-sheet.application.ddb .ddb-header-group-campaign {
-    display: none;
-  }
+/* Wave 8: keyed on the sheet's own layout mode (`.ddb-sheet.ddb-mode-*`, set
+ * from the WINDOW width by DdbCharacterSheet.svelte) instead of the old
+ * `@media (max-width: 62.5rem / 50rem)` pair, which measured the browser
+ * viewport and so never fired for a narrow window on a wide screen. Stacked
+ * (auto: < 1100px, floor 760px) drops the campaign slot and the rest-button
+ * labels together: at 760px the strip has room for the portrait, the name
+ * and icon-only rests, not for both text slots. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-header-group-campaign {
+  display: none;
 }
 
-@media (max-width: 50rem) {
-  .tidy5e-sheet.application.ddb .ddb-rest-button-label {
-    display: none;
-  }
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-rest-button-label {
+  display: none;
+}
 
-  .tidy5e-sheet.application.ddb .ddb-rest-button {
-    width: 1.625rem;
-    padding: 0;
-  }
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-rest-button {
+  width: 1.625rem;
+  padding: 0;
 }

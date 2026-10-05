@@ -37,9 +37,19 @@ export class Tidy5eCharacterSheetDdb extends Tidy5eCharacterSheetQuadrone {
     classes: [CONSTANTS.SHEET_LAYOUT_DDB],
     position: {
       // 1390 = the pre-sidebar 1150 default + the 230px sidebar column and its
-      // 6px gap. The window floor lives in `src/less/ddb/ddb-layout.css`
-      // (min-width, derived from the column tokens: 1230px), so this default
-      // gives the primary pane 730px beside the default 230px sidebar.
+      // 6px gap: the primary pane gets 730px beside the default 230px sidebar.
+      // The window floors live in `src/less/ddb/ddb-layout.css` (per layout
+      // mode since Wave 8).
+      //
+      // HEIGHT (Wave 8): 950 is a ceiling, not a promise. ApplicationV2's
+      // `_updatePosition` clamps the requested height to the window's
+      // computed max-height, which Foundry core sets on every `.application`
+      // to `calc(100vh - 1.5 * var(--hotbar-height))`, so the sheet already
+      // opens at min(950 or the remembered `sheetPreferences['character-ddb']`
+      // height, the available viewport height) with no code here. What used to
+      // defeat that was the DDB CSS floor (`min-height: 860px`, which beats an
+      // inline height); it is now min(640px, 100vh), and the density levels
+      // make the sheet fit whatever height it gets.
       width: 1390,
       height: 950,
     },

@@ -287,14 +287,12 @@
   box-shadow: var(--ddb-shadow-elevated);
 }
 
-/* Narrow-window fallback: the stacked layout gives the pane its own
- * full-width row (ddb-layout.css), so it goes back into the flow. */
-@media (max-width: 900px) {
-  .tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-overlay .ddb-sidebar {
-    position: relative;
-    inset: auto;
-    max-width: 100%;
-  }
+/* Stacked mode (Wave 8; was `@media (max-width: 900px)`): the pane gets its
+ * own full-width row (ddb-layout.css), so it goes back into the flow. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked.ddb-sidebar-overlay .ddb-sidebar {
+  position: relative;
+  inset: auto;
+  max-width: 100%;
 }
 
 /* ------------------------------------------------------------------ */
@@ -774,29 +772,24 @@
 /* Narrow-window fallback                                             */
 /* ------------------------------------------------------------------ */
 
-/* Below 900px the grid stacks (see `ddb-layout.css`); the sidebar becomes a
- * full-width block that grows with its content and lets the sheet body scroll,
- * so nothing is clipped on a small popped-out window. */
-@media (max-width: 900px) {
-  .tidy5e-sheet.application.ddb .ddb-sidebar {
-    width: auto;
-    max-width: none;
-  }
+/* Stacked mode (Wave 8; was `@media (max-width: 900px)`, which measured the
+ * browser viewport, not the window): the grid stacks (see `ddb-layout.css`)
+ * and the sidebar becomes a full-width block that grows with its content and
+ * lets the sheet body scroll, so nothing is clipped in a narrow window. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-sidebar,
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-sidebar.collapsed {
+  width: auto;
+  max-width: none;
+}
 
-  .tidy5e-sheet.application.ddb .ddb-sidebar.collapsed {
-    width: auto;
-    max-width: none;
-  }
+/* A full-width stacked pane has no width to drag. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-sidebar-resizer {
+  display: none;
+}
 
-  /* A full-width stacked pane has no width to drag. */
-  .tidy5e-sheet.application.ddb .ddb-sidebar-resizer {
-    display: none;
-  }
-
-  .tidy5e-sheet.application.ddb .ddb-sidebar-content {
-    flex: 0 0 auto;
-    height: auto;
-    /* Keeps a stacked sidebar from crowding out the primary column. */
-    max-height: 24rem;
-  }
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-sidebar-content {
+  flex: 0 0 auto;
+  height: auto;
+  /* Keeps a stacked sidebar from crowding out the primary column. */
+  max-height: 24rem;
 }

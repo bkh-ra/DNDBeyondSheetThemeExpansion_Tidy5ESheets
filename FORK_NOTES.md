@@ -83,6 +83,7 @@ world theme, but it owns whatever differs structurally:
 | Sidebar open/closed | per tab | single, `sheetPreferences.character.tabs['ddb-sidebar']` |
 | Window-header lock toggle | mounted | not mounted (the DDB banner has its own) |
 | Per-user layout preferences | — | `flags.ddb5e-sheets.userPreferences.ddb.{sidebarSide, sidebarMode, sidebarWidth (px, 220-520, dragged on the pane edge), clickOpensDetails, skillClick, detailsPaneEnabled, layoutMode}` (`src/sheets/ddb/DdbPreferences.ts`) |
+| Height / width adaptation | fixed layout; window scrolls | the window never scrolls (except stacked): `DdbCharacterSheet.svelte` sets `ddb-density-{normal|compact|dense}` (+ `ddb-density-overflow`) from the measured stat-column height vs the available body height (tokens in `ddb-tokens.css`: band 107/96/88, skill pitch 32/26/20, saves 30/26/23, box paddings, text 13/12 -> 12/11 at dense; 12px hysteresis) and `ddb-mode-{full|compact|stacked}` (+ `ddb-mode-pinned`) from the sheet width (full >= 1320, compact >= 1100, else stacked; 20px hysteresis) or the `layoutMode` preference; classes mirrored on the application element; window floor `min(640px, 100vh)` so Foundry's own viewport cap wins; below the dense fit the stat columns scroll themselves as the last resort |
 | Item-name click in the primary pane | inline summary toggle | **details pane** (plain click / Enter); Shift = inline summary, Ctrl/Meta = full sheet; `clickOpensDetails:'inline'` restores quadrone's gesture |
 
 The settings apps never hardwire a layout: they read `document.sheet.tabConfigurationSeam`

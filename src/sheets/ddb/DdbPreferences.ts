@@ -36,9 +36,57 @@ export type DdbUserPreferences = {
   skillClick: 'roll' | 'details';
   /** Show the pinned Details sidebar tab at all. */
   detailsPaneEnabled: boolean;
-  /** Layout density. (Wave 8) */
+  /**
+   * Width-driven layout of the sheet (Wave 8): `auto` picks one from the
+   * window width (`resolveDdbLayoutMode`); any other value pins it. The
+   * vertical density is never a preference; it always follows the height.
+   */
   layoutMode: 'auto' | 'full' | 'compact' | 'stacked';
 };
+
+/** A concrete layout mode: the `layoutMode` preference without `auto`. */
+export type DdbLayoutMode = Exclude<DdbUserPreferences['layoutMode'], 'auto'>;
+
+/**
+ * Window widths (px) at which `layoutMode: 'auto'` ENTERS each mode. A mode
+ * is kept until the window is `hysteresis` px narrower than its entry width,
+ * so dragging a window edge across a breakpoint does not flap the layout.
+ *   full     four columns at the full column budget (ddb-tokens.css)
+ *   compact  four columns, narrower stat columns and a 520px primary floor
+ *   stacked  stat columns side by side, primary pane and sidebar below them;
+ *            the only mode whose sheet body scrolls
+ */
+export const DDB_LAYOUT_MODE_BREAKPOINTS = Object.freeze({
+  full: 1320,
+  compact: 1100,
+  hysteresis: 20,
+});
+
+/**
+ * The layout mode for a window `windowWidth` px wide. A pinned preference
+ * wins outright; `auto` applies the breakpoints, with hysteresis relative to
+ * the mode the sheet is `current`ly in (omit it for a fresh decision).
+ */
+export function resolveDdbLayoutMode(
+  preference: DdbUserPreferences['layoutMode'],
+  windowWidth: number,
+  current?: DdbLayoutMode,
+): DdbLayoutMode {
+  if (preference !== 'auto') {
+    return preference;
+  }
+
+  const { full, compact, hysteresis } = DDB_LAYOUT_MODE_BREAKPOINTS;
+  const fullFrom = current === 'full' ? full - hysteresis : full;
+  const compactFrom =
+    current === 'full' || current === 'compact' ? compact - hysteresis : compact;
+
+  if (windowWidth >= fullFrom) {
+    return 'full';
+  }
+
+  return windowWidth >= compactFrom ? 'compact' : 'stacked';
+}
 
 export type DdbUserPreferenceKey = keyof DdbUserPreferences;
 
@@ -289,6 +337,13 @@ export class DdbPreferences {
     return (
       preferences.sidebarMode === 'overlay' && preferences.sidebarSide !== 'left'
     );
+  }
+
+  /** Whether the `layoutMode` preference pins one mode (anything but auto). */
+  static pinsLayoutMode(
+    preferences: DdbUserPreferences = DdbPreferences.get(),
+  ): boolean {
+    return preferences.layoutMode !== 'auto';
   }
 
   /**

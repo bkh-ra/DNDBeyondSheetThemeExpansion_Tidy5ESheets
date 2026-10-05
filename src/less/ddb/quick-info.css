@@ -129,24 +129,73 @@
 
 /* The band is a single row (INITIATIVE + ARMOR CLASS live in DdbCombatRow atop
  * the primary column), so it is only as tall as the ability boxes plus a
- * hairline of padding: ~107px. Horizontal padding is left to .ddb-sheet-body
- * so the band runs the full width it is given. */
+ * hairline of padding: ~107px at normal density (96 / 88 at compact / dense,
+ * Wave 8). Horizontal padding is left to .ddb-sheet-body so the band runs the
+ * full width it is given. */
 .tidy5e-sheet.application.ddb .ddb-quick-info {
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: var(--ddb-space-2) 0;
+  padding: var(--ddb-quick-info-pad) 0;
   font-family: var(--ddb-font-condensed);
   color: var(--ddb-text);
 }
 
 /* Nothing reflows: every item is a fixed footprint, and the health panel is
- * the only one allowed to give ground if the window is dragged narrow. */
+ * the only one allowed to give ground if the window is dragged narrow.
+ *
+ * DENSITY SCALE (Wave 8). The 95px ability card is what sets the band's
+ * height, but it cannot shrink alone: every frame in the band shares the
+ * BAND BASELINE (the header note of this file), and a smaller card would drop
+ * its frame bottom off that line. So the WHOLE row scales by one factor,
+ * `--ddb-ability-box-scale` (1 / 88:95 / 84:95). `zoom` rather than a
+ * transform: it re-lays the row out at the smaller size (the band really
+ * gets shorter, and text is re-rasterised rather than bitmap-scaled), and the
+ * row's layout width grows by the inverse factor so the HP panel still ends on
+ * the band's right edge. The 10px captions render at ~8.8px at dense, the one
+ * place the band's type shrinks. */
 .tidy5e-sheet.application.ddb .ddb-quick-info__row {
   display: flex;
   flex-wrap: nowrap;
   align-items: flex-start;
   gap: var(--ddb-space-1);
+  zoom: var(--ddb-ability-box-scale);
+}
+
+/* EDIT MODE: the HP readout gains its temp-max field on a second row and runs
+ * ~11.5px above and below its 80px panel (pre-Wave-8; the captions CURRENT /
+ * MAX / TEMP sit above the panel's top edge). At normal density the 6 + 6px
+ * of body and band padding above the row happened to absorb that; the denser
+ * levels pad less, and the body (overflow: hidden) clipped the captions. So
+ * in edit mode the band keeps 12px (scaled with the row) of clearance above
+ * the row at every density; normal is unchanged (6 + 6). */
+.tidy5e-sheet.application.ddb.sheet-mode-edit .ddb-quick-info {
+  padding-top: max(
+    var(--ddb-quick-info-pad),
+    calc(12px * var(--ddb-ability-box-scale) - var(--ddb-body-pad-top))
+  );
+}
+
+/* The HP manager popover hangs off the HP panel inside the scaled row; undo
+ * the scale on it so it always reads at full size. */
+.tidy5e-sheet.application.ddb .ddb-quick-info__row .ddb-hp-manager {
+  zoom: calc(1 / var(--ddb-ability-box-scale));
+}
+
+/* COMPACT mode (Wave 8, auto at 1100-1319px windows): the band needs ~1088px
+ * of row at the HP panel's 21rem floor, which a 1100px window cannot give at
+ * normal density. The panel's fields group is ~211px, so 20rem (a 298px
+ * interior) still holds CURRENT / MAX / TEMP. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-compact .ddb-hp-block {
+  min-width: 20rem;
+}
+
+/* STACKED mode (Wave 8, < 1100px): the band cannot fit one row at all, so it
+ * wraps; the health panel (right-aligned by its auto margin) drops to a
+ * second line under the abilities. The body scrolls in this mode. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-quick-info__row {
+  flex-wrap: wrap;
+  row-gap: var(--ddb-space-2);
 }
 
 .tidy5e-sheet.application.ddb .ddb-quick-info__abilities {

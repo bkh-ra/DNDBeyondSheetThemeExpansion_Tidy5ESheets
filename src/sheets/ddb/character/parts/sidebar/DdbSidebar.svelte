@@ -245,8 +245,9 @@
 
     const style = getComputedStyle(columns);
 
-    // The narrow-window fallback stacks the grid into two tracks; the pane is
-    // full-width there and the handle is hidden, so there is nothing to clamp.
+    // Stacked mode (`ddb-mode-stacked`, Wave 8) lays the grid out in two
+    // tracks; the pane is full-width there and the handle is hidden, so there
+    // is nothing to clamp.
     if (style.gridTemplateColumns.trim().split(/\s+/).length < 4) {
       return DDB_SIDEBAR_WIDTH_RANGE.max;
     }
@@ -285,6 +286,14 @@
 
     const observer = new ResizeObserver(update);
     observer.observe(columns);
+    // Wave 8: a layout-mode switch (`ddb-mode-compact`, or a pinned mode at an
+    // unchanged window size) narrows the stat columns and the primary floor
+    // without resizing `.ddb-columns` itself; the left stat column's width
+    // changes with every mode, so watching it keeps the clamp current.
+    const statColumn = columns.querySelector<HTMLElement>(':scope > .ddb-col-left');
+    if (statColumn) {
+      observer.observe(statColumn);
+    }
 
     return () => observer.disconnect();
   });

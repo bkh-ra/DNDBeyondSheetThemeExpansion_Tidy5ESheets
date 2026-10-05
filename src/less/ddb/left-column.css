@@ -49,7 +49,9 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: var(--ddb-space-5) var(--ddb-space-3) var(--ddb-space-3);
+  /* Block padding is density-scoped (ddb-tokens.css, Wave 8): 12/8 at
+   * normal, the values this note describes. */
+  padding: var(--ddb-box-pad-top) var(--ddb-space-3) var(--ddb-box-pad-bottom);
   color: var(--ddb-text);
   font-family: var(--ddb-font-body);
   font-size: var(--ddb-size-body);
@@ -99,7 +101,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--ddb-space-4);
+  gap: var(--ddb-box-body-gap);
 }
 
 /* The DDB signature: the title sits at the BOTTOM of the box, centred, with
@@ -114,9 +116,13 @@
   align-items: center;
   justify-content: center;
   gap: var(--ddb-space-1);
-  margin-top: var(--ddb-space-3);
-  padding-top: var(--ddb-space-1);
-  min-height: 18px; /* keeps the footer band even across boxes with/without a gear */
+  margin-top: var(--ddb-box-footer-gap);
+  padding-top: var(--ddb-box-footer-pad);
+  /* keeps the footer band even across boxes with/without a gear (18px at
+   * normal density; the 14px gear is the floor) */
+  min-height: var(--ddb-box-footer-height);
+  /* The caption's line box: the body's 1.4 at normal, tighter when denser. */
+  line-height: var(--ddb-stat-lineheight);
 }
 
 .tidy5e-sheet.application.ddb .ddb-box-title {
@@ -176,8 +182,13 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  min-height: 22px;
-  padding: var(--ddb-space-half) var(--ddb-space-1);
+  /* 22px at normal density; it shrinks with the skill row so a dense 20px
+   * row still holds it (ddb-tokens.css). The min-height alone sets the
+   * height (the value is centred by the flex box), so there is no block
+   * padding: with 2px of it the content (2 + 15.6 + 2 + borders) was ~22px
+   * whatever the token said. */
+  min-height: var(--ddb-chip-height);
+  padding: 0 var(--ddb-space-1);
   border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
   border-radius: var(--ddb-radius-control);
   background: none;
@@ -193,7 +204,7 @@
 
 .tidy5e-sheet.application.ddb .ddb-chip-value {
   font-family: var(--ddb-font-body);
-  font-size: var(--ddb-size-body);
+  font-size: var(--ddb-stat-size-body);
   font-weight: var(--ddb-weight-value);
   text-transform: none;
 }
@@ -293,14 +304,16 @@
 .tidy5e-sheet.application.ddb .ddb-saves-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(3, 30px);
+  /* 30px rows / 4px gap at normal density; both shrink with the density
+   * (ddb-tokens.css --ddb-save-row / --ddb-save-row-gap). */
+  grid-template-rows: repeat(3, var(--ddb-save-row));
   grid-auto-flow: column;
   /* Column gap 6px (was 10px), still wider than the 4px row gap: the captures
    * separate the two save columns more than the rows, so a pair of entries
    * never reads as one wide row. The narrower gap is part of the stat-column
    * compression (user request 2026-10-05); each entry keeps ~84px, enough for
    * the abbreviation and a signed two-digit modifier. */
-  gap: var(--ddb-space-1) var(--ddb-space-2);
+  gap: var(--ddb-save-row-gap) var(--ddb-space-2);
 }
 
 /* Positioning context for the pip that floats over the roll button. */
@@ -315,6 +328,14 @@
  * derived from the pip diameter so the abbreviation never shifts between
  * proficient and non-proficient rows. */
 .tidy5e-sheet.application.ddb .ddb-save-roll {
+  /* DdbSaveEntryShape clamps the cap to the row (diameter <= height - 1), so
+   * on a shorter density row the text track follows the DRAWN circle, not the
+   * nominal 28px, and the modifier stays centred in it. */
+  --ddb-save-cap-track: min(
+    var(--ddb-save-circle, 28px),
+    calc(var(--ddb-save-row) - 1px)
+  );
+
   position: relative;
   display: grid;
   /* Text columns pinned to the drawn geometry: the left padding is the shape's
@@ -322,7 +343,7 @@
    * exactly the cap diameter, so the modifier lands dead centre in the circle.
    * Both custom properties are set inline by DdbSavingThrowsBox from the same
    * constants it hands the shape, so text and drawing cannot drift. */
-  grid-template-columns: minmax(0, 1fr) var(--ddb-save-circle, 28px);
+  grid-template-columns: minmax(0, 1fr) var(--ddb-save-cap-track);
   align-items: center;
   gap: 0;
   box-sizing: border-box;
@@ -419,7 +440,7 @@
   min-width: 0;
   text-align: center;
   font-family: var(--ddb-font-condensed);
-  font-size: var(--ddb-size-label-md);
+  font-size: var(--ddb-stat-size-label-md);
   font-weight: var(--ddb-weight-label);
   text-transform: var(--ddb-transform-label);
   letter-spacing: var(--ddb-letterspacing-label);
@@ -435,7 +456,7 @@
 .tidy5e-sheet.application.ddb .ddb-save-modifier {
   text-align: center;
   font-family: var(--ddb-font-body);
-  font-size: var(--ddb-size-body);
+  font-size: var(--ddb-stat-size-body);
   font-weight: var(--ddb-weight-value);
   line-height: 1;
   color: var(--ddb-text);
@@ -471,6 +492,12 @@
   color: var(--ddb-label);
 }
 
+/* Dense (Wave 8): the note shrinks with the stat-column text. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-density-dense .ddb-saves-note {
+  font-size: var(--ddb-stat-size-label-md);
+  line-height: var(--ddb-stat-lineheight);
+}
+
 /* `margin-left: auto` rather than a `1fr` grid column: the label is intrinsic
  * width, so pushing the value off it puts the value on the box's own right
  * inset — the exact edge the concentration modifier lands on. */
@@ -490,6 +517,16 @@
   color: var(--ddb-text-muted);
 }
 
+/* LIST ROW SPACING. Foundry core spaces every `ul li` with a 0.25rem bottom
+ * margin (none on the last), which is part of the senses / skills / tool-row
+ * pitch at normal density. Restated as a token so the compact and dense
+ * levels can shrink it (ddb-tokens.css); the normal value is unchanged. */
+.tidy5e-sheet.application.ddb
+  :is(.ddb-senses-passives, .ddb-skills-list, .ddb-tool-rows)
+  > li:not(:last-child) {
+  margin-bottom: var(--ddb-list-row-margin);
+}
+
 /* ------------------------------------------------------------------ */
 /* SENSES box                                                         */
 /* ------------------------------------------------------------------ */
@@ -499,7 +536,7 @@
 .tidy5e-sheet.application.ddb .ddb-senses-passives {
   display: flex;
   flex-direction: column;
-  gap: var(--ddb-space-1);
+  gap: var(--ddb-sense-row-gap);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -528,7 +565,7 @@
   align-items: center;
   box-sizing: border-box;
   gap: var(--ddb-space-3);
-  min-height: 26px;
+  min-height: var(--ddb-sense-row); /* 26px at normal density */
   padding: 0 calc(var(--ddb-space-2) + var(--ddb-border-width-panel)) 0
     calc(var(--ddb-space-half) + var(--ddb-border-width-panel));
 }
@@ -542,7 +579,7 @@
   min-width: 30px; /* fits a 3-digit passive without the column resizing */
   text-align: center;
   font-family: var(--ddb-font-body);
-  font-size: var(--ddb-size-body);
+  font-size: var(--ddb-stat-size-body);
   font-weight: var(--ddb-weight-value);
   line-height: 1.2;
   color: var(--ddb-text);
@@ -565,7 +602,8 @@
   margin-top: var(--ddb-space-1);
   text-align: center;
   font-family: var(--ddb-font-condensed);
-  font-size: var(--ddb-size-label-md);
+  font-size: var(--ddb-stat-size-label-md);
+  line-height: var(--ddb-stat-lineheight);
   color: var(--ddb-text-prose);
 }
 
@@ -593,7 +631,8 @@
   gap: var(--ddb-space-half);
   text-align: center;
   font-family: var(--ddb-font-condensed);
-  font-size: var(--ddb-size-label-md);
+  font-size: var(--ddb-stat-size-label-md);
+  line-height: var(--ddb-stat-lineheight);
   color: var(--ddb-text-prose);
 }
 
@@ -608,8 +647,8 @@
 }
 
 .tidy5e-sheet.application.ddb .ddb-prof-group + .ddb-prof-group {
-  margin-top: var(--ddb-space-4);
-  padding-top: var(--ddb-space-4);
+  margin-top: var(--ddb-prof-group-gap);
+  padding-top: var(--ddb-prof-group-gap);
   border-top: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
 }
 
@@ -633,19 +672,70 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0 var(--ddb-space-1);
-  margin-top: var(--ddb-space-1);
-  line-height: var(--ddb-lineheight-body);
+  margin-top: var(--ddb-prof-items-gap);
+  line-height: var(--ddb-stat-lineheight);
   color: var(--ddb-text);
 }
 
 .tidy5e-sheet.application.ddb .ddb-prof-item {
   font-family: var(--ddb-font-condensed);
-  font-size: var(--ddb-size-body);
+  font-size: var(--ddb-stat-size-body);
   color: var(--ddb-text);
 }
 
 .tidy5e-sheet.application.ddb .ddb-prof-sep {
   color: var(--ddb-text-muted);
+}
+
+/* DENSE: RUN-IN GROUP LABELS (Wave 8). At the densest level each group's
+ * label leads its own prose line ("ARMOR Light, Medium, Shields") instead of
+ * taking a line above it: one ~13px line saved per group, the largest single
+ * saving in the stat columns (4-5 groups). The prose then flows as text (an
+ * item may break between words), the label keeps its caps style, and the
+ * edit-mode gear stays beside it. Edit mode's tool ROWS stay block-level, so
+ * that group keeps its label line. The group's own font and line-height are
+ * set because its inline content now sits on the group's strut. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-density-dense .ddb-prof-group {
+  font-size: var(--ddb-stat-size-body);
+  line-height: var(--ddb-stat-lineheight);
+}
+
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-density-dense .ddb-prof-group-header {
+  display: inline-flex;
+  min-height: 0;
+  margin-inline-end: var(--ddb-space-1);
+  vertical-align: baseline;
+}
+
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-density-dense .ddb-prof-group-items {
+  display: inline;
+  margin-top: 0;
+}
+
+/* In the flex layout the 4px column gap spaced the items; as text they need a
+ * real space, which is also the line-break opportunity between them (a margin
+ * is not one, and the run would wrap as a single word). */
+.tidy5e-sheet.application.ddb
+  .ddb-sheet.ddb-density-dense
+  .ddb-prof-group-items
+  > .ddb-prof-item:not(:last-child)::after {
+  content: ' ';
+}
+
+/* The mastery star as a glyph rather than an inline-block: an atomic inline
+ * is a break opportunity, which let a line start with the comma after it. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-density-dense .ddb-prof-item .ddb-prof-icon {
+  display: inline;
+}
+
+/* Compact / dense (Wave 8): Foundry's core button height (24px) floors the
+ * play-mode rollable tool names (a 24px line in the prose) and the edit-mode
+ * tool rows (24px whatever --ddb-tool-row says). Released at the denser
+ * levels only, so the normal level keeps its exact pre-Wave-8 geometry. */
+.tidy5e-sheet.application.ddb
+  .ddb-sheet:is(.ddb-density-compact, .ddb-density-dense)
+  :is(.ddb-prof-item-rollable, .ddb-tool-row .ddb-tool-name) {
+  height: auto;
 }
 
 /* The value half of a Special Traits entry (Number/String character flags). */
@@ -668,7 +758,7 @@
  * accent with the tool name. */
 .tidy5e-sheet.application.ddb .ddb-prof-item .ddb-prof-mod {
   font-family: var(--ddb-font-body);
-  font-size: var(--ddb-size-body);
+  font-size: var(--ddb-stat-size-body);
   font-weight: var(--ddb-weight-value);
   color: inherit;
   white-space: nowrap;
@@ -718,7 +808,7 @@
  * first content row starts well below it. Vertical padding, the frame and the
  * bottom title stay uniform with the other boxes. */
 .tidy5e-sheet.application.ddb .ddb-skills-box {
-  padding-inline: var(--ddb-space-2);
+  padding-inline: var(--ddb-skills-pad-inline); /* 6px; 4px in compact mode */
 }
 
 /* THE shared grid template: the header labels and every skill row are laid out
@@ -736,12 +826,16 @@
 .tidy5e-sheet.application.ddb .ddb-skills-header,
 .tidy5e-sheet.application.ddb .ddb-skill-row {
   display: grid;
-  grid-template-columns: 24px 28px minmax(0, 1fr) 36px;
+  /* 24 / 28 / 1fr / 36 in full mode; compact mode narrows MOD and BONUS by
+   * 2px each (ddb-tokens.css, "layout modes"). */
+  grid-template-columns:
+    var(--ddb-skills-track-prof) var(--ddb-skills-track-mod)
+    minmax(0, 1fr) var(--ddb-skills-track-bonus);
 }
 
 .tidy5e-sheet.application.ddb .ddb-skills-header {
   align-items: center;
-  margin-bottom: var(--ddb-space-1);
+  margin-bottom: var(--ddb-skills-header-gap);
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-label);
   font-weight: var(--ddb-weight-label);
@@ -760,6 +854,9 @@
   width: auto;
   min-width: 0;
   min-height: 0;
+  /* Foundry's core button height (20px) set the header row at normal
+   * density; the denser levels shrink it (ddb-tokens.css). */
+  height: var(--ddb-skills-header-height);
   margin: 0;
   padding: 0;
   border: 0;
@@ -799,7 +896,7 @@
 .tidy5e-sheet.application.ddb .ddb-skills-list {
   display: flex;
   flex-direction: column;
-  gap: var(--ddb-space-half);
+  gap: var(--ddb-skill-row-gap);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -812,7 +909,7 @@
  * that is the ~29px pitch measured off the capture. */
 .tidy5e-sheet.application.ddb .ddb-skill-row {
   align-items: stretch;
-  min-height: 26px;
+  min-height: var(--ddb-skill-row); /* 26px at normal density */
 }
 
 .tidy5e-sheet.application.ddb .ddb-skills-col-prof,
@@ -848,7 +945,7 @@
 
 .tidy5e-sheet.application.ddb .ddb-skill-ability {
   font-family: var(--ddb-font-condensed);
-  font-size: var(--ddb-size-label-md);
+  font-size: var(--ddb-stat-size-label-md);
   font-weight: var(--ddb-weight-label);
   text-transform: var(--ddb-transform-label);
   color: var(--ddb-label);
@@ -857,24 +954,31 @@
 .tidy5e-sheet.application.ddb .ddb-skill-ability-select {
   width: 100%;
   min-height: 0;
-  height: 20px;
+  height: var(--ddb-stat-select-height);
   padding: 0 var(--ddb-space-half);
   font-family: var(--ddb-font-condensed);
-  font-size: var(--ddb-size-label-md);
+  font-size: var(--ddb-stat-size-label-md);
   text-transform: var(--ddb-transform-label);
   color: var(--ddb-label);
 }
 
-/* `display: block` (not inline-flex) so `text-overflow` applies; 4px + 18px +
+/* The height is the ROW height, stated: Foundry's core button height (24px)
+ * would otherwise floor every density's row at 24px, and `auto` would add the
+ * hairline on top of the row (the grid stretch used to size it to exactly the
+ * 26px row, border box; this keeps that at every density).
+ * `display: block` (not inline-flex) so `text-overflow` applies; 4px + 18px +
  * 4px fills the 26px row so the name sits optically centred against the bonus
  * chip beside it and their hairlines line up. The trailing pad is 2px (was
  * 4px), half of the name-to-chip gap; see `.ddb-skills-col-bonus`. */
 .tidy5e-sheet.application.ddb .ddb-skill-name {
   display: block;
   justify-self: stretch;
+  box-sizing: border-box;
   width: 100%;
+  height: var(--ddb-skill-row);
   min-height: 0;
-  padding: var(--ddb-space-1) var(--ddb-space-half) var(--ddb-space-1) 0;
+  padding: var(--ddb-skill-name-pad) var(--ddb-space-half)
+    var(--ddb-skill-name-pad) 0;
   border: 0;
   border-bottom: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
   border-radius: 0;
@@ -882,8 +986,11 @@
   box-shadow: none;
   text-align: left;
   font-family: var(--ddb-font-condensed);
-  font-size: var(--ddb-size-body);
-  line-height: 18px; /* 4 + 18 + 4 = the 26px row */
+  font-size: var(--ddb-stat-size-body);
+  /* 4 + 18 + 4 = the 26px row at normal density; the name's line box is
+   * always the row minus its two pads, so every density keeps the hairline on
+   * the row's bottom edge. */
+  line-height: calc(var(--ddb-skill-row) - 2 * var(--ddb-skill-name-pad));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -911,7 +1018,7 @@
  * chip fills the column exactly and every value sits on the same right edge.
  * 34px still holds a signed two-digit bonus ("+11") without growing. */
 .tidy5e-sheet.application.ddb .ddb-skill-bonus {
-  min-width: 34px;
+  min-width: calc(var(--ddb-skills-track-bonus) - var(--ddb-space-half));
 }
 
 /* ------------------------------------------------------------------ */
@@ -923,7 +1030,9 @@
  * exactly (was 16px); this column is what sizes the SKILLS column width. */
 .tidy5e-sheet.application.ddb .ddb-skills-box.unlocked .ddb-skills-header,
 .tidy5e-sheet.application.ddb .ddb-skills-box.unlocked .ddb-skill-row {
-  grid-template-columns: 24px 28px minmax(0, 1fr) 36px 14px;
+  grid-template-columns:
+    var(--ddb-skills-track-prof) var(--ddb-skills-track-mod)
+    minmax(0, 1fr) var(--ddb-skills-track-bonus) 14px;
 }
 
 .tidy5e-sheet.application.ddb .ddb-skills-col-config {
@@ -943,6 +1052,8 @@
 .tidy5e-sheet.application.ddb .ddb-skill-ability-button {
   min-width: 0;
   min-height: 0;
+  /* core button height (22px) would floor a dense 20px row */
+  height: auto;
   padding: 0;
   border: 0;
   border-radius: var(--ddb-radius-control);
@@ -969,8 +1080,8 @@
   display: flex;
   align-items: center;
   gap: var(--ddb-space-1);
-  margin-top: var(--ddb-space-2);
-  padding-top: var(--ddb-space-2);
+  margin-top: var(--ddb-concentration-gap);
+  padding-top: var(--ddb-concentration-gap);
   border-top: var(--ddb-border-width-panel) solid var(--ddb-list-border);
 }
 
@@ -982,12 +1093,15 @@
   box-sizing: border-box;
   min-width: 0;
   min-height: 0;
+  /* Foundry's core button height (24px) at normal density; shorter rows in
+   * the denser levels (ddb-tokens.css). */
+  height: var(--ddb-concentration-height);
   padding: 0;
   border: 0;
   background: none;
   box-shadow: none;
   font-family: var(--ddb-font-condensed);
-  font-size: var(--ddb-size-label-md);
+  font-size: var(--ddb-stat-size-label-md);
   color: var(--ddb-text);
   cursor: pointer;
   transition: color var(--ddb-transition);
@@ -1049,16 +1163,16 @@
   grid-template-columns: 16px 34px minmax(0, 1fr) 16px;
   align-items: center;
   gap: var(--ddb-space-1);
-  min-height: 22px;
+  min-height: var(--ddb-tool-row); /* 22px at normal density */
 }
 
 .tidy5e-sheet.application.ddb .ddb-tool-row .ddb-tool-ability-select {
   width: 100%;
   min-height: 0;
-  height: 20px;
+  height: var(--ddb-stat-select-height);
   padding: 0 var(--ddb-space-half);
   font-family: var(--ddb-font-condensed);
-  font-size: var(--ddb-size-label-md);
+  font-size: var(--ddb-stat-size-label-md);
   text-transform: var(--ddb-transform-label);
   color: var(--ddb-label);
 }
