@@ -1,2 +1,522 @@
 /* DDB-FORK: Extras tab (summons, companions, linked creatures) of the DDB layout (ddb-next Wave 7).
- * Every selector starts with .tidy5e-sheet.application.ddb (see FORK_NOTES). */
+ * Every selector starts with .tidy5e-sheet.application.ddb (see FORK_NOTES).
+ *
+ * DdbExtrasTab (src/sheets/ddb/character/tabs/) is a DDB-only tab, not a
+ * wrapped quadrone one, so everything inside it is styled here, after D&D
+ * Beyond's Extras tab (design/captures/<pc>/<theme>/07-extras):
+ *
+ *   1. The tab body (fills the scroller, so the whole pane is a drop zone)
+ *   2. Toolbar: group pills (actions-spells.css section 1's pill look) +
+ *      MANAGE EXTRAS (D&D Beyond's outline button), pinned to the top
+ *   3. Groups: SUMMONED / COMPANIONS / LINKED headers + the column header row
+ *   4. Rows (DdbExtraCard): D&D Beyond's `.ct-extra-row` geometry
+ *        art 30px | name 13 + meta 10 | AC 16 | HP 16 (max muted) |
+ *        speed 16 + callout 10 | notes 12 muted | row actions
+ *      on fixed tracks, so the columns line up from group to group
+ *   5. Empty state (centred, muted, as D&D Beyond's)
+ *   6. Narrow pane: the notes column folds away
+ *
+ * Colours come from ddb-tokens.css (theme-aware); no theme forks here.
+ */
+
+/* ------------------------------------------------------------------ */
+/* 1. Tab body                                                        */
+/* ------------------------------------------------------------------ */
+
+/* The scroller is `.tidy-tab` (tab-content.css section 9), a flex column; the
+ * body grows to fill it so a drop anywhere on the pane lands on the tab.
+ * Block-end padding clears the panel's rounded corner like `.tab-content`. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras {
+  container: ddb-extras / inline-size;
+  flex: 1 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddb-space-5);
+  min-width: 0;
+  padding-block-end: calc(var(--ddb-space-5) + var(--ddb-radius-panel));
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  line-height: var(--ddb-lineheight-body);
+  color: var(--ddb-text);
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Toolbar                                                         */
+/* ------------------------------------------------------------------ */
+
+/* Pinned to the top of the scroller with the solid pane colour behind it,
+ * exactly like the other tabs' pill rows (actions-spells.css section 1). */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extras-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: var(--ddb-space-3);
+  padding-block: var(--ddb-space-2) var(--ddb-space-1);
+  background: var(--ddb-panel-bg-solid);
+}
+
+/* The pills keep section 1's look (`.ddb-filter-pills .ddb-filter-pill`);
+ * here the row is only the left part of the toolbar. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extras-toolbar .ddb-filter-pills.ddb-extras-pills {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 1.5rem;
+  padding-block: 0;
+}
+
+/* MANAGE EXTRAS: D&D Beyond's outline theme button (accent outline and text,
+ * filled on hover). */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras button.ddb-extras-manage {
+  flex: 0 0 auto;
+  min-height: 0;
+  min-width: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: var(--ddb-space-1) var(--ddb-space-3);
+  border: var(--ddb-border-width-panel) solid var(--ddb-accent-readable, var(--ddb-accent));
+  border-radius: var(--ddb-radius-control);
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label-md);
+  font-weight: var(--ddb-weight-label);
+  line-height: 1.3;
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  white-space: nowrap;
+  color: var(--ddb-accent-readable, var(--ddb-accent));
+  cursor: pointer;
+  transition: var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras button.ddb-extras-manage:hover:not(:disabled) {
+  background: var(--ddb-accent);
+  border-color: var(--ddb-accent-readable, var(--ddb-accent));
+  color: var(--ddb-accent-chip-contrast);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras button.ddb-extras-manage:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras button.ddb-extras-manage:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Groups + column header                                          */
+/* ------------------------------------------------------------------ */
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extras-group {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* SUMMONED: D&D Beyond's content-group header, accent caps over a hairline. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extras-group-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--ddb-space-2);
+  margin-block-end: var(--ddb-space-2);
+  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+}
+
+/* An h3: the DDB prefix outranks quadrone's `:is(h1,h2,h3)` rule (0-3-1). */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras h3.ddb-extras-group-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label-md);
+  font-weight: var(--ddb-weight-label);
+  line-height: 1.6;
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-accent-readable, var(--ddb-accent));
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extras-group-count {
+  flex: 0 0 auto;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extras-list {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* The column tracks, shared by the header row and every card. Fixed widths
+ * (D&D Beyond's: 35 | 130 | 35 | 85 | 50 | notes) so a column lines up
+ * across groups; the name and speed tracks may grow, notes takes the rest,
+ * and the row actions always reserve room for three buttons. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras {
+  --ddb-extras-columns:
+    2.1875rem
+    minmax(7.5rem, 1.6fr)
+    2.5rem
+    6.25rem
+    minmax(3.5rem, 0.7fr)
+    minmax(0, 1fr)
+    4.5rem;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras :is(.ddb-extras-columns, .ddb-extra-card) {
+  display: grid;
+  grid-template-columns: var(--ddb-extras-columns);
+  align-items: center;
+  column-gap: var(--ddb-space-1);
+  min-width: 0;
+}
+
+/* NAME | AC | HP | SPEED | NOTES */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extras-columns {
+  padding-block-end: var(--ddb-space-1);
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  line-height: 1.2;
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-heading);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extras-col {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. Rows                                                            */
+/* ------------------------------------------------------------------ */
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-card {
+  padding-block: var(--ddb-space-3);
+  line-height: 1;
+  transition: background-color var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-card + .ddb-extra-card {
+  border-top: var(--ddb-border-width-panel) dotted var(--ddb-list-border);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-card:hover {
+  background: var(--ddb-table-row-alt-bg);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-preview {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras img.ddb-extra-img {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: var(--ddb-radius-control);
+  object-fit: cover;
+}
+
+/* No art to show (missing, or not permitted): the placeholder silhouette on a
+ * neutral tile, so it reads in both themes. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-card:is(.missing, .ddb-extra-card--none) img.ddb-extra-img {
+  background: var(--ddb-text-disabled);
+  opacity: 0.8;
+  filter: grayscale(1);
+}
+
+/* Name over meta ("Tiny Beast"), both condensed. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-primary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ddb-space-half);
+  min-width: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-name {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-body);
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--ddb-text);
+}
+
+/* The name is a button when it opens the sheet: plain text at rest, the
+ * accent on hover (the tables' resting / hover link colours). */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras button.ddb-extra-name {
+  display: block;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  text-align: start;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-body);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--ddb-text);
+  cursor: pointer;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras button.ddb-extra-name:hover {
+  color: var(--ddb-accent-readable, var(--ddb-accent));
+  text-decoration: underline;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras button.ddb-extra-name:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-card:is(.missing, .ddb-extra-card--none) .ddb-extra-name {
+  font-style: italic;
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-meta {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  line-height: 1.2;
+  color: var(--ddb-text-muted);
+}
+
+/* AC / HP / SPEED values: 16px condensed bold, as D&D Beyond's. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-stat {
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-value-md);
+  font-weight: var(--ddb-weight-value);
+  line-height: 1.2;
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-stat .ddb-extra-blank {
+  font-weight: 400;
+  color: var(--ddb-text-disabled);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-hp {
+  align-items: center;
+  gap: var(--ddb-space-1);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-hp-sep {
+  font-weight: 400;
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-hp-value--max {
+  color: var(--ddb-text-muted);
+}
+
+/* With temporary hit points D&D Beyond tints the values green. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-card.has-temp .ddb-extra-hp-value--current,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-hp-temp {
+  color: var(--ddb-positive-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-hp-temp {
+  font-size: var(--ddb-size-label-md);
+}
+
+/* Current HP of an owned extra: a compact field in the value's own type. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras input.ddb-extra-hp-input {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  width: 2.75rem;
+  height: 1.625rem;
+  min-height: 0;
+  margin: 0;
+  padding: 0 var(--ddb-space-half);
+  border: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+  border-radius: var(--ddb-radius-input);
+  background: var(--ddb-panel-bg);
+  box-shadow: none;
+  text-align: center;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-value-md);
+  font-weight: var(--ddb-weight-value);
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-card.has-temp input.ddb-extra-hp-input {
+  color: var(--ddb-positive-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras input.ddb-extra-hp-input:hover {
+  border-color: var(--ddb-accent-readable, var(--ddb-accent));
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras input.ddb-extra-hp-input:focus {
+  outline: none;
+  border-color: var(--ddb-accent-readable, var(--ddb-accent));
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* SPEED: the main speed, then every other one in a 10px callout. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-speed {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--ddb-space-half);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-speed-value {
+  white-space: nowrap;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-speed-units {
+  margin-inline-start: var(--ddb-space-half);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-speed-callout {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--ddb-size-label);
+  font-weight: 400;
+  color: var(--ddb-text-muted);
+}
+
+/* NOTES: where it came from, read-only marks; 12px muted condensed. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-notes {
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label-md);
+  line-height: 1.3;
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-notes > span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+/* Row actions: Open / Dismiss / Remove as quiet icon buttons. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ddb-space-half);
+  min-width: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras button.ddb-extra-action {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.375rem;
+  height: 1.375rem;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: var(--ddb-border-width-panel) solid transparent;
+  border-radius: var(--ddb-radius-control);
+  background: transparent;
+  box-shadow: none;
+  font-size: var(--ddb-size-label-md);
+  line-height: 1;
+  color: var(--ddb-text-muted);
+  cursor: pointer;
+  transition: var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras button.ddb-extra-action:hover {
+  border-color: var(--ddb-list-border);
+  background: var(--ddb-panel-bg);
+  color: var(--ddb-accent-readable, var(--ddb-accent));
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras button.ddb-extra-action:is(.ddb-extra-remove, .ddb-extra-dismiss):hover {
+  color: var(--ddb-negative-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras button.ddb-extra-action:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. Empty state                                                     */
+/* ------------------------------------------------------------------ */
+
+/* "Extras that you add will display here.": centred in what is left of the
+ * pane, muted, as D&D Beyond shows it. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extras-empty {
+  flex: 1 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: var(--ddb-space-5);
+  text-align: center;
+  font-size: var(--ddb-size-label-md);
+  color: var(--ddb-text-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/* 6. Narrow pane                                                     */
+/* ------------------------------------------------------------------ */
+
+/* Below ~30rem the notes column folds away; name, stats and actions keep
+ * their widths. (A container never matches its own query, so the narrower
+ * tracks go on the lists inside it; the rows inherit them.) */
+@container ddb-extras (max-width: 30rem) {
+  .tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extras-list {
+    --ddb-extras-columns:
+      2.1875rem
+      minmax(6rem, 1fr)
+      2.5rem
+      6.25rem
+      minmax(3.5rem, auto)
+      0
+      4.5rem;
+  }
+
+  .tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras :is(.ddb-extra-notes, .ddb-extras-col--notes) {
+    visibility: hidden;
+  }
+}

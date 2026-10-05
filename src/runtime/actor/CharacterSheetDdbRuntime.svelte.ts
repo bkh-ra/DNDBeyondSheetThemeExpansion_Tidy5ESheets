@@ -11,6 +11,8 @@ import CharacterBastionTab from 'src/sheets/quadrone/actor/tabs/CharacterBastion
 import DdbActionsTab from 'src/sheets/ddb/character/tabs/DdbActionsTab.svelte';
 import DdbSpellsTab from 'src/sheets/ddb/character/tabs/DdbSpellsTab.svelte';
 import DdbInventoryTab from 'src/sheets/ddb/character/tabs/DdbInventoryTab.svelte';
+import DdbExtrasTab from 'src/sheets/ddb/character/tabs/DdbExtrasTab.svelte';
+import { DDB_EXTRAS } from 'src/sheets/ddb/features/extras/extras-constants';
 import * as Bastion from 'src/features/facility/Bastion';
 import { buildCharacterSheetTabOptions } from 'src/settings/tab-options/CharacterSheetTabOptions';
 import { buildActorInventoryTabOptions } from 'src/settings/tab-options/ActorInventoryTabOptions';
@@ -21,13 +23,16 @@ import { buildCharacterFeaturesTabOptions } from 'src/settings/tab-options/Chara
  * DDB-FORK: Tab registry for the DDB (D&D Beyond-style) character sheet layout.
  *
  * Tabs are ordered to match the D&D Beyond primary box (Actions | Spells |
- * Inventory | Features & Traits | Background | Notes) followed by the
- * Foundry-only extra tabs (Effects, Bastion, Character).
+ * Inventory | Features & Traits | Background | Notes | Extras) followed by
+ * the Foundry-only extra tabs (Effects, Bastion, Character).
  *
  * Actions and Spells (ddb-next Wave 3) and Inventory (Wave 6) mount DDB
  * wrappers (src/sheets/ddb/character/tabs/) that compose the quadrone tab
  * with the D&D Beyond pieces around it; the other tabs still reuse the
  * quadrone components verbatim.
+ * Extras (Wave 7) is the one DDB-only tab (`ddb-extras`,
+ * src/sheets/ddb/character/tabs/DdbExtrasTab.svelte); it is in the default
+ * tab list, so tab configuration shows, orders and hides it like the others.
  * Tab ids are unchanged, so tab configuration, sheet pins and API
  * registrations keep addressing the same tabs.
  */
@@ -104,6 +109,16 @@ export const CharacterSheetDdbRuntime =
         iconClass: 'fa-solid fa-notebook',
       },
       {
+        title: 'TIDY5E.DdbLayout.Extras.Title',
+        content: {
+          component: DdbExtrasTab,
+          type: 'svelte',
+        },
+        id: DDB_EXTRAS.TAB_ID,
+        layout: CONSTANTS.SHEET_LAYOUT_DDB,
+        iconClass: 'fa-solid fa-paw',
+      },
+      {
         title: 'DND5E.Effects',
         content: {
           component: ActorEffectsTab,
@@ -142,6 +157,7 @@ export const CharacterSheetDdbRuntime =
       CONSTANTS.TAB_CHARACTER_FEATURES,
       CONSTANTS.TAB_ACTOR_BIOGRAPHY,
       CONSTANTS.TAB_CHARACTER_JOURNAL,
+      DDB_EXTRAS.TAB_ID,
       CONSTANTS.TAB_EFFECTS,
       CONSTANTS.TAB_CHARACTER_BASTION,
       CONSTANTS.TAB_CHARACTER_ATTRIBUTES,
