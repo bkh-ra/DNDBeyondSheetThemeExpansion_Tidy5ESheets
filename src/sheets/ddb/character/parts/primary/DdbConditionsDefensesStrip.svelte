@@ -11,10 +11,22 @@
   Toggling a dnd5e condition uses the same handler as
   `src/sheets/quadrone/actor/parts/ConditionToggleQuadrone.svelte`; everything
   else routes through `Actor#toggleStatusEffect`.
+
+  CONDITION DETAILS (ddb-next Wave 5): every active chip and every picker row
+  carries an info trigger, `button.ddb-detail-trigger[data-ddb-detail=
+  "condition:<status id>"]` — the trigger contract of the left column
+  (DdbSkillsBox / DdbSavingThrowsBox), claimed by the sheet root's capture
+  listener (features/detail/detail-routing.ts), which shows the condition in
+  the sidebar Details pane. Rendered only while the details pane is enabled.
+  In the picker the trigger is a second `menuitem` of its row, kept out of
+  the Tab order: ArrowRight on an option moves to its trigger, ArrowLeft goes
+  back, and ArrowUp / ArrowDown / Home / End / Escape keep working from it.
 -->
 <script lang="ts">
   import Dnd5eIcon from 'src/components/icon/Dnd5eIcon.svelte';
   import { CONSTANTS } from 'src/constants';
+  import { DDB_CONSTANTS } from 'src/sheets/ddb/ddb-constants';
+  import { DdbPreferences } from 'src/sheets/ddb/DdbPreferences';
   import { clickOutside } from 'src/events/clickOutside.svelte';
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
   import type { Dnd5eActorCondition } from 'src/foundry/foundry-and-system';
@@ -26,6 +38,16 @@
   let context = $derived(getCharacterSheetQuadroneContext());
 
   const localize = FoundryAdapter.localize;
+
+  /** Condition info triggers only exist while the details pane does. */
+  let detailsEnabled = $derived(
+    DdbPreferences.fromUserPreferences(context.userPreferences)
+      .detailsPaneEnabled,
+  );
+
+  function conditionDetailLabel(name: string): string {
+    return localize('TIDY5E.DdbLayout.Condition.Show', { name });
+  }
 
   /**
    * Localize a key, falling back to plain English when the key is not present
@@ -325,6 +347,19 @@
     options[indices[target]].focus();
   }
 
+  /**
+   * The option button of the row an element sits in. The row's info trigger
+   * hands the up / down / home / end keys to it, so the roving order stays
+   * the options' order.
+   */
+  function rowOption(element: Element): HTMLButtonElement | null {
+    return (
+      element
+        .closest('li')
+        ?.querySelector<HTMLButtonElement>('.ddb-condition-option') ?? null
+    );
+  }
+
   /** Keys on an option button: Escape plus the full roving-focus set. */
   function onConditionOptionKeydown(event: KeyboardEvent) {
     let move: 'next' | 'previous' | 'first' | 'last';
@@ -333,6 +368,16 @@
       case 'Escape':
         closeConditionMenuFromKeyboard(event);
         return;
+      case 'ArrowRight': {
+        const trigger = (event.currentTarget as Element)
+          .closest('li')
+          ?.querySelector<HTMLButtonElement>('.ddb-detail-trigger');
+        if (trigger) {
+          event.preventDefault();
+          trigger.focus();
+        }
+        return;
+      }
       case 'ArrowDown':
         move = 'next';
         break;
@@ -351,6 +396,37 @@
 
     event.preventDefault();
     focusConditionOption(move, event.currentTarget as Element);
+  }
+
+  /** Keys on a row's info trigger: back to its option, or move on from it. */
+  function onConditionTriggerKeydown(event: KeyboardEvent) {
+    const option = rowOption(event.currentTarget as Element);
+
+    switch (event.key) {
+      case 'Escape':
+        closeConditionMenuFromKeyboard(event);
+        return;
+      case 'ArrowLeft':
+        event.preventDefault();
+        option?.focus();
+        return;
+      case 'ArrowDown':
+      case 'ArrowUp':
+      case 'Home':
+      case 'End':
+        event.preventDefault();
+        focusConditionOption(
+          event.key === 'ArrowDown'
+            ? 'next'
+            : event.key === 'ArrowUp'
+              ? 'previous'
+              : event.key === 'Home'
+                ? 'first'
+                : 'last',
+          option,
+        );
+        return;
+    }
   }
 
   /**
@@ -557,6 +633,19 @@
                 {conditionLabel(entry)}
               </span>
             {/if}
+            {#if detailsEnabled}
+              <button
+                type="button"
+                class="ddb-detail-trigger ddb-detail-trigger--condition"
+                data-ddb-detail="condition:{entry.statusId}"
+                data-tidy-sheet-part={DDB_CONSTANTS.SHEET_PARTS.DETAIL_TRIGGER}
+                aria-label={conditionDetailLabel(entry.name)}
+                data-tooltip={conditionDetailLabel(entry.name)}
+                data-tooltip-direction="UP"
+              >
+                <i class="fa-solid fa-circle-info"></i>
+              </button>
+            {/if}
           </li>
         {/each}
       </ul>
@@ -632,7 +721,7 @@
           aria-label={localize('DND5E.Conditions')}
         >
           {#each filteredConditions as entry (entry.key)}
-            <li role="none">
+            <li role="none" class="ddb-condition-option-row">
               <button
                 type="button"
                 role="menuitemcheckbox"
@@ -664,6 +753,22 @@
                 {/if}
                 <span class="truncate">{conditionLabel(entry)}</span>
               </button>
+              {#if detailsEnabled}
+                <button
+                  type="button"
+                  role="menuitem"
+                  tabindex="-1"
+                  class="ddb-detail-trigger ddb-detail-trigger--condition-option"
+                  data-ddb-detail="condition:{entry.statusId}"
+                  data-tidy-sheet-part={DDB_CONSTANTS.SHEET_PARTS
+                    .DETAIL_TRIGGER}
+                  aria-label={conditionDetailLabel(entry.name)}
+                  data-tooltip={conditionDetailLabel(entry.name)}
+                  onkeydown={onConditionTriggerKeydown}
+                >
+                  <i class="fa-solid fa-circle-info"></i>
+                </button>
+              {/if}
             </li>
           {:else}
             <li class="ddb-condition-empty">{noneLabel}</li>

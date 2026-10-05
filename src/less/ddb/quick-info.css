@@ -1073,6 +1073,34 @@
   box-shadow: var(--ddb-focus-ring);
 }
 
+/* LIGHT THEME legibility (wave 4 image review). White text on the light
+ * theme's #40d250 heal green is ~2:1, and the 0.45 opacity fade of the idle
+ * (disabled) state dropped both buttons below legibility.
+ *   - HEAL, armed: dark text on the green (--ddb-text, ~7.7:1). DAMAGE keeps
+ *     white on #d24040 (~4.6:1; dark text there would be ~3.3:1).
+ *   - Idle (no amount typed): no fade. The buttons turn into outlined ghosts in
+ *     their own heal / damage text colours (~4.6:1 on the panel), so "nothing
+ *     to apply" still reads at a glance and the labels stay legible. The ring
+ *     is an inset box-shadow, not a border, so the 18px stack does not grow.
+ * The dark theme keeps its look: these rules are `:not(.theme-dark)`. */
+.tidy5e-sheet.application.ddb:not(.theme-dark) .ddb-hp-block .ddb-hp-block__apply--heal {
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb:not(.theme-dark) .ddb-hp-block .ddb-hp-block__apply:disabled {
+  opacity: 1;
+  background: none;
+  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) currentColor;
+}
+
+.tidy5e-sheet.application.ddb:not(.theme-dark) .ddb-hp-block .ddb-hp-block__apply--heal:disabled {
+  color: var(--ddb-positive-text);
+}
+
+.tidy5e-sheet.application.ddb:not(.theme-dark) .ddb-hp-block .ddb-hp-block__apply--damage:disabled {
+  color: var(--ddb-negative-text);
+}
+
 /* Same quadrone shadow reset as the readout inputs below: this field DOES keep
  * a box, but it must be the panel's own hairline box and nothing else. */
 .tidy5e-sheet.application.ddb .ddb-hp-block .ddb-hp-block__apply-amount {
@@ -1132,6 +1160,43 @@
   text-align: center;
   line-height: 1.1;
   color: var(--ddb-label);
+}
+
+/* The title doubles as the HP manager trigger (DdbHpManagerPopover). It must
+ * look exactly like the plain title it replaced — every face property is
+ * inherited from the h2 above — so the panel is unchanged at rest; the button
+ * only adds hover / open / focus states. Box and font are restated because
+ * quadrone's `:is(button, .button)` (0-3-0) brings a 28px min-height and a
+ * `font` shorthand. */
+.tidy5e-sheet.application.ddb .ddb-hp-block__title-button {
+  display: inline;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0 var(--ddb-space-half);
+  border: none;
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  box-shadow: none;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  line-height: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: color var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-block__title-button:hover,
+.tidy5e-sheet.application.ddb .ddb-hp-block__title-button[aria-expanded='true'] {
+  background: none;
+  color: var(--ddb-accent);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-block__title-button:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
 }
 
 /* Fixed rem tracks, centred as a group: CURRENT / MAX   TEMP. No `1fr` — with

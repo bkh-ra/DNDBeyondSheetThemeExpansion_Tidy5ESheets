@@ -866,3 +866,9 @@
 /* ------------------------------------------------------------------ */
 /* 5. Sidebar width preference (`sidebarWidth: 'wide'`)               */
 /* ------------------------------------------------------------------ */
+
+/* Foundry core styles `dl dt` with a text-shadow that reads double-struck on
+   the light theme (wave 5 review); the stat labels are plain condensed caps. */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-stat-label {
+  text-shadow: none; /* core dl dt */
+}
