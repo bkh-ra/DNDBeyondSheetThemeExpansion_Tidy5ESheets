@@ -122,15 +122,18 @@
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extras-group-header {
   display: flex;
   align-items: baseline;
-  gap: var(--ddb-space-2);
+  gap: var(--ddb-space-1);
   margin-block-end: var(--ddb-space-2);
   border-bottom: var(--ddb-border-width-panel) solid var(--ddb-list-border);
 }
 
 /* An h3: the DDB prefix outranks quadrone's `:is(h1,h2,h3)` rule (0-3-1). */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras h3.ddb-extras-group-title {
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   margin: 0;
   padding: 0;
   border: none;
@@ -143,8 +146,12 @@
   color: var(--ddb-accent-readable, var(--ddb-accent));
 }
 
+/* The count badge sits right after the title, muted, exactly like the item
+ * tables' `.table-header-count` (tab-content.css section 2). */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extras-group-count {
   flex: 0 0 auto;
+  line-height: 1.6;
+  letter-spacing: var(--ddb-letterspacing-label);
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-label);
   font-weight: var(--ddb-weight-label);
@@ -223,18 +230,26 @@
   min-width: 0;
 }
 
+/* Token-style portrait: a round ring in the panel ring colour around a well a
+ * shade lighter than the pane (--ddb-text mixed in, so the well lifts off the
+ * dark pane and dips under the white one), so dark creature art still reads
+ * on the dark card. 30px overall, D&D Beyond's preview size. */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras img.ddb-extra-img {
   flex: 0 0 auto;
+  box-sizing: border-box;
   width: 30px;
   height: 30px;
-  border: none;
-  border-radius: var(--ddb-radius-control);
+  padding: 1px;
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-ring);
+  border-radius: var(--ddb-radius-pill);
+  background: color-mix(in srgb, var(--ddb-text) 14%, var(--ddb-panel-bg-solid));
   object-fit: cover;
 }
 
 /* No art to show (missing, or not permitted): the placeholder silhouette on a
  * neutral tile, so it reads in both themes. */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras .ddb-extra-card:is(.missing, .ddb-extra-card--none) img.ddb-extra-img {
+  border-color: var(--ddb-list-border);
   background: var(--ddb-text-disabled);
   opacity: 0.8;
   filter: grayscale(1);

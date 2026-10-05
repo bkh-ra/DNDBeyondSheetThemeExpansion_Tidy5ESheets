@@ -32,7 +32,8 @@
                   [aria-pressed] .include = selected
           > button.ddb-extras-manage                      (editable sheets only)
       > section.ddb-extras-group[data-ddb-extras-group="summoned" | "companions" | "linked"]
-          > header.ddb-extras-group-header > .ddb-extras-group-title + .ddb-extras-group-count
+          > header.ddb-extras-group-header > h3.ddb-extras-group-title + .ddb-extras-group-count
+              (the count badge right after the title, as the item tables have it)
           > div.ddb-extras-list[role="list"]
               > div.ddb-extras-columns (column header row)
               > DdbExtraCard  div.ddb-extra-card[data-ddb-extra-uuid] ...

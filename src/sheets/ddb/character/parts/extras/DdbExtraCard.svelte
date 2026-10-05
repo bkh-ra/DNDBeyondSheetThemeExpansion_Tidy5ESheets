@@ -31,8 +31,9 @@
       > .ddb-extra-stat[data-ddb-extra-stat="speed"] > .ddb-extra-speed-value
           + .ddb-extra-speed-callout
       > .ddb-extra-notes
-      > .ddb-extra-actions > button.ddb-extra-open | .ddb-extra-remove |
-          .ddb-extra-dismiss
+      > .ddb-extra-actions > button.ddb-extra-open | .ddb-extra-dismiss |
+          .ddb-extra-remove   (each with data-tooltip + aria-label: Open /
+          Dismiss = trash, deletes the summon / Remove = user-minus, unlinks)
 -->
 <script lang="ts">
   import TextInputQuadrone from 'src/components/inputs/TextInputQuadrone.svelte';
@@ -230,8 +231,7 @@
         aria-label={ddbLocalize(DDB_EXTRAS_LANG.DISMISS)}
         onclick={() => onDismiss(extra)}
       >
-        <i class="fa-solid fa-person-walking-arrow-right" aria-hidden="true"
-        ></i>
+        <i class="fa-solid fa-trash" aria-hidden="true"></i>
       </button>
     {/if}
     {#if canRemove}
@@ -242,7 +242,7 @@
         aria-label={ddbLocalize(DDB_EXTRAS_LANG.REMOVE)}
         onclick={() => onRemove(extra)}
       >
-        <i class="fa-solid fa-link-slash" aria-hidden="true"></i>
+        <i class="fa-solid fa-user-minus" aria-hidden="true"></i>
       </button>
     {/if}
   </div>
