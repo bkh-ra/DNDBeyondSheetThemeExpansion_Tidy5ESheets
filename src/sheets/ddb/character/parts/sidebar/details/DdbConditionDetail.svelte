@@ -16,14 +16,19 @@
   actually do: core removes the status's own effect when it exists (the static
   `_id`, or any single-status effect for statuses without one), so a status
   that is only IMPLIED by another condition (incapacitated under paralyzed)
-  still offers Apply. Only owners see it. Exhaustion has no toggle: it is a
-  level, set with the stepper on the conditions strip.
+  still offers Apply. Only owners see it.
+
+  EXHAUSTION is a level, not a toggle: owners get a - / + stepper instead,
+  mirroring the strip's level track (the same `system.attributes.exhaustion`
+  update, clamped to 0..`conditionTypes.exhaustion.levels`); dnd5e syncs the
+  exhaustion effect from that field.
 
   EXHAUSTION TABLE (modern rules, `FoundryAdapter.checkIfModernRules`): one
   row per level, computed from `conditionTypes.exhaustion.reduction` — exactly
   what dnd5e subtracts (`addRollExhaustion`, the movement reduction) — with
-  the actor's current level highlighted. The last level is death (dnd5e adds
-  the `dead` status at `levels`). Legacy rules have no reduction formula; the
+  the actor's current level highlighted (so there is no separate "Level"
+  stat above it). The last level is death (dnd5e adds the `dead` status at
+  `levels`), shown as its own line under that level's reductions. Legacy rules have no reduction formula; the
   2014 level table is part of the rules page shown below.
 
   HEADER: DdbDetailHeader's markup and classes (so the pane styles it the
@@ -34,7 +39,9 @@
   element the condition picker already uses.
 
   Hooks: root `article.ddb-condition-detail[data-condition=<key>]` with
-  `data-active`; toggle `[data-condition-action="apply|remove"]`; table
+  `data-active`; toggle `[data-condition-action="apply|remove"]`; exhaustion
+  stepper `[data-condition-action="exhaustion-dec|exhaustion-inc"]` around
+  `.ddb-condition-detail__level[data-level]`; table
   `table.ddb-exhaustion-table[data-rules="modern"]`, rows `tr[data-level]`,
   current row `tr.current[aria-current="true"]`.
 -->
@@ -42,12 +49,10 @@
   import Dnd5eIcon from 'src/components/icon/Dnd5eIcon.svelte';
   import type { ConditionType } from 'src/foundry/config.types';
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
-  import type { DdbDetailStat } from 'src/sheets/ddb/features/detail/detail-stats';
   import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
   import { formatAsModifier } from 'src/utils/formatting';
   import { debug, error } from 'src/utils/logging';
   import DdbDetailRuleText from './DdbDetailRuleText.svelte';
-  import DdbDetailStatStrip from './DdbDetailStatStrip.svelte';
 
   interface Props {
     key: string;
@@ -189,22 +194,86 @@
     });
   });
 
-  let stats = $derived.by(() => {
-    const result: DdbDetailStat[] = [];
+  /** Highest exhaustion level (dnd5e's own clamp in the token HUD). */
+  let maxExhaustion = $derived(Number(config?.levels ?? 6) || 6);
 
-    if (isExhaustion) {
-      result.push({
-        key: 'level',
-        label: localize('DND5E.Level'),
-        value: String(exhaustionLevel),
-      });
+  let canStepExhaustion = $derived(context.owner && isExhaustion);
+
+  /** Same write as the strip's level track. */
+  async function stepExhaustion(delta: 1 | -1) {
+    if (!canStepExhaustion || busy) {
+      return;
     }
 
-    return result;
-  });
+    const next = Math.min(
+      Math.max(exhaustionLevel + delta, 0),
+      maxExhaustion,
+    );
+
+    if (next === exhaustionLevel) {
+      return;
+    }
+
+    busy = true;
+
+    try {
+      await context.actor.update({ 'system.attributes.exhaustion': next });
+    } catch (e) {
+      error('An error occurred while changing exhaustion', false, e);
+    } finally {
+      busy = false;
+    }
+  }
 
   let deadLabel = $derived(localize('EFFECT.DND5E.StatusDead'));
 </script>
+
+{#snippet exhaustionStepper()}
+  <div
+    class="ddb-condition-detail__stepper"
+    role="group"
+    aria-label={localize('DND5E.Exhaustion')}
+  >
+    <button
+      type="button"
+      class="ddb-detail-button ddb-detail-button--icon"
+      data-condition-action="exhaustion-dec"
+      aria-label={localize('DND5E.ExhaustionLevel', {
+        n: Math.max(exhaustionLevel - 1, 0),
+      })}
+      data-tooltip={localize('DND5E.ExhaustionLevel', {
+        n: Math.max(exhaustionLevel - 1, 0),
+      })}
+      disabled={busy || exhaustionLevel <= 0}
+      onclick={() => stepExhaustion(-1)}
+    >
+      <i class="fa-solid fa-minus"></i>
+    </button>
+    <span
+      class="ddb-condition-detail__level"
+      data-level={exhaustionLevel}
+      aria-live="polite"
+    >
+      {localize('TIDY5E.DdbLayout.Condition.Exhaustion.Level')}
+      <strong>{exhaustionLevel}</strong>
+    </span>
+    <button
+      type="button"
+      class="ddb-detail-button ddb-detail-button--icon"
+      data-condition-action="exhaustion-inc"
+      aria-label={localize('DND5E.ExhaustionLevel', {
+        n: Math.min(exhaustionLevel + 1, maxExhaustion),
+      })}
+      data-tooltip={localize('DND5E.ExhaustionLevel', {
+        n: Math.min(exhaustionLevel + 1, maxExhaustion),
+      })}
+      disabled={busy || exhaustionLevel >= maxExhaustion}
+      onclick={() => stepExhaustion(1)}
+    >
+      <i class="fa-solid fa-plus"></i>
+    </button>
+  </div>
+{/snippet}
 
 {#snippet toggleAction()}
   <button
@@ -251,15 +320,16 @@
     </div>
   </header>
 
-  <!-- No actions row at all when there is nothing to toggle (exhaustion,
-       non-owners). -->
+  <!-- No actions row at all for viewers who do not own the actor. -->
   {#if canToggle}
     <div class="ddb-detail-actions">
       {@render toggleAction()}
     </div>
+  {:else if canStepExhaustion}
+    <div class="ddb-detail-actions">
+      {@render exhaustionStepper()}
+    </div>
   {/if}
-
-  <DdbDetailStatStrip {stats} />
 
   {#if exhaustionRows.length}
     <table class="ddb-exhaustion-table" data-rules="modern">

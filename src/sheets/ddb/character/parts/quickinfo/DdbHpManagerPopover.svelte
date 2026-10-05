@@ -2,8 +2,10 @@
   DDB-FORK: the Hit Points manager — D&D Beyond's "Hit Points" panel as a
   popover, opened from the HIT POINTS title button of DdbHpBlock.
 
-  HP CHANGES: an amount, a Damage / Heal switch and a LIVE preview of what
-  Apply will do:
+  HP CHANGES: an amount, a Heal / Damage switch (in the order of the band's
+  HEAL / DAMAGE buttons; Damage is the default) and a LIVE preview of what
+  Apply will do. Until something is entered the preview line is neutral: the
+  current figures only, no arrow.
     damage  temp HP absorbs first, the rest spills into current HP:
             newHp = clamp(hp - spill, 0, effectiveMax)
     heal    newHp = min(hp + amount, effectiveMax)
@@ -88,7 +90,8 @@
   let canRestoreLife = $derived(hpValue <= 0 || isDead);
 
   type Mode = 'damage' | 'heal';
-  const MODES: readonly Mode[] = ['damage', 'heal'];
+  /** Visual + roving order: HEAL first, as the band stacks HEAL over DAMAGE. */
+  const MODES: readonly Mode[] = ['heal', 'damage'];
 
   let mode = $state<Mode>('damage');
   let amount = $state<number | null>(null);
@@ -393,22 +396,39 @@
     <span class="ddb-hp-manager__preview-label">
       {localize('TIDY5E.DdbLayout.Hp.Preview')}
     </span>
-    <span class="ddb-hp-manager__preview-part" data-preview="hp">
-      {localize('DND5E.HP')}
-      {hpValue} &rarr;
-      <strong class={{ changed: preview.hp !== hpValue }}>{preview.hp}</strong>
-    </span>
-    {#if showTempPreview}
-      <span class="ddb-hp-manager__preview-separator" aria-hidden="true"
-        >&middot;</span
-      >
-      <span class="ddb-hp-manager__preview-part" data-preview="temp">
-        {localize('TIDY5E.DdbLayout.Hp.Temp')}
-        {hpTemp} &rarr;
-        <strong class={{ changed: preview.temp !== hpTemp }}
-          >{preview.temp}</strong
-        >
+    {#if hasChanges}
+      <span class="ddb-hp-manager__preview-part" data-preview="hp">
+        {localize('DND5E.HP')}
+        {hpValue} &rarr;
+        <strong class={{ changed: preview.hp !== hpValue }}>{preview.hp}</strong>
       </span>
+      {#if showTempPreview}
+        <span class="ddb-hp-manager__preview-separator" aria-hidden="true"
+          >&middot;</span
+        >
+        <span class="ddb-hp-manager__preview-part" data-preview="temp">
+          {localize('TIDY5E.DdbLayout.Hp.Temp')}
+          {hpTemp} &rarr;
+          <strong class={{ changed: preview.temp !== hpTemp }}
+            >{preview.temp}</strong
+          >
+        </span>
+      {/if}
+    {:else}
+      <!-- Nothing entered: the figures as they stand, no projection. -->
+      <span class="ddb-hp-manager__preview-part" data-preview="hp">
+        {localize('DND5E.HP')}
+        {hpValue}
+      </span>
+      {#if hpTemp !== 0}
+        <span class="ddb-hp-manager__preview-separator" aria-hidden="true"
+          >&middot;</span
+        >
+        <span class="ddb-hp-manager__preview-part" data-preview="temp">
+          {localize('TIDY5E.DdbLayout.Hp.Temp')}
+          {hpTemp}
+        </span>
+      {/if}
     {/if}
   </p>
 

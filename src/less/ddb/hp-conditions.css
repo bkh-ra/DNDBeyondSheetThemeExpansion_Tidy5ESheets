@@ -228,60 +228,70 @@
   box-shadow: var(--ddb-focus-ring);
 }
 
-/* Damage / Heal: a two-segment switch in the band applicator's colours —
- * outlined when idle, filled when chosen, so the choice reads at a glance
- * and matches the HEAL / DAMAGE buttons on the panel it opened from. */
+/* Heal / Damage: two pills in the band applicator's colours and order (HEAL
+ * above DAMAGE there, HEAL left of DAMAGE here). The CHOSEN mode is a solid
+ * fill in every state — hover, focus, press — so it can never look washed
+ * out; the other mode is an outline only. No background transition: an
+ * animated fill was caught half-way in captures and read as a pale tint. */
 .tidy5e-sheet.application.ddb .ddb-hp-manager__modes {
   display: flex;
+  gap: var(--ddb-space-1);
 }
 
 .tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__mode {
   height: 22px;
   padding: 0 var(--ddb-space-3);
   border: var(--ddb-border-width-panel) solid var(--ddb-mode-color);
+  border-radius: var(--ddb-radius-control);
   background: none;
   color: var(--ddb-mode-text);
+  transition: none;
 }
 
+/* White ink on the damage red: 4.6:1 light, 5.4:1 dark. */
 .tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__mode--damage {
   --ddb-mode-color: var(--ddb-negative-bg);
-  --ddb-mode-hover: var(--ddb-negative-bg-hover);
   --ddb-mode-text: var(--ddb-negative-text);
   --ddb-mode-ink: var(--ddb-accent-chip-contrast);
-  border-radius: var(--ddb-radius-control) 0 0 var(--ddb-radius-control);
 }
 
 /* Ink on the filled heal green is DARK in both themes: white on the light
  * theme's #40d250 is ~2:1 and on the dark theme's #00c797 ~2.2:1, while
- * --ddb-text (light) and --ddb-page-bg (dark) both clear 7:1. White stays on
- * the damage red (4.6:1 light, 5.4:1 dark). */
+ * --ddb-text (light) and --ddb-page-bg (dark) both clear 7:1. */
 .tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__mode--heal {
   --ddb-mode-color: var(--ddb-positive-bg);
-  --ddb-mode-hover: var(--ddb-positive-bg-hover);
   --ddb-mode-text: var(--ddb-positive-text);
   --ddb-mode-ink: var(--ddb-text);
-  border-left: none;
-  border-radius: 0 var(--ddb-radius-control) var(--ddb-radius-control) 0;
 }
 
 .tidy5e-sheet.application.ddb.theme-dark .ddb-hp-manager .ddb-hp-manager__mode--heal {
   --ddb-mode-ink: var(--ddb-page-bg);
 }
 
-.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__mode:hover {
-  background: color-mix(in srgb, var(--ddb-mode-color) 15%, transparent);
+/* Idle mode on hover: a heavier outline, still no fill. */
+.tidy5e-sheet.application.ddb
+  .ddb-hp-manager
+  .ddb-hp-manager__mode[aria-checked='false']:hover {
+  background: none;
+  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-mode-color);
   color: var(--ddb-mode-text);
-}
-
-.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__mode[aria-checked='true'] {
-  background: var(--ddb-mode-color);
-  color: var(--ddb-mode-ink);
 }
 
 .tidy5e-sheet.application.ddb
   .ddb-hp-manager
-  .ddb-hp-manager__mode[aria-checked='true']:hover {
-  background: var(--ddb-mode-hover);
+  .ddb-hp-manager__mode[aria-checked='true'],
+.tidy5e-sheet.application.ddb
+  .ddb-hp-manager
+  .ddb-hp-manager__mode[aria-checked='true']:is(:hover, :focus, :active) {
+  background: var(--ddb-mode-color);
+  color: var(--ddb-mode-ink);
+  opacity: 1;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-hp-manager
+  .ddb-hp-manager__mode:focus-visible {
+  box-shadow: var(--ddb-focus-ring);
 }
 
 /* --- live preview --- */
@@ -402,60 +412,67 @@
 /* 2. Condition info triggers (DdbConditionsDefensesStrip.svelte)     */
 /* ------------------------------------------------------------------ */
 
+/* Both triggers draw the "i" in the readable accent: the accent itself in the
+ * light theme, and in the dark theme the same hue lifted to a readable
+ * lightness (`--ddb-accent-readable`, defined sheet-wide in
+ * actions-spells.css; the fallback is the plain accent). Grey at reduced
+ * opacity all but vanished on the dark strip. */
+
 /* Active chips: the conditions read as a comma-separated run of text, so the
  * info icon rides IN the run, right after its name and before the chip's
  * `::after` comma — static, not the absolutely positioned chevron the left
- * column uses, and always visible (dimmed) because a chip has no box to hover
- * that would reveal it. */
+ * column uses, and always visible because a chip has no box to hover that
+ * would reveal it. */
 .tidy5e-sheet.application.ddb .ddb-condition > .ddb-detail-trigger--condition {
   position: static;
   width: 14px;
   height: 14px;
   margin-left: var(--ddb-space-half);
   background: none;
-  color: var(--ddb-condition-muted);
-  opacity: 0.75;
+  color: var(--ddb-accent-readable, var(--ddb-accent));
+  opacity: 1;
 }
 
 .tidy5e-sheet.application.ddb .ddb-condition > .ddb-detail-trigger--condition:hover,
 .tidy5e-sheet.application.ddb .ddb-condition > .ddb-detail-trigger--condition:focus-visible {
   background: none;
-  color: var(--ddb-accent);
+  color: var(--ddb-text);
   opacity: 1;
 }
 
-/* Picker rows: option and trigger side by side. The option keeps every bit
- * of its primary-box.css look; it only gives up the trigger's width. */
+/* Picker rows: the "i" sits INSIDE the option's box, at its right end, on
+ * every row. It stays a sibling of the option in the DOM (two menu items per
+ * row, see DdbConditionsDefensesStrip.svelte) and is laid over the option's
+ * reserved right padding, so the option's hover border and focus ring
+ * enclose it. The option keeps the rest of its primary-box.css look. */
 .tidy5e-sheet.application.ddb .ddb-condition-options > .ddb-condition-option-row {
-  display: flex;
-  align-items: center;
-  gap: var(--ddb-space-half);
+  position: relative;
 }
 
 .tidy5e-sheet.application.ddb .ddb-condition-option-row > .ddb-condition-option {
-  flex: 1 1 auto;
-  width: auto;
-  min-width: 0;
+  padding-right: calc(18px + var(--ddb-space-2));
 }
 
-/* Hidden until the row is hovered or holds keyboard focus, like the left
- * column's chevrons, so the list stays a clean column of names. */
+/* The pointer on the "i" is still "on the row": keep the row's hover border. */
+.tidy5e-sheet.application.ddb .ddb-condition-option-row:hover > .ddb-condition-option {
+  border-color: var(--ddb-accent);
+  color: var(--ddb-text);
+}
+
 .tidy5e-sheet.application.ddb .ddb-condition-option-row > .ddb-detail-trigger--condition-option {
-  position: static;
-  flex: 0 0 auto;
+  top: 50%;
+  right: var(--ddb-space-1);
   width: 18px;
   height: 18px;
   background: none;
-}
-
-.tidy5e-sheet.application.ddb
-  .ddb-condition-option-row:is(:hover, :has(:focus-visible))
-  > .ddb-detail-trigger--condition-option {
+  color: var(--ddb-accent-readable, var(--ddb-accent));
   opacity: 1;
+  transform: translateY(-50%);
 }
 
 .tidy5e-sheet.application.ddb .ddb-condition-option-row > .ddb-detail-trigger--condition-option:hover {
   background: none;
+  color: var(--ddb-text);
 }
 
 /* ------------------------------------------------------------------ */
@@ -558,7 +575,45 @@
   color: var(--ddb-text-muted);
 }
 
-.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-exhaustion-table__dead {
+/* Death is not one more reduction: it gets its own line under the last
+ * level's figures, without the run's separator, so it never wraps away from
+ * its dot or strands one at a line start. */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-exhaustion-table__effect > .ddb-exhaustion-table__dead {
+  display: block;
   font-weight: var(--ddb-weight-value);
   color: var(--ddb-negative-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-exhaustion-table__effect > .ddb-exhaustion-table__dead::before {
+  content: none;
+}
+
+/* Owner-only exhaustion stepper (the detail's control, in place of the
+ * Apply / Remove button other conditions get): - LEVEL n +, with the
+ * detail pane's own 22px icon buttons. */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-condition-detail__stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ddb-space-2);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-condition-detail__level {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--ddb-space-1);
+  min-width: 4.5em;
+  justify-content: center;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-condition-detail__level strong {
+  font-size: var(--ddb-size-value-md);
+  font-weight: var(--ddb-weight-value);
+  letter-spacing: normal;
+  color: var(--ddb-text);
 }
