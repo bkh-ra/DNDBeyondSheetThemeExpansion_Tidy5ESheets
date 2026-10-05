@@ -48,6 +48,14 @@
       : 'inline',
   );
 
+  // Sidebar placement (Preferences > DDB Layout): `ddb-sidebar-left` /
+  // `ddb-sidebar-overlay`, implemented in ddb-layout.css + sidebar.css.
+  let layoutClasses = $derived(
+    DdbPreferences.sheetClasses(
+      DdbPreferences.fromUserPreferences(context.userPreferences),
+    ),
+  );
+
   function onClickCapture(event: MouseEvent) {
     routeDetailTriggerClick(event, host);
   }
@@ -55,7 +63,7 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 <div
-  class="ddb-sheet"
+  class={['ddb-sheet', layoutClasses]}
   data-tidy-sheet-part="ddb-sheet"
   data-ddb-click-opens={clickOpens}
   onclickcapture={onClickCapture}

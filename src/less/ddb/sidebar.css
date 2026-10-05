@@ -40,9 +40,10 @@
    * drags it anywhere in DDB_SIDEBAR_WIDTH_RANGE (220-520px), and
    * DdbSidebar.svelte then sets this variable INLINE on this element (only
    * while expanded, so the rail rule below still wins when collapsed). The
-   * rail is just wide enough for the 28px toggle button. */
+   * rail width (`--ddb-sidebar-rail-width`, just wide enough for the 28px
+   * toggle button) is declared on the sheet root in ddb-layout.css, because
+   * the overlay grid track is sized by it as well. */
   --ddb-sidebar-width: 230px;
-  --ddb-sidebar-rail-width: 28px;
   /* Grab strip of the resize handle along the pane's left edge. 8px is a
    * comfortable pointer target that still ends inside the rows' 14px left
    * inset, so it never sits over a favorite row or the collapse toggle. */
@@ -233,6 +234,67 @@
 /* Keyboard focus adds the sheet's focus glow around the line. */
 .tidy5e-sheet.application.ddb .ddb-sidebar-resizer:focus-visible::after {
   box-shadow: var(--ddb-focus-ring);
+}
+
+/* ------------------------------------------------------------------ */
+/* Placement: left / overlay (ddb-next Wave 4)                        */
+/* ------------------------------------------------------------------ */
+
+/* LEFT: the pane sits before the primary column (ddb-layout.css), so the
+ * handle and its affordance line move to the pane's RIGHT edge - always the
+ * edge that faces the primary column. DdbSidebar.svelte mirrors the drag and
+ * the arrow keys to match. The collapse toggle's icon (a pane drawn on the
+ * right) is mirrored with it. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-left .ddb-sidebar-resizer {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-left .ddb-sidebar-resizer::after {
+  inset-inline-start: auto;
+  inset-inline-end: calc(var(--ddb-outline-width) * 2);
+}
+
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-left .ddb-sidebar-toggle i {
+  transform: scaleX(-1);
+}
+
+/* OVERLAY (right-hand pane only; a left pane always pushes, so
+ * `ddb-sidebar-overlay` never comes with `ddb-sidebar-left`): the column is
+ * only a rail wide (ddb-layout.css). The pane leaves
+ * the flow, fills the column's height and is pinned to its OUTER edge, so an
+ * expanded pane grows over the primary column's edge instead of taking width
+ * from it; collapsed, it is exactly the rail. The `max-width: 100%` cap of the
+ * push layout (the grid column) would pin it to the rail, so it is lifted - the
+ * width range (max 520px) stays under the primary column's 580px floor, so the
+ * pane never covers the whole column. Floating over list rows, the surface is
+ * the opaque panel colour (the push pane's `--ddb-box-bg` is translucent in
+ * Underdark) and gets the elevated shadow. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-overlay .ddb-sidebar {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+  max-width: none;
+  background: var(--ddb-panel-bg-solid);
+}
+
+/* Expanded over the list, the pane needs an edge that reads as "on top": a
+ * 1px ring outside the panel's own inset outline, plus the elevated shadow. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-overlay .ddb-sidebar:not(.collapsed) {
+  outline: 1px solid var(--ddb-panel-ring);
+  outline-offset: 0;
+  box-shadow: var(--ddb-shadow-elevated);
+}
+
+/* Narrow-window fallback: the stacked layout gives the pane its own
+ * full-width row (ddb-layout.css), so it goes back into the flow. */
+@media (max-width: 900px) {
+  .tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-overlay .ddb-sidebar {
+    position: relative;
+    inset: auto;
+    max-width: 100%;
+  }
 }
 
 /* ------------------------------------------------------------------ */

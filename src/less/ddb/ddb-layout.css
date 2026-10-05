@@ -15,6 +15,10 @@
 /* --- suppress quadrone root chrome, repaint root --- */
 .tidy5e-sheet.application.ddb {
   background: var(--ddb-page-bg);
+  /* Width of the collapsed sidebar rail: just enough for the 28px toggle.
+   * Declared at the root (not on the pane) because the overlay grid track and
+   * the overlay window floor below are sized by it too. */
+  --ddb-sidebar-rail-width: 28px;
 }
 
 .tidy5e-sheet.application.ddb::before,
@@ -143,6 +147,56 @@
   align-items: stretch;
 }
 
+/* --- sidebar placement (Preferences > DDB Layout; ddb-next Wave 4) ---
+ *
+ * `.ddb-sheet` carries `ddb-sidebar-left` / `ddb-sidebar-overlay` from the
+ * user's `sidebarSide` / `sidebarMode` (`DdbPreferences.sheetClasses`). All
+ * four combinations keep the resize handle on the pane edge that faces the
+ * primary column (sidebar.css) and the drag direction mirrored to match
+ * (DdbSidebar.svelte).
+ *
+ * LEFT: the sidebar track moves in front of the primary track. The DOM order
+ * stays left / skills / primary / sidebar; `order` on the primary column
+ * re-sequences the grid's auto-placement, and the template swaps the two
+ * flexible tracks so the sidebar keeps its `auto` track and the primary
+ * column keeps its `minmax` floor.
+ *
+ * OVERLAY (right-hand pane only: `ddb-sidebar-overlay` is never set together
+ * with `ddb-sidebar-left`, a left pane always pushes - DdbPreferences
+ * `overlaysContent`): the sidebar column shrinks to a rail-width track. The
+ * collapsed rail still sits in it, so nothing is ever hidden under it; the
+ * EXPANDED pane leaves the flow, is pinned to the column's outer edge and
+ * grows over the primary column's right edge (sidebar.css). The primary column
+ * keeps its full width whatever the pane's width. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-left .ddb-columns {
+  grid-template-columns:
+    var(--ddb-col-left-width)
+    var(--ddb-col-skills-width)
+    auto
+    minmax(var(--ddb-primary-min-width), 1fr);
+}
+
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-left .ddb-col-primary {
+  order: 1;
+}
+
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-overlay .ddb-columns {
+  grid-template-columns:
+    var(--ddb-col-left-width)
+    var(--ddb-col-skills-width)
+    minmax(var(--ddb-primary-min-width), 1fr)
+    var(--ddb-sidebar-rail-width);
+}
+
+
+/* The overlay pane is positioned against its (rail-wide) column and must
+ * paint over the primary column, so the column neither clips nor sits below. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-overlay .ddb-col-sidebar {
+  position: relative;
+  z-index: 5;
+  overflow: visible;
+}
+
 .tidy5e-sheet.application.ddb .ddb-col {
   display: flex;
   flex-direction: column;
@@ -240,6 +294,16 @@
   min-height: 860px;
 }
 
+/* Overlay (Wave 4): the sidebar's grid share is only the rail, so the window
+ * floor drops by the difference. */
+.tidy5e-sheet.application.ddb:not(.minimized):has(.ddb-sheet.ddb-sidebar-overlay) {
+  min-width: calc(
+    var(--ddb-col-left-width) + var(--ddb-col-skills-width) +
+      var(--ddb-primary-min-width) + var(--ddb-sidebar-rail-width) +
+      3 * 6px + 2 * 8px + 2px
+  );
+}
+
 /* Minimized: title bar only. */
 .tidy5e-sheet.application.ddb.minimized {
   min-width: 0;
@@ -282,5 +346,13 @@
   .tidy5e-sheet.application.ddb .ddb-col-sidebar {
     grid-column: 1 / -1;
     overflow: visible;
+  }
+  /* The placement classes outrank the two rules above; stacked, the pane is
+   * simply a full-width row again (sidebar.css drops the overlay too). */
+  .tidy5e-sheet.application.ddb .ddb-sheet:is(.ddb-sidebar-left, .ddb-sidebar-overlay) .ddb-columns {
+    grid-template-columns: 1fr 1fr;
+  }
+  .tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-overlay .ddb-col-sidebar {
+    position: static;
   }
 }

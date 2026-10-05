@@ -39,6 +39,18 @@
  * fork — the same var-re-point technique tab-content.css uses. */
 .tidy5e-sheet.application.ddb .ddb-header-banner {
   --ddb-text: var(--ddb-header-text);
+  /* DDB-FORK (Wave 4 review): the secondary foregrounds follow the same rule.
+   * The light theme maps --ddb-text-muted / --ddb-label / --ddb-heading to
+   * #5b6970, which nearly vanishes on the dark strip (the species/class line,
+   * LEVEL / XP, the campaign label, the lock and gear). On the banner they
+   * take their Underdark values (ddb-tokens.css, `.theme-dark`), so the strip
+   * reads the same in both themes. */
+  --ddb-header-text-muted: #a2acb2;
+  --ddb-text-muted: var(--ddb-header-text-muted);
+  --ddb-label: var(--ddb-header-text-muted);
+  --ddb-heading: var(--ddb-header-text-muted);
+  /* Hairlines (campaign box, bottom rule) as in Underdark, not light grey. */
+  --ddb-panel-border: color-mix(in srgb, var(--ddb-accent) 60%, transparent);
 
   display: flex;
   flex: 0 0 auto;
@@ -58,6 +70,21 @@
   font-size: var(--ddb-size-body);
   line-height: var(--ddb-lineheight-body);
   overflow: hidden;
+}
+
+/* DDB-FORK (Wave 4 review): the window header (title and controls) sits on a
+ * strip of the window background above the banner, and `.window-content` is
+ * pulled 20px up under it, so the controls straddle that strip and the
+ * banner. In Underdark both are the same dark; in the light theme the strip
+ * was the light page colour and the controls read half on light, half on dark.
+ * The strip now takes the banner colour in both themes (only on the sheet:
+ * the Manage dialogs share the `ddb` root class but have no banner). Below the
+ * strip the opaque `.window-content` covers this background. */
+.tidy5e-sheet.application.ddb.actor:not(.minimized) {
+  background:
+    linear-gradient(var(--ddb-header-bg), var(--ddb-header-bg)) top / 100%
+      3rem no-repeat,
+    var(--ddb-page-bg);
 }
 
 /* DDB-FORK (matrix-sheet Table 2 row 6, revised): Sheet Settings > Theme >
@@ -611,6 +638,12 @@
   transition:
     color var(--ddb-transition),
     background-color var(--ddb-transition);
+}
+
+/* The glyph follows the button. Quadrone's light theme colours button icons
+ * itself (a dark grey, near-invisible on the dark strip). */
+.tidy5e-sheet.application.ddb .ddb-header-control > i {
+  color: inherit;
 }
 
 .tidy5e-sheet.application.ddb .ddb-header-control:hover {

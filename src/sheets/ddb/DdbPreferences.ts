@@ -1,3 +1,4 @@
+import { CONSTANTS } from 'src/constants';
 import UserPreferencesService from 'src/features/user-preferences/UserPreferencesService';
 import type { UserPreferences } from 'src/features/user-preferences/user-preferences.types';
 
@@ -264,5 +265,46 @@ export class DdbPreferences {
     preferences: DdbUserPreferences = DdbPreferences.get(),
   ): boolean {
     return preferences.detailsPaneEnabled && preferences.skillClick === 'details';
+  }
+
+  /**
+   * Forget every DDB preference of the current user (the Preferences app's
+   * "Reset to defaults"). The sparse stored object is removed outright, so
+   * every read falls back to `DDB_USER_PREFERENCE_DEFAULTS`; nothing is
+   * written in its place.
+   */
+  static async reset(): Promise<void> {
+    await game.user.unsetFlag(CONSTANTS.MODULE_ID, DdbPreferences.flagPath);
+  }
+
+  /**
+   * Whether the expanded sidebar floats over the primary column. Overlay only
+   * applies to a RIGHT-hand pane: on the left it would cover the combat row,
+   * the tab strip, the search field and every item name, so a left sidebar
+   * always pushes the content whatever `sidebarMode` says.
+   */
+  static overlaysContent(
+    preferences: DdbUserPreferences = DdbPreferences.get(),
+  ): boolean {
+    return (
+      preferences.sidebarMode === 'overlay' && preferences.sidebarSide !== 'left'
+    );
+  }
+
+  /**
+   * The classes the sheet root (`.ddb-sheet`) carries for the sidebar
+   * placement preferences. `ddb-layout.css` / `sidebar.css` key off them:
+   * `ddb-sidebar-left` moves the pane before the primary column (resize handle
+   * on its right edge), `ddb-sidebar-overlay` floats the expanded right-hand
+   * pane over the primary column's edge instead of giving it a grid track.
+   * The two never appear together (`overlaysContent`).
+   */
+  static sheetClasses(
+    preferences: DdbUserPreferences,
+  ): Record<'ddb-sidebar-left' | 'ddb-sidebar-overlay', boolean> {
+    return {
+      'ddb-sidebar-left': preferences.sidebarSide === 'left',
+      'ddb-sidebar-overlay': DdbPreferences.overlaysContent(preferences),
+    };
   }
 }

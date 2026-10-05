@@ -43,6 +43,9 @@
   stat columns and the primary pane's minimum are paid (measured off
   `.ddb-columns`). The inline variable is omitted while collapsed so the rail
   rule in `sidebar.css` applies, and the handle is not rendered then.
+  Wave 4: with `sidebarSide: 'left'` the handle is on the pane's RIGHT edge
+  and the drag / arrow keys are mirrored; with `sidebarMode: 'overlay'` the
+  window clamp is skipped (the pane floats over the primary column).
 -->
 <script lang="ts">
   import TabContents from 'src/components/tabs/TabContents.svelte';
@@ -91,6 +94,18 @@
   let preferences = $derived(
     DdbPreferences.fromUserPreferences(context.userPreferences),
   );
+
+  /**
+   * Wave 4 placement preferences (`.ddb-sheet.ddb-sidebar-left` /
+   * `.ddb-sidebar-overlay`, see ddb-layout.css). On the left the handle sits
+   * on the pane's RIGHT edge, so pointer and arrow keys run mirrored; in
+   * overlay mode (right-hand pane only, see `DdbPreferences.overlaysContent`)
+   * the pane floats over the primary column instead of sharing the grid with
+   * it, so only the range caps its width.
+   */
+  let onLeft = $derived(preferences.sidebarSide === 'left');
+
+  let overlay = $derived(DdbPreferences.overlaysContent(preferences));
 
   // Expanded state, read live from the user's stored sheet preferences.
   let storedExpanded = $derived(
@@ -222,6 +237,12 @@
   );
 
   function measureAvailableWidth(columns: HTMLElement): number {
+    // Overlay: the pane covers the primary column's edge rather than taking
+    // width from it, and the range max (520) is below the primary floor (580).
+    if (overlay) {
+      return DDB_SIDEBAR_WIDTH_RANGE.max;
+    }
+
     const style = getComputedStyle(columns);
 
     // The narrow-window fallback stacks the grid into two tracks; the pane is
@@ -344,9 +365,11 @@
       return;
     }
 
-    // The handle is on the pane's LEFT edge (the pane sits right of the
-    // primary column), so moving the pointer left widens the pane.
-    const delta = (drag.startX - event.clientX) / drag.scale;
+    // The handle is on the edge facing the primary column: the pane's LEFT
+    // edge normally, so moving the pointer left widens the pane; its RIGHT
+    // edge when the pane sits on the left, so moving right widens it.
+    const moved = (event.clientX - drag.startX) / drag.scale;
+    const delta = onLeft ? moved : -moved;
     pendingWidth = clampSidebarWidth(drag.startWidth + delta, maxWidth);
   }
 
@@ -364,19 +387,23 @@
 
   /**
    * Window-splitter keys (WAI-ARIA APG): the separator moves the way the
-   * arrow points, so ArrowLeft widens this right-hand pane. Home / End jump to
-   * the narrowest / widest the window allows.
+   * arrow points, so ArrowLeft widens a right-hand pane and ArrowRight a
+   * left-hand one. Home / End jump to the narrowest / widest the window allows.
    */
   function onResizeKeyDown(event: KeyboardEvent) {
     refreshAvailableWidth();
 
     let next: number;
 
+    // The arrow pointing away from the primary column widens the pane.
+    const widen = onLeft ? 'ArrowRight' : 'ArrowLeft';
+    const narrow = onLeft ? 'ArrowLeft' : 'ArrowRight';
+
     switch (event.key) {
-      case 'ArrowLeft':
+      case widen:
         next = width + RESIZE_KEY_STEP;
         break;
-      case 'ArrowRight':
+      case narrow:
         next = width - RESIZE_KEY_STEP;
         break;
       case 'Home':
