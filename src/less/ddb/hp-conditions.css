@@ -1,0 +1,564 @@
+/* DDB-FORK: HP manager popover + condition details of the DDB layout (ddb-next Wave 5).
+ * Every selector starts with .tidy5e-sheet.application.ddb (see FORK_NOTES). */
+
+/* ------------------------------------------------------------------ */
+/* 1. HP manager popover (DdbHpManagerPopover.svelte)                  */
+/* ------------------------------------------------------------------ */
+
+/* Anchored under the HP panel's right edge (the panel is
+ * `position: relative`), absolutely positioned so the fixed-height band
+ * never reflows when it opens. Same floating-surface recipe as the condition
+ * picker in primary-box.css: SOLID panel colour (--ddb-box-bg is translucent
+ * in Underdark mode and a floating panel must not show the sheet through
+ * it), the panel ring, the panel radius, the elevated shadow. The z-index
+ * clears the column panes below the band, whose sticky table headers and
+ * trigger chevrons sit at 1-2. */
+.tidy5e-sheet.application.ddb .ddb-hp-manager {
+  position: absolute;
+  top: calc(100% + var(--ddb-space-1));
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddb-space-3);
+  box-sizing: border-box;
+  width: 18rem;
+  padding: var(--ddb-space-3) var(--ddb-space-4) var(--ddb-space-4);
+  border: var(--ddb-outline-width) solid var(--ddb-panel-ring);
+  border-radius: var(--ddb-radius-panel);
+  background: var(--ddb-panel-bg-solid);
+  box-shadow: var(--ddb-shadow-elevated);
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  line-height: var(--ddb-lineheight-body);
+  text-align: left;
+  color: var(--ddb-text);
+  cursor: auto;
+}
+
+/* The root is focusable (tabindex -1, so a click on its padding keeps focus
+ * inside for Escape) but is never a focus target worth a ring. */
+.tidy5e-sheet.application.ddb .ddb-hp-manager:focus {
+  outline: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ddb-space-2);
+  padding-bottom: var(--ddb-space-1);
+  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+}
+
+/* An h3 for the dialog's accessible name; quadrone's display-face h3 rule
+ * (0-3-1) would otherwise restyle it, so every face property is restated. */
+.tidy5e-sheet.application.ddb .ddb-hp-manager__title {
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label-md);
+  font-style: normal;
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  line-height: 1.2;
+  text-transform: var(--ddb-transform-label);
+  text-shadow: none;
+  color: var(--ddb-heading);
+}
+
+/* Every button in the popover restates its box: quadrone's
+ * `:is(button, .button)` (0-3-0) brings a 28px min-height and a `font`
+ * shorthand that would otherwise win. */
+.tidy5e-sheet.application.ddb .ddb-hp-manager button {
+  box-sizing: border-box;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  box-shadow: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-style: normal;
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  line-height: 1;
+  text-transform: var(--ddb-transform-label);
+  cursor: pointer;
+  transition:
+    background-color var(--ddb-transition),
+    border-color var(--ddb-transition),
+    color var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager button:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager button:disabled {
+  cursor: default;
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  font-size: var(--ddb-size-label-md);
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__close:hover {
+  background: none;
+  color: var(--ddb-accent);
+}
+
+/* --- CURRENT / MAX / TEMP: the figures the preview starts from --- */
+.tidy5e-sheet.application.ddb .ddb-hp-manager__summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ddb-space-2);
+  margin: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager__figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
+/* `text-shadow: none` undoes Foundry's core `dl dt` shadow, which smeared the
+ * caps labels into a double-struck look on the light panel. */
+.tidy5e-sheet.application.ddb .ddb-hp-manager__figure dt,
+.tidy5e-sheet.application.ddb .ddb-hp-manager__label {
+  margin: 0;
+  text-shadow: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  line-height: 1.2;
+  text-transform: var(--ddb-transform-label);
+  white-space: nowrap;
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager__figure dd {
+  margin: 0;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-value-md);
+  font-weight: var(--ddb-weight-value);
+  line-height: 1.2;
+  color: var(--ddb-text);
+}
+
+/* --- HP changes: amount + Damage / Heal, then temp HP --- */
+.tidy5e-sheet.application.ddb .ddb-hp-manager__changes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: var(--ddb-space-2) var(--ddb-space-3);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddb-space-half);
+  min-width: 0;
+}
+
+/* The one hairline field box of the band's applicator amount
+ * (quick-info.css `.ddb-hp-block__apply-amount`), at the DDB control height,
+ * with the number spinners hidden as there. */
+.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__number,
+.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__text {
+  box-sizing: border-box;
+  width: 100%;
+  height: 22px;
+  margin: 0;
+  padding: 0 var(--ddb-space-2);
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border-radius: var(--ddb-radius-input);
+  background: none;
+  box-shadow: none;
+  outline: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-body);
+  font-weight: var(--ddb-weight-value);
+  line-height: 1;
+  color: var(--ddb-text);
+  -moz-appearance: textfield;
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__number {
+  text-align: center;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-hp-manager
+  .ddb-hp-manager__number::-webkit-outer-spin-button,
+.tidy5e-sheet.application.ddb
+  .ddb-hp-manager
+  .ddb-hp-manager__number::-webkit-inner-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+/* The max override's placeholder is the COMPUTED max: it must never read as an
+ * entered override, so it is muted, regular weight and italic. (Muted text,
+ * not --ddb-text-placeholder: that token only exists in the dark theme.) */
+.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__text::placeholder {
+  font-style: italic;
+  font-weight: normal;
+  color: var(--ddb-text-muted);
+  opacity: 1;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-hp-manager
+  :is(.ddb-hp-manager__number, .ddb-hp-manager__text):focus {
+  border-color: var(--ddb-accent);
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* Damage / Heal: a two-segment switch in the band applicator's colours —
+ * outlined when idle, filled when chosen, so the choice reads at a glance
+ * and matches the HEAL / DAMAGE buttons on the panel it opened from. */
+.tidy5e-sheet.application.ddb .ddb-hp-manager__modes {
+  display: flex;
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__mode {
+  height: 22px;
+  padding: 0 var(--ddb-space-3);
+  border: var(--ddb-border-width-panel) solid var(--ddb-mode-color);
+  background: none;
+  color: var(--ddb-mode-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__mode--damage {
+  --ddb-mode-color: var(--ddb-negative-bg);
+  --ddb-mode-hover: var(--ddb-negative-bg-hover);
+  --ddb-mode-text: var(--ddb-negative-text);
+  --ddb-mode-ink: var(--ddb-accent-chip-contrast);
+  border-radius: var(--ddb-radius-control) 0 0 var(--ddb-radius-control);
+}
+
+/* Ink on the filled heal green is DARK in both themes: white on the light
+ * theme's #40d250 is ~2:1 and on the dark theme's #00c797 ~2.2:1, while
+ * --ddb-text (light) and --ddb-page-bg (dark) both clear 7:1. White stays on
+ * the damage red (4.6:1 light, 5.4:1 dark). */
+.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__mode--heal {
+  --ddb-mode-color: var(--ddb-positive-bg);
+  --ddb-mode-hover: var(--ddb-positive-bg-hover);
+  --ddb-mode-text: var(--ddb-positive-text);
+  --ddb-mode-ink: var(--ddb-text);
+  border-left: none;
+  border-radius: 0 var(--ddb-radius-control) var(--ddb-radius-control) 0;
+}
+
+.tidy5e-sheet.application.ddb.theme-dark .ddb-hp-manager .ddb-hp-manager__mode--heal {
+  --ddb-mode-ink: var(--ddb-page-bg);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__mode:hover {
+  background: color-mix(in srgb, var(--ddb-mode-color) 15%, transparent);
+  color: var(--ddb-mode-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__mode[aria-checked='true'] {
+  background: var(--ddb-mode-color);
+  color: var(--ddb-mode-ink);
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-hp-manager
+  .ddb-hp-manager__mode[aria-checked='true']:hover {
+  background: var(--ddb-mode-hover);
+}
+
+/* --- live preview --- */
+/* Muted until there is something to apply, then full text colour, so the
+ * line reads as "nothing pending" vs "this is what Apply will do". */
+.tidy5e-sheet.application.ddb .ddb-hp-manager__preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--ddb-space-half) var(--ddb-space-1);
+  margin: 0;
+  padding: var(--ddb-space-1) var(--ddb-space-2);
+  border-radius: var(--ddb-radius-control);
+  background: var(--ddb-table-row-alt-bg);
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label-md);
+  line-height: 1.4;
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager__preview.pending {
+  background: var(--ddb-accent-subtle-bg);
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager__preview-label {
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager__preview strong {
+  font-weight: var(--ddb-weight-value);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager__preview strong.changed {
+  color: var(--ddb-text);
+}
+
+/* --- Restore life / Apply --- */
+.tidy5e-sheet.application.ddb .ddb-hp-manager__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ddb-space-2);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ddb-space-1);
+  height: 22px;
+  padding: 0 var(--ddb-space-4);
+  border: var(--ddb-border-width-panel) solid var(--ddb-accent);
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__button i {
+  margin: 0;
+  font-size: var(--ddb-size-label);
+  color: inherit;
+}
+
+/* Apply is the accent-filled primary action, like the detail pane's
+ * Use / Roll buttons (sidebar-details.css `.ddb-detail-button--primary`). */
+.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__apply {
+  background: var(--ddb-accent);
+  color: var(--ddb-accent-chip-contrast);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__apply:hover:not(:disabled) {
+  border-color: var(--ddb-accent-hover);
+  background: var(--ddb-accent-hover);
+}
+
+/* Idle Apply (nothing typed): the detail pane's disabled-primary recipe
+ * (sidebar-details.css) rather than an opacity fade, which left white text on
+ * a washed-out accent unreadable. */
+.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__apply:disabled {
+  border-color: var(--ddb-list-border);
+  background: var(--ddb-table-row-alt-bg);
+  color: var(--ddb-text-muted);
+}
+
+/* Restore life is a healing action: the heal colour, outlined so Apply stays
+ * the single filled button. */
+.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__restore {
+  margin-right: auto;
+  border-color: var(--ddb-positive-bg);
+  color: var(--ddb-positive-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager .ddb-hp-manager__restore:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--ddb-positive-bg) 15%, transparent);
+}
+
+/* --- dnd5e HP fields (bonus formula, max override) --- */
+.tidy5e-sheet.application.ddb .ddb-hp-manager__config {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddb-space-1);
+  padding-top: var(--ddb-space-2);
+  border-top: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-manager__config-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6rem;
+  align-items: center;
+  gap: var(--ddb-space-2);
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Condition info triggers (DdbConditionsDefensesStrip.svelte)     */
+/* ------------------------------------------------------------------ */
+
+/* Active chips: the conditions read as a comma-separated run of text, so the
+ * info icon rides IN the run, right after its name and before the chip's
+ * `::after` comma — static, not the absolutely positioned chevron the left
+ * column uses, and always visible (dimmed) because a chip has no box to hover
+ * that would reveal it. */
+.tidy5e-sheet.application.ddb .ddb-condition > .ddb-detail-trigger--condition {
+  position: static;
+  width: 14px;
+  height: 14px;
+  margin-left: var(--ddb-space-half);
+  background: none;
+  color: var(--ddb-condition-muted);
+  opacity: 0.75;
+}
+
+.tidy5e-sheet.application.ddb .ddb-condition > .ddb-detail-trigger--condition:hover,
+.tidy5e-sheet.application.ddb .ddb-condition > .ddb-detail-trigger--condition:focus-visible {
+  background: none;
+  color: var(--ddb-accent);
+  opacity: 1;
+}
+
+/* Picker rows: option and trigger side by side. The option keeps every bit
+ * of its primary-box.css look; it only gives up the trigger's width. */
+.tidy5e-sheet.application.ddb .ddb-condition-options > .ddb-condition-option-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ddb-space-half);
+}
+
+.tidy5e-sheet.application.ddb .ddb-condition-option-row > .ddb-condition-option {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+
+/* Hidden until the row is hovered or holds keyboard focus, like the left
+ * column's chevrons, so the list stays a clean column of names. */
+.tidy5e-sheet.application.ddb .ddb-condition-option-row > .ddb-detail-trigger--condition-option {
+  position: static;
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  background: none;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-condition-option-row:is(:hover, :has(:focus-visible))
+  > .ddb-detail-trigger--condition-option {
+  opacity: 1;
+}
+
+.tidy5e-sheet.application.ddb .ddb-condition-option-row > .ddb-detail-trigger--condition-option:hover {
+  background: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Condition detail (DdbConditionDetail.svelte)                    */
+/* ------------------------------------------------------------------ */
+
+/* The condition icon is a <dnd5e-icon> (see DdbConditionDetail.svelte). The
+ * element's own `:host { display: contents }` would ignore the 36px thumbnail
+ * box `.ddb-detail-img` gives every detail view, so it becomes a flex box
+ * here, and the glyph is centred in it at two-thirds size (the status SVGs
+ * fill their whole viewBox, unlike item art). `--icon-fill` paints the
+ * monochrome parts in the pane's text colour in both themes; a status's own
+ * coloured parts (Blinded's red slash) keep their colour. */
+.tidy5e-sheet.application.ddb .ddb-detail-pane dnd5e-icon.ddb-condition-detail__icon {
+  --icon-size: calc(36px - 2 * var(--ddb-space-2));
+  --icon-fill: var(--ddb-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* The modern-rules exhaustion table: DDB's compact list-table look (label
+ * caps header, hairline rows) at sidebar density, with the actor's current
+ * level picked out by the accent wash plus an accent bar on its leading edge
+ * so it does not rely on colour alone. */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-exhaustion-table {
+  width: 100%;
+  margin: 0;
+  border: none;
+  border-collapse: collapse;
+  background: none;
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-label-md);
+  line-height: var(--ddb-lineheight-body);
+  color: var(--ddb-text);
+}
+
+/* Foundry core paints table sections (thead fill, even-row zebra, borders);
+ * the DDB list look is plain rows on hairlines, with only the current level
+ * marked. */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-exhaustion-table :is(thead, tbody, tr) {
+  border: none;
+  background: none;
+  text-shadow: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-exhaustion-table :is(th, td) {
+  padding: var(--ddb-space-1) var(--ddb-space-2);
+  border: none;
+  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+  background: none;
+  text-align: left;
+  vertical-align: baseline;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-exhaustion-table thead th {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-exhaustion-table__level {
+  width: 1%;
+  white-space: nowrap;
+  font-family: var(--ddb-font-condensed);
+  font-weight: var(--ddb-weight-value);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-exhaustion-table tr.current {
+  background: var(--ddb-accent-subtle-bg);
+  box-shadow: inset 3px 0 0 var(--ddb-accent);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-exhaustion-table tr.current > :is(th, td) {
+  font-weight: var(--ddb-weight-value);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-exhaustion-table__current {
+  margin-left: var(--ddb-space-1);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-accent);
+}
+
+/* The effects of a level as one run: "d20 -2 · Speed -5 ft". */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-exhaustion-table__effect > span {
+  white-space: nowrap;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-exhaustion-table__effect > span + span::before {
+  content: '\00B7';
+  margin: 0 var(--ddb-space-1);
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-exhaustion-table__dead {
+  font-weight: var(--ddb-weight-value);
+  color: var(--ddb-negative-text);
+}

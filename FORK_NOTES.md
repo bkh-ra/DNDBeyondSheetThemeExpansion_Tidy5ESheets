@@ -44,7 +44,13 @@ Repository: `origin` = https://github.com/bkh-ra/DNDBeyondSheetThemeExpansion_Ti
 | `src/keybindings/keybind-init.ts` | debug quick-sheet-switch classic matcher excludes the DDB class; DDB quick switch (`tidyQssDdb`, Shift+B) |
 | `src/integration/modules/PopoutModuleIntegration.ts` | sheet-lock shim skipped for layouts that keep their own toggle (`mountsWindowHeaderModeToggle === false`) |
 | `src/features/user-preferences/user-preferences.types.ts` | `ddb?: Partial<DdbUserPreferences>` (per-user DDB layout preferences, see `src/sheets/ddb/DdbPreferences.ts`) |
-| `src/less/tidy5e.css` | imports the `ddb/*.css` layer (`sidebar-details.css` added in wave 2) |
+| `src/less/tidy5e.css` | imports the `ddb/*.css` layer (`sidebar-details.css` added in wave 2, `actions-spells.css` in wave 3) |
+| `src/runtime/table-columns/ColumnRuntimeBase.ts` | column-partition type candidates start with `sheetDocument._sheet?.columnPartitionTypeKey` (DDB: `'character-ddb'`) |
+| `src/features/sections/SheetSections.ts` | `getSheetTabSectionOrganizationForDocument` consults `document._sheet?.sheetTabSectionOrganizationDefault` between the actor flag and the world setting |
+| `src/sheets/quadrone/actor/tabs/CharacterSheetTab.svelte` | derives its organization through that SheetSections method (quadrone result unchanged) |
+| `src/settings/settings.svelte.ts` | world settings `ddbCharacterSheetTabOrganization` (default `action`), `ddbExposeTidyApiAlias` (default on, reload), `ddbBackdropFolder` / `ddbBackdropIndex` (config:false; the DDB Appearance gallery) |
+| `src/runtime/table-row-actions/RowActionRuntimeBase.ts` + `src/sheets/quadrone/shared/{Spell,Feature,Inventory}Table.svelte` | `withSharedRowActionCount`: the tables read an optional `tabRowActionCount` svelte context (provided only by the DDB Actions / Spells wrappers) so a tab can align its row-actions column across sections |
+| `src/main.svelte.ts` | `registerDdbColumns()` after `CONFIG.TIDY5E` is built (`src/sheets/ddb/registry/ddb-columns.ts`); the ready hook aliases the API onto the inactive `tidy5e-sheet` module record when `ddbExposeTidyApiAlias` is on |
 | `find-preloaded-images.js` | (fixed 2026-10-04: the scan regex really points at `modules/ddb5e-sheets/images` now; it had silently matched nothing since the fork) |
 | mechanical-rename files | every upstream file that carries only the `SHEET_CSS_CLASS` / asset-URL renames is marked `DDB-FORK: mechanical rename only …`; `npm run check-fork-markers` fails the build gate when an unmarked upstream edit appears |
 
@@ -96,6 +102,9 @@ live in `design/audit/`.
 - `src/sheets/ddb/**` — DDB layout sheet class, root component, tabs, parts, SVG motifs
 - `src/runtime/actor/CharacterSheetDdbRuntime.svelte.ts` — DDB tab registry
 - `src/less/ddb/**` — the DDB style layer (tokens, layout, per-region css)
+- `src/sheets/ddb/registry/ddb-columns.ts` — DDB column specs + partitions under the `character-ddb` type key (Actions: Range / Hit-DC / Damage / Uses / Time; Spells: Time / Range / Hit-DC / Effect / Duration / Uses / Components / School); `src/sheets/ddb/filters/ddb-item-filters.ts` — DDB filter pins (attack, activation, limited use, spell levels, concentration, ritual)
+- `src/sheets/ddb/character/tabs/**` — Actions / Spells tab wrappers (DdbFilterPills, DdbActionsInCombat, DdbSpellcastingStrip with Manage Spells via the dnd5e Compendium Browser); `tab-row-actions.svelte.ts` publishes the tab-wide `tabRowActionCount` context the shared tables honour; `--ddb-accent-readable` (actions-spells.css) lifts a dark accent to a readable lightness in the dark theme for the roll buttons, pills and rule links
+- `src/sheets/ddb/character/parts/header/DdbManageMenu.svelte`, `src/sheets/ddb/applications/DdbLevelUpDialog.svelte.ts` (+ `DdbLevelUp.svelte`), `src/applications/settings/ddb-preferences/**`, `src/applications/settings/ddb-appearance/**` — the D&D Beyond MANAGE menu (Sheet Settings, Level Up, Configure Token, Export / Import Data, Change Sheet Appearance, Preferences) and its two apps; the apps carry `tidy5e-sheet sheet quadrone ddb ddb-manage-app` so the DDB layer styles them (`src/less/ddb/manage.css`). The sidebar resizer mirrors its drag/arrow direction when the sidebar sits on the left (`sidebarSide`), and skips the window clamp in `overlay` mode.
 - `FORK_NOTES.md`, `publish.ps1`
 
 ## Upstream merge procedure

@@ -1003,6 +1003,10 @@ export class SheetSections {
   ): 'action' | 'origin' {
     return (
       TidyFlags.characterSheetTabSectionOrganization.get(document) ??
+      // DDB-FORK: a sheet class may carry its own default (the DDB layout
+      // reads the `ddbCharacterSheetTabOrganization` world setting) between
+      // the per-actor flag and the shared world setting.
+      document?._sheet?.sheetTabSectionOrganizationDefault ??
       SettingsProvider.settings.characterSheetTabOrganization.get()
     );
   }

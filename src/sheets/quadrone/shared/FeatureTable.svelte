@@ -41,11 +41,20 @@
       >(),
     );
 
+  // DDB-FORK: a tab may share one row-actions width across its sections (the
+  // DDB layout aligns its columns tab-wide; see RowActionRuntimeBase).
+  const sharedRowActionCount = getContext<(() => number) | undefined>(
+    'tabRowActionCount',
+  );
+
   const rowActionInfo = $derived(
-    RowActionRuntimeBase.getRowActionWidthInfo(
-      section.items,
-      (entry) => context.itemContext[entry.id]?.rowActions,
-      context.unlocked ? section.sectionActions : [],
+    RowActionRuntimeBase.withSharedRowActionCount(
+      RowActionRuntimeBase.getRowActionWidthInfo(
+        section.items,
+        (entry) => context.itemContext[entry.id]?.rowActions,
+        context.unlocked ? section.sectionActions : [],
+      ),
+      sharedRowActionCount?.(),
     ),
   );
 

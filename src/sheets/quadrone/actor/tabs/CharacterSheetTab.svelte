@@ -16,6 +16,7 @@
   import InventoryTable from '../../shared/InventoryTable.svelte';
   import { SettingsProvider } from 'src/settings/settings.svelte';
   import { TidyFlags } from 'src/foundry/TidyFlags';
+  import { SheetSections } from 'src/features/sections/SheetSections'; // DDB-FORK
   import { tick } from 'svelte';
   import { observeResize } from 'src/features/resize-observation/attachments';
 
@@ -57,9 +58,10 @@
   let itemToggleMap = $derived(inlineToggleService.map);
 
   // Effective organization: per-actor override or global setting
+  // DDB-FORK: resolved through SheetSections so a sheet class default (DDB
+  // layout) sits between the two; quadrone sheets resolve exactly as before.
   let effectiveOrganization = $derived(
-    TidyFlags.characterSheetTabSectionOrganization.get(context.actor) ??
-      SettingsProvider.settings.characterSheetTabOrganization.get(),
+    SheetSections.getSheetTabSectionOrganizationForDocument(context.actor),
   );
 
   let tabContent: HTMLElement;

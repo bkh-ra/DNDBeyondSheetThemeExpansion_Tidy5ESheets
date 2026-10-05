@@ -69,3 +69,6 @@
 @import 'ddb/sidebar.css';
 @import 'ddb/tab-content.css';
 @import 'ddb/sidebar-details.css';
+@import 'ddb/actions-spells.css';
+@import 'ddb/manage.css';
+@import 'ddb/hp-conditions.css';

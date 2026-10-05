@@ -11,6 +11,18 @@ import { DDB_CONSTANTS } from './ddb-constants';
 import { DdbPreferences } from './DdbPreferences';
 import { DdbDetailState } from './features/detail/DdbDetailState.svelte';
 import { resolveDocumentLinkSelection } from './features/detail/detail-routing';
+import { ItemFilterService } from 'src/features/filtering/ItemFilterService.svelte';
+import { SettingsProvider } from 'src/settings/settings.svelte';
+import type { ApplicationRenderOptions } from 'src/types/application.types';
+import type { CharacterSheetQuadroneContext } from 'src/types/types';
+import { DDB_COLUMN_PARTITION_TYPE_KEY } from './registry/ddb-columns';
+import { FeatureColumnRuntime } from 'src/runtime/table-columns/FeatureColumnRuntime';
+import { InventoryColumnRuntime } from 'src/runtime/table-columns/InventoryColumnRuntime';
+import { SpellColumnRuntime } from 'src/runtime/table-columns/SpellColumnRuntime';
+import {
+  DDB_FILTER_PINS,
+  getDdbDocumentFilters,
+} from './filters/ddb-item-filters';
 
 /**
  * DDB-FORK: The D&D Beyond-style character sheet.
@@ -31,7 +43,24 @@ export class Tidy5eCharacterSheetDdb extends Tidy5eCharacterSheetQuadrone {
       width: 1390,
       height: 950,
     },
+    actions: {
+      ddbRollAttack: Tidy5eCharacterSheetDdb.#ddbRollAttack,
+      ddbRollDamage: Tidy5eCharacterSheetDdb.#ddbRollDamage,
+    },
   };
+
+  constructor(options?: Partial<ApplicationConfiguration> | undefined) {
+    super(options);
+
+    // The service quadrone builds, fed by the DDB provider: quadrone's filters
+    // plus the Actions / Spells pill filters (attack, limited use, spell
+    // levels). See `filters/ddb-item-filters.ts`.
+    this.itemFilterService = new ItemFilterService(
+      {},
+      this.actor,
+      getDdbDocumentFilters,
+    );
+  }
 
   /**
    * What the sidebar detail pane shows. Transient per open sheet: shared with
@@ -80,10 +109,140 @@ export class Tidy5eCharacterSheetDdb extends Tidy5eCharacterSheetQuadrone {
     };
   }
 
+  /**
+   * Actions-tab organization when the actor has made no choice of its own:
+   * the DDB layout groups by activation (D&D Beyond's ACTION / BONUS ACTION /
+   * REACTION ...) unless the world setting says otherwise. Read by
+   * `SheetSections.getSheetTabSectionOrganizationForDocument`.
+   */
+  get sheetTabSectionOrganizationDefault(): 'action' | 'origin' {
+    return SettingsProvider.settings.ddbCharacterSheetTabOrganization.get();
+  }
+
+  /**
+   * Column partitions are looked up under this key before the actor type
+   * (`ColumnRuntimeBase`), so the DDB Actions / Spells tables get their own
+   * column sets (`registry/ddb-columns.ts`) and every other tab falls through
+   * to quadrone's.
+   */
+  get columnPartitionTypeKey(): string {
+    return DDB_COLUMN_PARTITION_TYPE_KEY;
+  }
+
   // Window size is remembered per layout, so a quadrone resize can never
   // shrink the DDB sheet below its tuned 1390x950 default (and vice versa).
   get sheetSizePreferenceKey(): string {
     return CONSTANTS.SHEET_PREFERENCES_KEY_CHARACTER_DDB;
+  }
+
+  async _prepareContext(
+    options: ApplicationRenderOptions,
+  ): Promise<CharacterSheetQuadroneContext> {
+    const context = await super._prepareContext(options);
+
+    // The DDB pills are pinned filters: Actions and Spells pin D&D Beyond's
+    // sets, every other tab keeps quadrone's pins.
+    context.filterPins = DDB_FILTER_PINS[this.actor.type] ?? context.filterPins;
+
+    return context;
+  }
+
+  /**
+   * Actions tab grouped by item type ("origin"): quadrone builds those groups
+   * with the Inventory / Spells / Features tabs' tables, so their columns are
+   * those tabs' (QUANTITY, PRICE, COMPONENTS ...). On the DDB layout the
+   * Actions tab has ONE column set whatever the grouping, so each group's
+   * columns are re-resolved for the Actions tab id, which the 'character-ddb'
+   * partitions answer for all three domains (registry/ddb-columns.ts). Only
+   * `columns` changes; items, keys and header actions are quadrone's.
+   */
+  createSheetTabOriginSections(context: CharacterSheetQuadroneContext) {
+    const sections = super.createSheetTabOriginSections(context);
+
+    const options = {
+      sheetDocument: context.document,
+      owner: context.owner,
+      unlocked: context.unlocked,
+      editable: context.editable,
+      tabId: CONSTANTS.TAB_ACTOR_ACTIONS,
+    };
+
+    for (const section of sections as any[]) {
+      const runtime =
+        section.type === CONSTANTS.SECTION_TYPE_INVENTORY
+          ? InventoryColumnRuntime
+          : section.type === CONSTANTS.SECTION_TYPE_SPELLBOOK
+            ? SpellColumnRuntime
+            : section.type === CONSTANTS.SECTION_TYPE_FEATURE
+              ? FeatureColumnRuntime
+              : undefined;
+
+      if (runtime) {
+        section.columns = runtime.getColumnSpecifications({
+          ...options,
+          sectionKey: section.key,
+        });
+      }
+    }
+
+    return sections;
+  }
+
+  /* -------------------------------------------- */
+  /*  Roll buttons (Actions / Spells columns)     */
+  /* -------------------------------------------- */
+
+  /**
+   * `data-action="ddbRollAttack"`: the to-hit button of the DDB roll column.
+   * The button carries the `data-activity-id` of the item's first usable
+   * attack activity (the one dnd5e takes `labels.modifier` from); without one
+   * that activity is looked up here.
+   */
+  static async #ddbRollAttack(
+    this: Tidy5eCharacterSheetDdb,
+    event: Event,
+    target: HTMLElement,
+  ) {
+    if (!this.isEditable) {
+      return;
+    }
+
+    const { item, activity } = this._getDocumentSubmissionInformation(target);
+
+    const attack =
+      activity ??
+      item?.system.activities?.find(
+        (a: any) => a.type === 'attack' && a.canUse,
+      );
+
+    if (typeof attack?.rollAttack !== 'function') {
+      return;
+    }
+
+    return attack.rollAttack({ event });
+  }
+
+  /**
+   * `data-action="ddbRollDamage"`: one button per damage / healing formula in
+   * the DDB formula column, each carrying the `data-activity-id` whose
+   * formula it shows.
+   */
+  static async #ddbRollDamage(
+    this: Tidy5eCharacterSheetDdb,
+    event: Event,
+    target: HTMLElement,
+  ) {
+    if (!this.isEditable) {
+      return;
+    }
+
+    const { activity } = this._getDocumentSubmissionInformation(target);
+
+    if (typeof activity?.rollDamage !== 'function') {
+      return;
+    }
+
+    return activity.rollDamage({ event });
   }
 
   /* -------------------------------------------- */

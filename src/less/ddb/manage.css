@@ -1,0 +1,674 @@
+/* DDB-FORK: Manage menu, Preferences and Appearance apps of the DDB layout (ddb-next Wave 4).
+ * Every selector starts with .tidy5e-sheet.application.ddb or .application.ddb.<app class> (see FORK_NOTES).
+ *
+ * Three parts:
+ *   1. the MANAGE chip in the header banner and its popover (DdbHeaderBanner /
+ *      DdbManageMenu), inside the sheet: `.tidy5e-sheet.application.ddb` (0-4-0);
+ *   2. the shared shell of the three standalone windows the menu opens
+ *      (Preferences, Appearance, Level Up), which all carry
+ *      `.ddb-manage-app` beside their own root class;
+ *   3. per-window details (`.ddb-preferences-app`, `.ddb-appearance-app`,
+ *      `.ddb-level-up-app`).
+ *
+ * The windows carry `tidy5e-sheet quadrone ddb` so the DDB tokens and
+ * quadrone's form controls reach them. The price is that the sheet-window
+ * rules of the DDB layer (`.tidy5e-sheet.application.ddb` window floor of
+ * 1230 x 860, `.window-content` reset) match them too; part 2 undoes those
+ * explicitly. Selectors there carry extra compound classes where quadrone's
+ * `:is(h1,h2,h3)` / field rules would otherwise tie or win. */
+
+/* ------------------------------------------------------------------ */
+/* 1. MANAGE chip (header banner)                                      */
+/* ------------------------------------------------------------------ */
+
+/* The banner's parent, so the popover (its second child) escapes the banner's
+ * `overflow: hidden`. Deliberately NOT positioned and NOT a stacking context:
+ * `.window-content` is pulled 20px up under the window header (z-index 1), and
+ * a positioned host painted the banner over the lower half of the window's
+ * header controls. The popover is placed against its offset parent (the
+ * window) and carries its own z-index instead. */
+.tidy5e-sheet.application.ddb .ddb-header-banner-host {
+  display: flex;
+  flex-direction: column;
+}
+
+/* DDB's `character-button-small`: a small outline chip on the dark strip, in
+ * the label type of the rest buttons beside it. The box model is restated in
+ * full because quadrone's `:is(button, .button)` rule (0-3-0, `font:`
+ * shorthand) matches it too. */
+.tidy5e-sheet.application.ddb .ddb-manage-trigger {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ddb-space-1);
+  align-self: flex-start;
+  width: auto;
+  min-width: 0;
+  height: 1.375rem;
+  min-height: 0;
+  /* Centred on the name line (the name row is ~2.2rem tall). */
+  margin: 0.4rem 0 0;
+  padding: 0 var(--ddb-space-2);
+  border: var(--ddb-border-width-panel) solid var(--ddb-accent);
+  border-radius: var(--ddb-radius-control);
+  background: transparent;
+  box-shadow: none;
+  color: var(--ddb-text);
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  line-height: 1;
+  text-transform: var(--ddb-transform-label);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-manage-trigger:hover {
+  background: var(--ddb-accent-subtle-bg);
+  border-color: var(--ddb-accent-hover);
+}
+
+.tidy5e-sheet.application.ddb .ddb-manage-trigger.open {
+  background: var(--ddb-accent-transparent);
+  border-color: var(--ddb-accent-active);
+}
+
+.tidy5e-sheet.application.ddb .ddb-manage-trigger:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+.tidy5e-sheet.application.ddb .ddb-manage-trigger-caret {
+  font-size: 0.625rem;
+  color: var(--ddb-accent);
+  transition: transform var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-manage-trigger.open .ddb-manage-trigger-caret {
+  transform: rotate(180deg);
+}
+
+/* --- the popover (same floating-panel recipe as the condition picker) --- */
+.tidy5e-sheet.application.ddb .ddb-manage-menu {
+  position: absolute;
+  /* Overwritten inline from the chip's measured position. */
+  top: 4rem;
+  left: 1rem;
+  /* Above the sheet body's own layers (overlay sidebar 5, condition picker 10). */
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  box-sizing: border-box;
+  min-width: 13.5rem;
+  max-width: 20rem;
+  margin: 0;
+  padding: var(--ddb-space-1);
+  /* Solid, not --ddb-box-bg: a floating list must not show the sheet through. */
+  background: var(--ddb-panel-bg-solid);
+  border: var(--ddb-outline-width) solid var(--ddb-panel-ring);
+  border-radius: var(--ddb-radius-panel);
+  box-shadow: var(--ddb-shadow-elevated);
+  color: var(--ddb-text);
+  font-family: var(--ddb-font-body);
+}
+
+.tidy5e-sheet.application.ddb .ddb-manage-item {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--ddb-space-3);
+  box-sizing: border-box;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: var(--ddb-space-2) var(--ddb-space-3);
+  border: var(--ddb-border-width-panel) solid transparent;
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  box-shadow: none;
+  color: var(--ddb-text);
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label-md);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  line-height: 1.2;
+  text-align: start;
+  text-transform: var(--ddb-transform-label);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--ddb-transition),
+    border-color var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-manage-item-icon {
+  flex: 0 0 auto;
+  width: 1rem;
+  text-align: center;
+  color: var(--ddb-accent);
+}
+
+.tidy5e-sheet.application.ddb .ddb-manage-item:hover,
+.tidy5e-sheet.application.ddb .ddb-manage-item:focus-visible {
+  outline: none;
+  border-color: var(--ddb-accent);
+  background: var(--ddb-accent-subtle-bg);
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-manage-item:focus-visible {
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Shared window shell (.ddb-manage-app)                           */
+/* ------------------------------------------------------------------ */
+
+/* Undo the DDB sheet-window floor (ddb-layout.css, 0-4-0): these are dialogs. */
+.application.ddb.ddb-manage-app.tidy5e-sheet:not(.minimized) {
+  min-width: 0;
+  min-height: 0;
+}
+
+.application.ddb.ddb-manage-app.tidy5e-sheet .window-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* The scroll region; sections stack on the DDB page colour. */
+.application.ddb.ddb-manage-app .window-content .dialog-content-container {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--ddb-space-4);
+  min-height: 0;
+  margin: 0;
+  padding: var(--ddb-space-5);
+  overflow: hidden auto;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--ddb-accent) 90%, transparent)
+    transparent;
+}
+
+/* One DDB panel per section. */
+.application.ddb.ddb-manage-app .ddb-prefs-section {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: var(--ddb-space-1);
+  margin: 0;
+  padding: var(--ddb-space-3) var(--ddb-space-5) var(--ddb-space-4);
+  background: var(--ddb-box-bg);
+  border-radius: var(--ddb-radius-panel);
+  box-shadow: inset 0 0 0 var(--ddb-outline-width) var(--ddb-panel-ring);
+}
+
+.application.ddb.ddb-manage-app .ddb-prefs-heading-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ddb-space-3);
+  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-accent);
+  margin-bottom: var(--ddb-space-1);
+}
+
+/* Section titles: DDB's condensed uppercase box heading. The `.window-content
+ * h2` prefix outranks quadrone's heading rules (0-4-1). */
+.application.ddb.ddb-manage-app .window-content h2.ddb-prefs-heading {
+  flex: 1 1 auto;
+  margin: 0;
+  padding: var(--ddb-space-1) 0;
+  border: none;
+  color: var(--ddb-heading);
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label-md);
+  font-weight: 700;
+  letter-spacing: var(--ddb-letterspacing-label);
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.application.ddb.ddb-manage-app .window-content .ddb-prefs-section > h2.ddb-prefs-heading {
+  margin-bottom: var(--ddb-space-1);
+  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-accent);
+}
+
+/* A setting: label left, control right, optional hint below. */
+.application.ddb.ddb-manage-app .ddb-prefs-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(8rem, 14rem);
+  align-items: center;
+  column-gap: var(--ddb-space-4);
+  row-gap: var(--ddb-space-half);
+  margin: 0;
+  padding: var(--ddb-space-2) 0;
+}
+
+.application.ddb.ddb-manage-app .ddb-prefs-row + .ddb-prefs-row {
+  border-top: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+}
+
+.application.ddb.ddb-manage-app .ddb-prefs-label {
+  min-width: 0;
+  color: var(--ddb-text);
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.application.ddb.ddb-manage-app .ddb-prefs-row-toggle {
+  cursor: pointer;
+}
+
+.application.ddb.ddb-manage-app .ddb-prefs-control {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ddb-space-2);
+  min-width: 0;
+}
+
+.application.ddb.ddb-manage-app .window-content .ddb-prefs-control :is(select, input[type='text'], input[type='number']) {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+}
+
+.application.ddb.ddb-manage-app .window-content .ddb-prefs-control :is(select, input):focus-visible {
+  outline: none;
+  border-color: var(--ddb-accent);
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* The unit sits INSIDE the number field, so the field ends where the selects
+ * above and below it end. */
+.application.ddb.ddb-manage-app .ddb-prefs-number {
+  position: relative;
+}
+
+.application.ddb.ddb-manage-app .window-content .ddb-prefs-number input[type='number'] {
+  padding-inline-end: 2rem;
+  text-align: end;
+}
+
+.application.ddb.ddb-manage-app .ddb-prefs-unit {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: var(--ddb-space-3);
+  display: flex;
+  align-items: center;
+  color: var(--ddb-text-muted);
+  font-size: var(--ddb-size-label-md);
+  pointer-events: none;
+}
+
+.application.ddb.ddb-manage-app .ddb-prefs-hint {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--ddb-text-muted);
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-label-md);
+  line-height: 1.35;
+}
+
+/* --- DDB toggle switch (a checkbox with role="switch") ---
+ * Restated against quadrone's checkbox rules (up to 0-6-1 for
+ * `:focus:not(:disabled):checked`), hence the long prefix. */
+.application.ddb.ddb-manage-app .window-content input[type='checkbox'].ddb-prefs-switch {
+  --ddb-switch-width: 2.125rem;
+  --ddb-switch-height: 1.125rem;
+  --ddb-switch-knob: calc(var(--ddb-switch-height) - 0.25rem);
+
+  position: relative;
+  appearance: none;
+  display: inline-block;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: var(--ddb-switch-width);
+  height: var(--ddb-switch-height);
+  margin: 0;
+  padding: 0;
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border-radius: var(--ddb-radius-pill);
+  background: var(--ddb-pip-empty);
+  box-shadow: none;
+  outline: none;
+  transform: none;
+  cursor: pointer;
+  transition:
+    background-color var(--ddb-transition),
+    border-color var(--ddb-transition);
+}
+
+.application.ddb.ddb-manage-app .window-content input[type='checkbox'].ddb-prefs-switch::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0.125rem;
+  width: var(--ddb-switch-knob);
+  height: var(--ddb-switch-knob);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+  transform: translateY(-50%);
+  transition: left var(--ddb-transition);
+}
+
+.application.ddb.ddb-manage-app .window-content input[type='checkbox'].ddb-prefs-switch::after {
+  content: none;
+}
+
+.application.ddb.ddb-manage-app .window-content input[type='checkbox'].ddb-prefs-switch:checked {
+  border-color: var(--ddb-accent);
+  background: var(--ddb-accent);
+}
+
+.application.ddb.ddb-manage-app .window-content input[type='checkbox'].ddb-prefs-switch:checked::before {
+  content: '';
+  left: calc(100% - var(--ddb-switch-knob) - 0.125rem);
+  color: transparent;
+}
+
+.application.ddb.ddb-manage-app .window-content input[type='checkbox'].ddb-prefs-switch:focus-visible {
+  box-shadow: var(--ddb-focus-ring);
+}
+
+.application.ddb.ddb-manage-app .window-content input[type='checkbox'].ddb-prefs-switch:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+/* --- buttons: reset / apply / small heading button --- */
+.application.ddb.ddb-manage-app .ddb-prefs-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--ddb-space-2);
+  padding-top: var(--ddb-space-2);
+}
+
+.application.ddb.ddb-manage-app .window-content :is(.ddb-prefs-reset, .ddb-prefs-small-button, .ddb-level-up-apply, .ddb-prefs-icon-button) {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ddb-space-2);
+  width: auto;
+  height: 1.75rem;
+  min-height: 0;
+  margin: 0;
+  padding: 0 var(--ddb-space-4);
+  border: var(--ddb-border-width-panel) solid var(--ddb-accent);
+  border-radius: var(--ddb-radius-control);
+  background: transparent;
+  box-shadow: none;
+  color: var(--ddb-text);
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  line-height: 1;
+  text-transform: var(--ddb-transform-label);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--ddb-transition);
+}
+
+.application.ddb.ddb-manage-app .window-content .ddb-prefs-small-button {
+  height: 1.5rem;
+  padding: 0 var(--ddb-space-3);
+}
+
+.application.ddb.ddb-manage-app .window-content .ddb-prefs-icon-button {
+  width: 1.75rem;
+  padding: 0;
+  color: var(--ddb-accent);
+}
+
+/* The primary action is DDB's solid accent button. */
+.application.ddb.ddb-manage-app .window-content .ddb-level-up-apply {
+  height: 2rem;
+  padding: 0 var(--ddb-space-5);
+  background: var(--ddb-accent);
+  color: var(--ddb-accent-chip-contrast, #fff);
+}
+
+.application.ddb.ddb-manage-app .window-content :is(.ddb-prefs-reset, .ddb-prefs-small-button, .ddb-prefs-icon-button):hover:not(:disabled) {
+  background: var(--ddb-accent-subtle-bg);
+}
+
+.application.ddb.ddb-manage-app .window-content .ddb-level-up-apply:hover:not(:disabled) {
+  background: var(--ddb-accent-hover);
+}
+
+.application.ddb.ddb-manage-app .window-content :is(.ddb-prefs-reset, .ddb-prefs-small-button, .ddb-level-up-apply, .ddb-prefs-icon-button):focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+.application.ddb.ddb-manage-app .window-content :is(.ddb-prefs-reset, .ddb-prefs-small-button, .ddb-level-up-apply, .ddb-prefs-icon-button):disabled {
+  border-color: var(--ddb-panel-border);
+  background: transparent;
+  color: var(--ddb-text-disabled);
+  cursor: default;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3a. Preferences                                                     */
+/* ------------------------------------------------------------------ */
+
+.application.ddb.ddb-preferences-app .ddb-prefs-folder input[type='text'] {
+  font-family: var(--ddb-font-body);
+}
+
+
+
+/* ------------------------------------------------------------------ */
+/* 3b. Appearance                                                      */
+/* ------------------------------------------------------------------ */
+
+/* Fieldsets only group what an owner may change; no chrome of their own. */
+.application.ddb.ddb-appearance-app fieldset.ddb-appearance-fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddb-space-1);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.application.ddb.ddb-appearance-app fieldset.ddb-appearance-fieldset:disabled {
+  opacity: 0.6;
+}
+
+/* Thumbnails: DDB's backdrop picker grid. */
+.application.ddb.ddb-appearance-app .ddb-backdrop-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+  gap: var(--ddb-space-3);
+  padding: var(--ddb-space-2) 0;
+}
+
+.application.ddb.ddb-appearance-app .window-content button.ddb-backdrop-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--ddb-space-1);
+  width: auto;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: var(--ddb-space-1);
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border-radius: var(--ddb-radius-control);
+  background: var(--ddb-box-bg);
+  box-shadow: none;
+  color: var(--ddb-text);
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-label-md);
+  font-weight: 400;
+  line-height: 1.2;
+  text-transform: none;
+  cursor: pointer;
+  transition:
+    border-color var(--ddb-transition),
+    box-shadow var(--ddb-transition);
+}
+
+.application.ddb.ddb-appearance-app .window-content button.ddb-backdrop-option:hover:not(:disabled) {
+  border-color: var(--ddb-accent-hover);
+}
+
+.application.ddb.ddb-appearance-app .window-content button.ddb-backdrop-option:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+.application.ddb.ddb-appearance-app .window-content button.ddb-backdrop-option.selected {
+  border-color: var(--ddb-accent);
+  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) var(--ddb-accent);
+}
+
+.application.ddb.ddb-appearance-app .window-content button.ddb-backdrop-option.selected::after {
+  content: '\f058';
+  position: absolute;
+  top: var(--ddb-space-2);
+  right: var(--ddb-space-2);
+  color: var(--ddb-accent);
+  font-family: 'Font Awesome 7 Pro', 'Font Awesome 6 Pro';
+  font-size: 1rem;
+  font-weight: 900;
+  text-shadow: 0 0 3px var(--ddb-panel-bg-solid);
+}
+
+.application.ddb.ddb-appearance-app .ddb-backdrop-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: calc(var(--ddb-radius-control) - 1px);
+  background: var(--ddb-page-bg);
+  color: var(--ddb-text-muted);
+  font-size: 1.25rem;
+}
+
+.application.ddb.ddb-appearance-app .ddb-backdrop-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: none;
+}
+
+.application.ddb.ddb-appearance-app .ddb-backdrop-name {
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.application.ddb.ddb-appearance-app .ddb-backdrop-empty {
+  padding: var(--ddb-space-1) 0;
+}
+
+/* "DDB default" tile: the art the sheet paints with no image chosen (Tidy's
+ * character banner, `--t5e-background-image` on quadrone actor sheets). */
+.application.ddb.ddb-appearance-app .ddb-backdrop-default .ddb-backdrop-thumb {
+  background: url('../../modules/ddb5e-sheets/images/banner-character.webp')
+    center / cover no-repeat;
+}
+
+/* Accent: swatch, hex field, eyedropper, clear - one layout in every state. */
+.application.ddb.ddb-appearance-app .ddb-accent-control {
+  gap: var(--ddb-space-1);
+}
+
+.application.ddb.ddb-appearance-app .window-content input[type='color'].ddb-accent-swatch {
+  flex: 0 0 1.75rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin: 0;
+  padding: 2px;
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border-radius: var(--ddb-radius-control);
+  background: var(--ddb-box-bg);
+  cursor: pointer;
+}
+
+.application.ddb.ddb-appearance-app input.ddb-accent-swatch::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.application.ddb.ddb-appearance-app input.ddb-accent-swatch::-webkit-color-swatch {
+  border: none;
+  border-radius: calc(var(--ddb-radius-control) - 2px);
+}
+
+.application.ddb.ddb-appearance-app input.ddb-accent-swatch::-moz-color-swatch {
+  border: none;
+  border-radius: calc(var(--ddb-radius-control) - 2px);
+}
+
+.application.ddb.ddb-appearance-app .window-content input.ddb-accent-text {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  font-family: var(--ddb-font-body);
+  text-transform: lowercase;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3c. Level Up                                                        */
+/* ------------------------------------------------------------------ */
+
+.application.ddb.ddb-level-up-app .ddb-level-up {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddb-space-1);
+  padding: var(--ddb-space-4) var(--ddb-space-5) var(--ddb-space-5);
+}
+
+.application.ddb.ddb-level-up-app .ddb-level-up-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--ddb-space-2);
+  margin: var(--ddb-space-2) 0 0;
+  padding: var(--ddb-space-3);
+  border-radius: var(--ddb-radius-control);
+  background: var(--ddb-accent-subtle-bg);
+  color: var(--ddb-text);
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-body);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.application.ddb.ddb-level-up-app .ddb-level-up-summary i {
+  color: var(--ddb-accent);
+}
+
+.application.ddb.ddb-level-up-app .ddb-level-up-class {
+  margin-inline-start: auto;
+  color: var(--ddb-text-muted);
+  font-weight: 400;
+  text-transform: none;
+}
+
+.application.ddb.ddb-level-up-app .ddb-level-up-empty {
+  margin: 0;
+  color: var(--ddb-text-muted);
+}

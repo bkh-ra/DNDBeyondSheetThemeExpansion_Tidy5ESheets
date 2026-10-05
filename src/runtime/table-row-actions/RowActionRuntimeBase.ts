@@ -50,6 +50,30 @@ export abstract class RowActionRuntimeBase<
     return buttonWidth * rowActionCount + paddingX;
   }
 
+  /**
+   * DDB-FORK: raise a section's row-action width to a tab-wide count. The DDB
+   * layout aligns its Actions / Spells columns across every section of a tab
+   * (`src/sheets/ddb/character/tabs/tab-row-actions.svelte.ts` provides the
+   * `tabRowActionCount` svelte context the shared tables read); quadrone tabs
+   * never provide it and keep the per-section width.
+   */
+  static withSharedRowActionCount(
+    info: { maxRowActionsCount: number; widthRems: number; widthPx: number },
+    shared: number | undefined,
+  ) {
+    if (shared === undefined || shared <= info.maxRowActionsCount) {
+      return info;
+    }
+
+    const widthRems = this.calculateRowActionWidthRems(shared);
+
+    return {
+      maxRowActionsCount: shared,
+      widthRems,
+      widthPx: widthRems * foundryCoreSettings.value.fontSizePx,
+    };
+  }
+
   static getRowActionWidthInfo<TEntry>(
     entries: TEntry[],
     rowActionFn: (entry: TEntry) => any[] | undefined,

@@ -5,12 +5,12 @@ import { TidyFlags } from 'src/foundry/TidyFlags';
 import ActorEffectsTab from 'src/sheets/quadrone/actor/tabs/ActorEffectsTab.svelte';
 import ActorInventoryTab from 'src/sheets/quadrone/actor/tabs/ActorInventoryTab.svelte';
 import ActorJournalTab from 'src/sheets/quadrone/actor/tabs/ActorJournalTab.svelte';
-import ActorSpellbookTab from 'src/sheets/quadrone/actor/tabs/ActorSpellbookTab.svelte';
 import CharacterAttributesTab from 'src/sheets/quadrone/actor/tabs/CharacterAttributesTab.svelte';
 import CharacterBiographyTab from 'src/sheets/quadrone/actor/tabs/CharacterBiographyTab.svelte';
 import CharacterFeaturesTab from 'src/sheets/quadrone/actor/tabs/CharacterFeaturesTab.svelte';
 import CharacterBastionTab from 'src/sheets/quadrone/actor/tabs/CharacterBastionTab.svelte';
-import CharacterSheetTab from 'src/sheets/quadrone/actor/tabs/CharacterSheetTab.svelte';
+import DdbActionsTab from 'src/sheets/ddb/character/tabs/DdbActionsTab.svelte';
+import DdbSpellsTab from 'src/sheets/ddb/character/tabs/DdbSpellsTab.svelte';
 import * as Bastion from 'src/features/facility/Bastion';
 import { buildCharacterSheetTabOptions } from 'src/settings/tab-options/CharacterSheetTabOptions';
 import { buildActorInventoryTabOptions } from 'src/settings/tab-options/ActorInventoryTabOptions';
@@ -20,13 +20,15 @@ import { buildCharacterFeaturesTabOptions } from 'src/settings/tab-options/Chara
 /**
  * DDB-FORK: Tab registry for the DDB (D&D Beyond-style) character sheet layout.
  *
- * Phase 0 (current): reuses the quadrone tab components verbatim so the layout
- * is functional end-to-end; tabs are ordered to match the D&D Beyond primary
- * box (Actions | Spells | Inventory | Features & Traits | Background | Notes)
- * followed by the Foundry-only extra tabs (Effects, Bastion, Character).
+ * Tabs are ordered to match the D&D Beyond primary box (Actions | Spells |
+ * Inventory | Features & Traits | Background | Notes) followed by the
+ * Foundry-only extra tabs (Effects, Bastion, Character).
  *
- * Later phases will replace these components with DDB-styled versions from
- * src/sheets/ddb/character/tabs/ one at a time.
+ * Actions and Spells mount DDB wrappers (src/sheets/ddb/character/tabs/,
+ * ddb-next Wave 3) that compose the quadrone tab with the D&D Beyond pieces
+ * around it; the other tabs still reuse the quadrone components verbatim.
+ * Tab ids are unchanged, so tab configuration, sheet pins and API
+ * registrations keep addressing the same tabs.
  */
 export const CharacterSheetDdbRuntime =
   new ActorSheetQuadroneRuntime<CharacterSheetQuadroneContext>(
@@ -37,7 +39,7 @@ export const CharacterSheetDdbRuntime =
         // title through `localize()`).
         title: 'DND5E.ActionPl',
         content: {
-          component: CharacterSheetTab,
+          component: DdbActionsTab,
           type: 'svelte',
         },
         id: CONSTANTS.TAB_ACTOR_ACTIONS,
@@ -48,7 +50,7 @@ export const CharacterSheetDdbRuntime =
       {
         title: 'TYPES.Item.spellPl',
         content: {
-          component: ActorSpellbookTab,
+          component: DdbSpellsTab,
           type: 'svelte',
         },
         id: CONSTANTS.TAB_ACTOR_SPELLBOOK,
