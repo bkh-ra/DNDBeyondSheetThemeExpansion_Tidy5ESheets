@@ -6,7 +6,7 @@ import ActorEffectsTab from 'src/sheets/quadrone/actor/tabs/ActorEffectsTab.svel
 import ActorJournalTab from 'src/sheets/quadrone/actor/tabs/ActorJournalTab.svelte';
 import CharacterAttributesTab from 'src/sheets/quadrone/actor/tabs/CharacterAttributesTab.svelte';
 import CharacterBiographyTab from 'src/sheets/quadrone/actor/tabs/CharacterBiographyTab.svelte';
-import CharacterFeaturesTab from 'src/sheets/quadrone/actor/tabs/CharacterFeaturesTab.svelte';
+import DdbFeaturesTab from 'src/sheets/ddb/character/tabs/DdbFeaturesTab.svelte';
 import CharacterBastionTab from 'src/sheets/quadrone/actor/tabs/CharacterBastionTab.svelte';
 import DdbActionsTab from 'src/sheets/ddb/character/tabs/DdbActionsTab.svelte';
 import DdbSpellsTab from 'src/sheets/ddb/character/tabs/DdbSpellsTab.svelte';
@@ -80,7 +80,7 @@ export const CharacterSheetDdbRuntime =
         // own key.
         title: 'TIDY5E.DdbLayout.Tab.FeaturesAndTraits',
         content: {
-          component: CharacterFeaturesTab,
+          component: DdbFeaturesTab,
           type: 'svelte',
         },
         id: CONSTANTS.TAB_CHARACTER_FEATURES,

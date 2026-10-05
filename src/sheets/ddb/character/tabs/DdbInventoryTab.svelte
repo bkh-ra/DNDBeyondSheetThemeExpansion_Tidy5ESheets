@@ -53,6 +53,7 @@
   import type { Item5e } from 'src/types/item.types';
   import type { Actor5e } from 'src/types/types';
   import { getContext, tick, untrack } from 'svelte';
+  import DdbEncumbranceStrip from './DdbEncumbranceStrip.svelte';
   import DdbFilterPills from './DdbFilterPills.svelte';
   import DdbInventoryContainerView from './DdbInventoryContainerView.svelte';
   import DdbInventoryPartyView from './DdbInventoryPartyView.svelte';
@@ -277,6 +278,8 @@
     {/if}
   </div>
 {/snippet}
+
+<DdbEncumbranceStrip />
 
 <DdbFilterPills
   {tabId}

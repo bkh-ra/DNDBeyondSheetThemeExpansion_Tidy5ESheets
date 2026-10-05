@@ -1,0 +1,122 @@
+/* DDB-FORK: src/less/ddb/tab-strips.css
+ *
+ * Tab header strips (user request 2026-10-05): the card row that sits ABOVE
+ * a tab's pills and search bar, as the Spells tab's spellcasting strip does.
+ * The card / header / stat look lives in actions-spells.css section 5 and is
+ * shared through `:is(.ddb-spellcasting-*, .ddb-tab-strip-*)`; this file
+ * holds what each strip adds:
+ *
+ *   Actions     the Actions-in-Combat box (actions-spells.css section 4)
+ *   Inventory   DdbEncumbranceStrip: WEIGHT CARRIED meter + STR | SIZE |
+ *               MULTIPLIER | CAPACITY, quadrone's CharacterEncumbranceRow
+ *               moved up out of the item list
+ *   Features    DdbClassStrip: one card per class with its subclass, level
+ *               and hit die
+ *
+ * Like the spellcasting strip they scroll away with the first scroll; the
+ * pills and the search bar under them stay pinned (section 1 of
+ * actions-spells.css). Every selector starts `.tidy5e-sheet.application.ddb`.
+ */
+
+/* ------------------------------------------------------------------ */
+/* 1. Encumbrance strip (Inventory)                                   */
+/* ------------------------------------------------------------------ */
+
+/* A single card, so it carries the strip's top padding itself. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-encumbrance-strip {
+  margin-block-start: var(--ddb-space-2);
+}
+
+/* Title over the meter; takes whatever room the four stats leave. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-encumbrance-strip > .ddb-tab-strip-card-header {
+  flex: 1 1 12rem;
+  gap: var(--ddb-space-half);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-encumbrance-meter {
+  display: flex;
+  min-width: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-encumbrance-meter .meter {
+  flex: 1 1 auto;
+  min-width: 8rem;
+  max-width: 26rem;
+}
+
+/* The size value is a word ("Medium"), the others are numbers: keep the word
+ * from inflating its box. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-encumbrance-strip .ddb-tab-strip-stat[data-stat='size'] .value {
+  font-size: var(--ddb-size-body);
+  line-height: 1.5;
+}
+
+/* The quadrone row this strip replaces: ActorInventoryTab renders
+ * CharacterEncumbranceRow (`.encumbrance-details`) at the top of the item
+ * list. Moved, not doubled. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content [data-tab-contents-for='inventory'] .tab-content > .encumbrance-details {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Class strip (Features & Traits)                                 */
+/* ------------------------------------------------------------------ */
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-class-card > .ddb-class-img {
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+  border-radius: var(--ddb-radius-control);
+  object-fit: cover;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-class-card > .ddb-tab-strip-card-header {
+  flex: 1 1 10rem;
+  gap: var(--ddb-space-half);
+}
+
+/* The class and subclass names are detail triggers (buttons): box model
+ * restated over quadrone's `:is(button, .button)`, the font comes from the
+ * shared title / subtitle rules. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-class-card button:is(.ddb-class-name, .ddb-subclass-name) {
+  display: inline;
+  width: auto;
+  min-width: 0;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+  text-align: start;
+  cursor: pointer;
+  transition: var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-class-card button:is(.ddb-class-name, .ddb-subclass-name):hover {
+  color: var(--ddb-accent-readable);
+  text-decoration: underline;
+  text-shadow: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-class-card button:is(.ddb-class-name, .ddb-subclass-name):focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* The subclass reads as a name ("Oath of Vengeance"), not a caps label. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-class-card .ddb-subclass-name {
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  font-weight: var(--ddb-weight-value);
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-class-card .ddb-subclass-name.empty {
+  font-style: italic;
+  color: var(--ddb-text-muted);
+}

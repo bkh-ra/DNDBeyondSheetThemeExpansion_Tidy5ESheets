@@ -17,8 +17,10 @@
   at this tab). Every group shares one row-actions width
   (tab-row-actions.svelte.ts), so the columns line up from group to group.
 
-  CharacterSheetTab ends with its own sheet footer; actions-spells.css slots
-  the Actions-in-Combat box above that footer (the footer stays pinned last).
+  The Actions-in-Combat box sits ABOVE the pills, in the tab's header area,
+  like the Spells tab's spellcasting strip (user request 2026-10-05): it
+  scrolls away with the first scroll while the pills and the search bar stay
+  pinned. (Waves 3-8 slotted it under the list, above the pinned footer.)
 -->
 <script lang="ts">
   import { CONSTANTS } from 'src/constants';
@@ -47,8 +49,8 @@
   shareTabRowActionWidth(() => rowActionCount);
 </script>
 
+<DdbActionsInCombat {tabId} />
+
 <DdbFilterPills {tabId} />
 
 <CharacterSheetTab />
-
-<DdbActionsInCombat {tabId} />

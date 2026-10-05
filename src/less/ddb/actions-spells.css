@@ -340,30 +340,18 @@
 /* 4. Actions in Combat                                               */
 /* ------------------------------------------------------------------ */
 
-/* Where it goes: under the action list but ABOVE quadrone's pinned tab
- * footer. The footer is the last child of CharacterSheetTab's `.tab-content`
- * and the box is mounted after that element, so in DOM order it would land
- * below the footer (the footer then floats mid-pane at the end of a scroll).
- * Dissolving `.tab-content` (display: contents) makes its children flex items
- * of the `.tidy-tab` column itself; `order` then puts the box before the
- * footer. The footer keeps tab-content.css section 10's sticky pin and
- * `margin-block-start: auto`, now against the whole scroller. Nothing in
- * `.tab-content` relies on its own box here: in the DDB pane it is not the
- * scroller (`.tidy-tab` is), and its padding is already zero (section 10).
- * The `:has(> .sheet-footer)` term matches section 10's specificity so its
- * `display: flex` cannot win back. */
-.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab:has(> .ddb-actions-in-combat) > .tab-content:has(> .sheet-footer) {
-  display: contents;
-}
-
-.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab:has(> .ddb-actions-in-combat) > .tab-content > .sheet-footer {
-  order: 2;
-}
-
+/* Where it goes: the tab's header area, ABOVE the filter pills and the
+ * search bar, like the Spells tab's spellcasting strip (user request
+ * 2026-10-05; waves 3-8 slotted it under the list, above the pinned footer,
+ * by dissolving `.tab-content`). DdbActionsTab mounts it first, so it is a
+ * plain first child of the scroller: it scrolls away with the first scroll
+ * while the pills and the bar under it stay pinned (section 1), and
+ * CharacterSheetTab's `.tab-content` keeps tab-content.css section 10's
+ * flex column with its pinned footer. Same card as the strips (section 5 /
+ * tab-strips.css): top padding of the strip, the card's own margin below. */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab > .ddb-actions-in-combat {
-  order: 1;
   flex: 0 0 auto;
-  margin-block: var(--ddb-space-3);
+  margin-block: var(--ddb-space-2) var(--ddb-space-1);
   padding: var(--ddb-space-2) var(--ddb-space-3);
   border: var(--ddb-border-width-panel) solid var(--ddb-list-border);
   border-radius: var(--ddb-radius-control);
@@ -439,8 +427,11 @@
 
 /* One flat card per spellcasting class: CLASS (ABILITY) | MODIFIER | SPELL
  * ATTACK | SAVE DC | PREPARED | MANAGE SPELLS. Wraps at narrow widths, the
- * button dropping to its own line rather than squeezing the numbers. */
-.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-spellcasting-strip {
+ * button dropping to its own line rather than squeezing the numbers.
+ * The strip / card / header / stat rules are SHARED with the other tabs'
+ * header strips through the `.ddb-tab-strip*` aliases (tab-strips.css:
+ * the Inventory encumbrance strip and the Features class strip). */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-strip, .ddb-tab-strip) {
   display: flex;
   flex: 0 0 auto;
   flex-direction: column;
@@ -448,7 +439,7 @@
   padding-block-start: var(--ddb-space-2);
 }
 
-.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-spellcasting-card {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-card, .ddb-tab-strip-card) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -459,7 +450,7 @@
   background: var(--ddb-table-row-alt-bg);
 }
 
-.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-spellcasting-card-header {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-card-header, .ddb-tab-strip-card-header) {
   display: flex;
   flex: 0 1 auto;
   flex-direction: column;
@@ -470,7 +461,7 @@
   background: none;
 }
 
-.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-spellcasting-class-name {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-class-name, .ddb-tab-strip-title) {
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-label-md);
   font-weight: var(--ddb-weight-label);
@@ -479,7 +470,7 @@
   color: var(--ddb-heading-box);
 }
 
-.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-spellcasting-ability {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-ability, .ddb-tab-strip-subtitle) {
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-label);
   font-weight: var(--ddb-weight-label);
@@ -487,7 +478,7 @@
   color: var(--ddb-text-muted);
 }
 
-.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-spellcasting-stats {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-stats, .ddb-tab-strip-stats) {
   display: flex;
   flex: 1 1 auto;
   flex-wrap: wrap;
@@ -496,14 +487,14 @@
 }
 
 /* Value over caps label, D&D Beyond's spellcasting header boxes. */
-.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-spellcasting-stat {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-stat, .ddb-tab-strip-stat) {
   display: flex;
   flex-direction: column;
   align-items: center;
   min-width: 3rem;
 }
 
-.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-spellcasting-stat .value {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-stat, .ddb-tab-strip-stat) .value {
   font-family: var(--ddb-font-body);
   font-size: var(--ddb-size-value-md);
   font-weight: var(--ddb-weight-value);
@@ -511,13 +502,13 @@
   color: var(--ddb-text);
 }
 
-.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-spellcasting-stat .value .sign,
-.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-spellcasting-stat .value .max {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-stat, .ddb-tab-strip-stat) .value .sign,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-stat, .ddb-tab-strip-stat) .value .max {
   font-size: var(--ddb-size-label-md);
   color: var(--ddb-text-muted);
 }
 
-.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-spellcasting-stat .label {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-stat, .ddb-tab-strip-stat) .label {
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-size-label);
   font-weight: var(--ddb-weight-label);
