@@ -480,25 +480,27 @@
   /* Above the rings (see the z-index note on `::before`). */
   position: relative;
   z-index: 1;
-  /* SYMMETRIC INLINE INSETS (user request 2026-10-05). A classic scrollbar is
-   * taken out of the padding box, so the right inset is margin + the reserved
-   * gutter, 4 + 10 = 14px; `scrollbar-gutter: stable` keeps that gutter
-   * whether or not the list overflows. The left inset used to be 4 + 8 = 12px,
-   * so rows sat closer to the outline on the left and ran into the scrollbar
-   * on the right. The left padding now MIRRORS the gutter (10px, Chromium's
-   * thin scrollbar, which Foundry's Electron client always uses), so rows
-   * clear the outline by 14px on both sides, scrollbar shown or not (measured
-   * 14/14 in the live sheet, both states). The 4px margin keeps the thumb off
-   * the 2px outline; the header above is padded to the same 14px.
+  /* SYMMETRIC INLINE INSETS (user requests 2026-10-05, twice). Margin 4px +
+   * padding 10px on BOTH sides = 14px from the outline to the content while
+   * nothing scrolls. The first cut reserved the right-hand 10px as a permanent
+   * scrollbar gutter (`scrollbar-gutter: stable`, no padding) so rows never
+   * shifted when a scrollbar appeared; but the moment a pane scrolled (the
+   * Details pane nearly always does) the content sat hard against the thumb,
+   * which read as "no right margin". The gutter is on demand now
+   * (`scrollbar-gutter: auto`): the 10px thin scrollbar is carved out of the
+   * box only while the pane overflows, and the 10px padding then stays between
+   * the content and the track (left 14px to the outline, right 10px to the
+   * track and 24px to the outline). The one cost is a 10px content-width
+   * change when a pane starts or stops overflowing. The 4px margin keeps the
+   * thumb off the 2px outline; the header above is padded to the same 14px.
    *
-   * NOT `stable both-edges`, the obvious device: measured with painted
-   * scrollbars, Chromium then stops painting the right-most glyphs of each
-   * favorite row ("3 / 3" drew as "3 /") as soon as the list really scrolls,
-   * although layout and hit-testing are unchanged. */
+   * NOT `stable both-edges`: measured with painted scrollbars, Chromium then
+   * stops painting the right-most glyphs of each favorite row ("3 / 3" drew
+   * as "3 /") as soon as the list really scrolls. */
   margin-inline: var(--ddb-panel-double-gap);
-  padding: var(--ddb-space-2) 0 var(--ddb-space-3) var(--ddb-space-4);
+  padding: var(--ddb-space-2) var(--ddb-space-4) var(--ddb-space-3);
   overflow: hidden auto;
-  scrollbar-gutter: stable;
+  scrollbar-gutter: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--ddb-accent-transparent) transparent;
 

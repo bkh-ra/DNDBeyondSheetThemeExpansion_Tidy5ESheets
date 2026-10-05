@@ -300,8 +300,16 @@
 }
 
 /* The boxed C / R tags D&D Beyond prints next to concentration and ritual
- * spells: outline only, so they never compete with the accent dice boxes. */
+ * spells: outline only, so they never compete with the accent dice boxes.
+ * Modifier classes are `ddb-spell-tag--concentration` / `--ritual`, never the
+ * bare words: quadrone/character.css gives `.concentration` (the saving-throws
+ * block) `position: absolute; left: 0; right: 0`, which turned the tag into a
+ * one-pixel outlined box spanning the whole row wherever the DURATION column
+ * was wide enough to show (user review 2026-10-05, "white bounding boxes").
+ * `position: static` here is the second lock against the same thing. */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-spell-tag {
+  position: static;
+  width: auto;
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;

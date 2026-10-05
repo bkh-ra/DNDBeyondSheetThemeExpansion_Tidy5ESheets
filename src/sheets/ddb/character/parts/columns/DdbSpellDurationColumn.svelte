@@ -48,7 +48,7 @@
     {/if}
     {#if concentration}
       <span
-        class="ddb-spell-tag concentration"
+        class="ddb-spell-tag ddb-spell-tag--concentration"
         data-tooltip="TIDY5E.DdbLayout.Spells.Concentration"
         aria-label={localize('TIDY5E.DdbLayout.Spells.Concentration')}
         >{propertyAbbreviation('concentration', 'C')}</span
@@ -56,7 +56,7 @@
     {/if}
     {#if ritual}
       <span
-        class="ddb-spell-tag ritual"
+        class="ddb-spell-tag ddb-spell-tag--ritual"
         data-tooltip="TIDY5E.DdbLayout.Spells.Ritual"
         aria-label={localize('TIDY5E.DdbLayout.Spells.Ritual')}
         >{propertyAbbreviation('ritual', 'R')}</span

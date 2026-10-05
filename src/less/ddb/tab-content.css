@@ -813,6 +813,19 @@
   border-top: 1px solid var(--ddb-list-border);
 }
 
+/* The Spellbook footer is preceded by its IntersectionObserver sentinel, a
+ * zero-height `div[role="presentation"]` carrying an INLINE
+ * `margin-bottom: -1rem` (quadrone/actor/parts/ActorSpellbookFooter.svelte).
+ * Quadrone's `.tab-content` block-end padding absorbs that pull; the rule above
+ * zeroes that padding, so here the pull dragged the pinned footer 8px over the
+ * last spell row at the very end of the scroll (user review 2026-10-05, "the bar
+ * at the bottom of the spell list is overlapping content"). Inline style, so
+ * `!important` is the only way to neutralise it; keyed on the sentinel's own
+ * shape (presentation role directly before the spellbook footer). */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab .tab-content > [role='presentation']:has(+ .sheet-footer.spellbook-footer) {
+  margin-bottom: 0 !important;
+}
+
 /* ------------------------------------------------------------------ */
 /* 11. Quantity stepper always visible                                */
 /* ------------------------------------------------------------------ */

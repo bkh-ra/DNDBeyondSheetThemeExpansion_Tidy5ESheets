@@ -872,3 +872,38 @@
 .tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-stat-label {
   text-shadow: none; /* core dl dt */
 }
+
+/* --- Pills inside the pane never leave it ---
+ * The reused item summary renders quadrone pills (properties, and the
+ * inline effects list's `label.pill.pill-switch` with a name, a category and
+ * a toggle). A pill is a wrapping flex box whose minimum width is its
+ * min-content, so a long effect name ("Aid: Level 2 Max HP Bonus (Temporary)"
+ * plus the toggle) ran 40px past the pane's right edge and was clipped by the
+ * sidebar scroller (user review 2026-10-05: the right margin looked smaller
+ * than the left). Cap every pill at the pane width; the switch pill keeps its
+ * one line, lets its name block shrink, and truncates the name (quadrone's own
+ * `.truncate` span) instead of wrapping the toggle onto a second line. */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .pills > .pill {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .pills > .pill.pill-switch {
+  flex-wrap: nowrap;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .pill.pill-switch > .icon-and-label-container {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .pill.pill-switch > .icon-and-label-container > .truncate {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .pill.pill-switch > .icon-and-label-container > .effect-pill-category,
+.tidy5e-sheet.application.ddb .ddb-detail-pane .pill.pill-switch > .field-toggle {
+  flex: 0 0 auto;
+}

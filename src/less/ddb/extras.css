@@ -25,8 +25,13 @@
 
 /* The scroller is `.tidy-tab` (tab-content.css section 9), a flex column; the
  * body grows to fill it so a drop anywhere on the pane lands on the tab.
- * Block-end padding clears the panel's rounded corner like `.tab-content`. */
-.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras {
+ * Block-end padding clears the panel's rounded corner like `.tab-content`.
+ * Keyed on the sheet-part attribute, NOT the bare class: the tab PANE also
+ * carries `ddb-extras` (TabContent.svelte adds the tab id as a class), and a
+ * bare `.ddb-extras { display: flex }` out-ranked quadrone's inactive-pane
+ * `display: none`, so the empty Extras body showed on every other tab and sat
+ * over the Effects and Character tabs (user review 2026-10-05). */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras[data-tidy-sheet-part='ddb-extras'] {
   container: ddb-extras / inline-size;
   flex: 1 0 auto;
   display: flex;
@@ -168,7 +173,7 @@
  * (D&D Beyond's: 35 | 130 | 35 | 85 | 50 | notes) so a column lines up
  * across groups; the name and speed tracks may grow, notes takes the rest,
  * and the row actions always reserve room for three buttons. */
-.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-extras[data-tidy-sheet-part='ddb-extras'] {
   --ddb-extras-columns:
     2.1875rem
     minmax(7.5rem, 1.6fr)
