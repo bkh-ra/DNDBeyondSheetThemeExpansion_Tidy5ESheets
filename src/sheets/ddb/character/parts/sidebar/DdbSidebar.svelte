@@ -1,11 +1,11 @@
 <!--
   DDB-FORK: the DDB right-hand sidebar pane (Favorites / Traits / anything a
-  third-party module registered).
+  third-party module registered, plus the pinned Details pane).
 
-  This is a DDB-styled SHELL only. Every tab in it — including Favorites, the
-  one piece of character data the DDB layout previously rendered nowhere — comes
-  straight out of the INHERITED `sidebarTabRuntime`
-  (`CharacterSheetQuadroneSidebarRuntime`), so:
+  This is a DDB-styled SHELL only. Every tab in it comes from the sheet's
+  `sidebarTabRuntime` (`CharacterSheetDdbSidebarRuntime`), which is the
+  INHERITED quadrone sidebar registry (`CharacterSheetQuadroneSidebarRuntime`)
+  plus one pinned tab of its own, so:
 
     - `context.sidebarTabs` is rendered GENERICALLY. Modules that call
       `api.registerCharacterSidebarTab` show up here with no DDB-side change.
@@ -13,6 +13,9 @@
       and the 16 `character-parts/favorites/**` components) are reused verbatim.
       Nothing about favorites is reimplemented; only restyled, in
       `src/less/ddb/sidebar.css`.
+    - the Details tab (`details/DdbDetailsTab.svelte`) is pinned last and is
+      outside tab configuration; the `detailsPaneEnabled` user preference
+      hides it.
 
   Tab selection uses Tidy's shared `Tabs` + `TabContents`, mirroring
   `src/sheets/quadrone/actor/character-parts/CharacterSidebar.svelte` (and the
@@ -25,6 +28,11 @@
   which reuses the exact storage shape quadrone's sidebar already uses. The
   write happens on the toggle only — never on open — so merely viewing a sheet
   does not touch the user document.
+
+  REVEAL: every detail selection (`DdbDetailState.version`) switches to the
+  Details tab and, if the pane is collapsed, expands it TRANSIENTLY — the
+  stored collapse preference is not written. The toggle then simply drops the
+  transient state (back to the user's collapsed rail), again without a write.
 -->
 <script lang="ts">
   import TabContents from 'src/components/tabs/TabContents.svelte';
@@ -33,7 +41,10 @@
   import { UserSheetPreferencesService } from 'src/features/user-preferences/SheetPreferencesService';
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
   import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
-  import { setContext, untrack } from 'svelte';
+  import { DDB_CONSTANTS } from 'src/sheets/ddb/ddb-constants';
+  import { DdbPreferences } from 'src/sheets/ddb/DdbPreferences';
+  import { getDdbDetailState } from 'src/sheets/ddb/features/detail/DdbDetailState.svelte';
+  import { setContext, tick, untrack } from 'svelte';
 
   /**
    * Pseudo-tab id used as the storage slot for the DDB sidebar's expanded
@@ -43,6 +54,8 @@
   const SIDEBAR_PREFERENCE_KEY = 'ddb-sidebar';
 
   let context = $derived(getCharacterSheetQuadroneContext());
+
+  const detail = getDdbDetailState();
 
   const localize = FoundryAdapter.localize;
 
@@ -61,6 +74,10 @@
 
   setContext(CONSTANTS.SVELTE_CONTEXT.ON_TAB_SELECTED, onSidebarTabSelected);
 
+  let preferences = $derived(
+    DdbPreferences.fromUserPreferences(context.userPreferences),
+  );
+
   // Expanded state, read live from the user's stored sheet preferences.
   let storedExpanded = $derived(
     UserSheetPreferencesService.getByType(context.actor.type)?.tabs?.[
@@ -72,7 +89,27 @@
   // value takes back over once the flag update round-trips.
   let expanded = $derived(storedExpanded ?? true);
 
+  /** Opened by a detail selection while collapsed; never persisted. */
+  let transientExpanded = $state(false);
+
+  let effectiveExpanded = $derived(expanded || transientExpanded);
+
+  // A stored "expanded" makes the transient flag moot; drop it so a later
+  // collapse is a real one.
+  $effect(() => {
+    if (expanded) {
+      untrack(() => (transientExpanded = false));
+    }
+  });
+
   async function toggleExpanded() {
+    // Collapsing a transiently opened pane returns to the user's stored
+    // (collapsed) state; nothing to write.
+    if (transientExpanded && !expanded) {
+      transientExpanded = false;
+      return;
+    }
+
     const next = !expanded;
     expanded = next;
 
@@ -84,16 +121,66 @@
     );
   }
 
+  let hasDetailsTab = $derived(
+    context.sidebarTabs.some((tab) => tab.id === DDB_CONSTANTS.TAB_DDB_DETAILS),
+  );
+
+  let tabStrip = $state<HTMLElement>();
+
+  // Reveal the Details tab on every selection made after this pane mounted.
+  let seenVersion = untrack(() => detail?.version ?? 0);
+
+  $effect(() => {
+    const version = detail?.version ?? 0;
+
+    if (version === seenVersion) {
+      return;
+    }
+
+    seenVersion = version;
+
+    untrack(() => {
+      if (!hasDetailsTab) {
+        return;
+      }
+
+      selectedTabId = DDB_CONSTANTS.TAB_DDB_DETAILS;
+      onSidebarTabSelected(DDB_CONSTANTS.TAB_DDB_DETAILS);
+
+      if (!expanded) {
+        transientExpanded = true;
+      }
+
+      // The strip scrolls horizontally with a hidden scrollbar; bring the
+      // pinned (last) tab into view so the active tab is never off-strip.
+      tick().then(() =>
+        tabStrip
+          ?.querySelector<HTMLElement>(
+            `[data-tab-id="${DDB_CONSTANTS.TAB_DDB_DETAILS}"]`,
+          )
+          ?.scrollIntoView({ block: 'nearest', inline: 'nearest' }),
+      );
+    });
+  });
+
   let toggleLabel = $derived(
-    localize(expanded ? 'JOURNAL.ViewCollapse' : 'JOURNAL.ViewExpand'),
+    localize(effectiveExpanded ? 'JOURNAL.ViewCollapse' : 'JOURNAL.ViewExpand'),
   );
 
   let hasTabs = $derived(context.sidebarTabs.length > 0);
 </script>
 
 <div
-  class={['ddb-sidebar', 'sidebar', { collapsed: !expanded }]}
+  class={[
+    'ddb-sidebar',
+    'sidebar',
+    {
+      collapsed: !effectiveExpanded,
+      'ddb-sidebar-wide': preferences.sidebarWidth === 'wide',
+    },
+  ]}
   data-tidy-sheet-part="ddb-sidebar"
+  data-ddb-transient-expand={transientExpanded && !expanded ? '' : null}
 >
   <div
     class="ddb-sidebar-header sidebar-header"
@@ -103,16 +190,19 @@
       type="button"
       class="ddb-sidebar-toggle"
       aria-label={toggleLabel}
-      aria-expanded={expanded}
+      aria-expanded={effectiveExpanded}
       data-tooltip={toggleLabel}
       onclick={toggleExpanded}
     >
-      <i class={expanded ? 'fa-solid fa-sidebar-flip' : 'fa-solid fa-sidebar'}
+      <i
+        class={effectiveExpanded
+          ? 'fa-solid fa-sidebar-flip'
+          : 'fa-solid fa-sidebar'}
       ></i>
     </button>
 
-    {#if expanded}
-      <div class="ddb-sidebar-tab-strip">
+    {#if effectiveExpanded}
+      <div class="ddb-sidebar-tab-strip" bind:this={tabStrip}>
         <Tabs
           bind:selectedTabId
           tabs={context.sidebarTabs}
@@ -135,7 +225,7 @@
     {/if}
   </div>
 
-  {#if expanded}
+  {#if effectiveExpanded}
     <div class="ddb-sidebar-content" data-tidy-sheet-part="ddb-sidebar-content">
       {#if hasTabs}
         <TabContents

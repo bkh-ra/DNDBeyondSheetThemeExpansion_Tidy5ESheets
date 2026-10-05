@@ -5,6 +5,10 @@
   reading order matches DDB: STR/DEX/CON down the left, INT/WIS/CHA down the
   right. Roll + proficiency behaviour is lifted from
   `src/sheets/quadrone/actor/character-parts/SavingThrowsCard.svelte`.
+
+  DETAILS (Wave 2): each entry carries a hover/focus-revealed chevron
+  (`button.ddb-detail-trigger[data-ddb-detail="save:<key>"]`), absolutely
+  positioned so the entry layout is unchanged; the roll button keeps rolling.
 -->
 <script lang="ts">
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
@@ -13,6 +17,9 @@
   import { CONSTANTS } from 'src/constants';
   import { formatAsModifier, getModifierData } from 'src/utils/formatting';
   import { error } from 'src/utils/logging';
+  import { DDB_CONSTANTS, DDB_LANG } from 'src/sheets/ddb/ddb-constants';
+  import { ddbLocalize } from 'src/sheets/ddb/ddb-localize';
+  import { DdbPreferences } from 'src/sheets/ddb/DdbPreferences';
   import DdbBox from './DdbBox.svelte';
   import DdbProficiencyPip from './DdbProficiencyPip.svelte';
   import DdbSaveEntryShape from './DdbSaveEntryShape.svelte';
@@ -37,6 +44,11 @@
   let context = $derived(getCharacterSheetQuadroneContext());
 
   const localize = FoundryAdapter.localize;
+
+  let detailsEnabled = $derived(
+    DdbPreferences.fromUserPreferences(context.userPreferences)
+      .detailsPaneEnabled,
+  );
 
   /**
    * DDB shows free-text "saving throw modifiers" harvested from its modifier
@@ -162,6 +174,19 @@
             ? (ability.source?.proficient ?? 0)
             : ability.proficient}
         />
+        {#if detailsEnabled}
+          <button
+            type="button"
+            class="ddb-detail-trigger ddb-detail-trigger--chevron ddb-detail-trigger--save"
+            data-ddb-detail="save:{ability.key}"
+            data-tidy-sheet-part={DDB_CONSTANTS.SHEET_PARTS.DETAIL_TRIGGER}
+            aria-label={ddbLocalize(DDB_LANG.DETAIL_SHOW, {
+              name: `${ability.label} ${localize('DND5E.SavingThrow')}`,
+            })}
+          >
+            <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        {/if}
       </div>
     {/each}
   </div>

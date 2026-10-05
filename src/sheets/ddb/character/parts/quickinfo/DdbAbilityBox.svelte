@@ -16,6 +16,10 @@
     - `swapAbilityScoreAndBonus` (world homebrew setting) swaps which figure is
       the big one in the well and which lives in the badge, exactly as
       AbilityScore.svelte:107-225 does. DDB's default is modifier-primary.
+    - details -> a hover/focus-revealed chevron in the card's lower-left
+                corner (`button.ddb-detail-trigger[data-ddb-detail=
+                "ability:<key>"]`) opens the ability in the sidebar Details
+                pane (Wave 2); the roll gestures above are unchanged.
 -->
 <script lang="ts">
   import { CONSTANTS } from 'src/constants';
@@ -26,6 +30,9 @@
   import { getModifierData } from 'src/utils/formatting';
   import TextInputQuadrone from 'src/components/inputs/TextInputQuadrone.svelte';
   import DdbAbilityBoxShape from 'src/sheets/ddb/svg/DdbAbilityBoxShape.svelte';
+  import { DDB_CONSTANTS, DDB_LANG } from 'src/sheets/ddb/ddb-constants';
+  import { ddbLocalize } from 'src/sheets/ddb/ddb-localize';
+  import { DdbPreferences } from 'src/sheets/ddb/DdbPreferences';
 
   type Props = {
     ability: ActorAbilityContextEntry;
@@ -64,6 +71,11 @@
 
   let configTooltip = $derived(
     localize('DND5E.AbilityConfigure', { ability: ability.label }),
+  );
+
+  let detailsEnabled = $derived(
+    DdbPreferences.fromUserPreferences(context.userPreferences)
+      .detailsPaneEnabled,
   );
 
   let saveRoller = $state<HTMLButtonElement>();
@@ -247,6 +259,17 @@
         .ABILITY_CONFIGURATION_CONTROL}
     >
       <i class="fas fa-cog"></i>
+    </button>
+  {/if}
+  {#if detailsEnabled}
+    <button
+      type="button"
+      class="ddb-detail-trigger ddb-detail-trigger--chevron ddb-detail-trigger--ability"
+      data-ddb-detail="ability:{ability.key}"
+      data-tidy-sheet-part={DDB_CONSTANTS.SHEET_PARTS.DETAIL_TRIGGER}
+      aria-label={ddbLocalize(DDB_LANG.DETAIL_SHOW, { name: ability.label })}
+    >
+      <i class="fa-solid fa-chevron-right"></i>
     </button>
   {/if}
 </div>

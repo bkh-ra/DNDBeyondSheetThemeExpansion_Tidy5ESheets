@@ -9,6 +9,12 @@
   Tools reuse the `context.tools` entries and the roll wiring from
   `src/sheets/quadrone/actor/parts/ToolsCard.svelte`, so a tool name here is a
   live tool check rather than dead text.
+
+  DETAILS (Wave 2): every tool carries a hover/focus-revealed chevron
+  (`button.ddb-detail-trigger[data-ddb-detail="tool:<key>"]`). It is
+  absolutely positioned, so neither the inline play-mode run nor the edit-mode
+  rows move; in play mode each tool is wrapped in a `.ddb-tool-entry` span to
+  anchor it (a button cannot nest in the roll button).
 -->
 <script lang="ts">
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
@@ -20,12 +26,20 @@
   import SelectQuadrone from 'src/components/inputs/SelectQuadrone.svelte';
   import SelectOptions from 'src/components/inputs/SelectOptions.svelte';
   import { SettingsProvider } from 'src/settings/settings.svelte';
+  import { DDB_CONSTANTS, DDB_LANG } from 'src/sheets/ddb/ddb-constants';
+  import { ddbLocalize } from 'src/sheets/ddb/ddb-localize';
+  import { DdbPreferences } from 'src/sheets/ddb/DdbPreferences';
   import DdbBox from './DdbBox.svelte';
   import DdbProficiencyPip from './DdbProficiencyPip.svelte';
 
   let context = $derived(getCharacterSheetQuadroneContext());
 
   const localize = FoundryAdapter.localize;
+
+  let detailsEnabled = $derived(
+    DdbPreferences.fromUserPreferences(context.userPreferences)
+      .detailsPaneEnabled,
+  );
 
   /*
     DDB-FORK (matrix-client N3): "Show Tool reference tooltip". Same derivation
@@ -118,6 +132,20 @@
    */
   let specialTraits = $derived(context.specialTraits ?? []);
 </script>
+
+{#snippet toolDetailTrigger(tool: { key: string; label: string })}
+  {#if detailsEnabled}
+    <button
+      type="button"
+      class="ddb-detail-trigger ddb-detail-trigger--chevron ddb-detail-trigger--tool"
+      data-ddb-detail="tool:{tool.key}"
+      data-tidy-sheet-part={DDB_CONSTANTS.SHEET_PARTS.DETAIL_TRIGGER}
+      aria-label={ddbLocalize(DDB_LANG.DETAIL_SHOW, { name: tool.label })}
+    >
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  {/if}
+{/snippet}
 
 <!--
   No i18n key exists for DDB's combined heading; the closest system strings are
@@ -244,6 +272,7 @@
               >
                 <i class="fa-solid fa-cog"></i>
               </button>
+              {@render toolDetailTrigger(tool)}
             </li>
           {:else}
             <li class="ddb-prof-item ddb-empty">
@@ -257,25 +286,30 @@
                ToolsCard prints in its MODIFIER column. -->
           {#each context.tools as tool, i (tool.key)}
             {@const modifier = getModifierData(tool.total)}
-            <button
-              type="button"
-              class="ddb-prof-item ddb-prof-item-rollable"
-              data-action="roll"
-              data-type="tool"
-              data-key={tool.key}
-              data-reference-tooltip={toolReferences[tool.key]}
-              data-tidy-sheet-part={CONSTANTS.SHEET_PARTS.TOOL_ROLLER}
-              data-tidy-draggable
-              data-context-menu={CONSTANTS.CONTEXT_MENU_TYPE_KEYED_FAVORITE}
-              data-has-roll-modes
-              disabled={!context.owner}
+            <!-- The wrapper only anchors the absolutely positioned detail
+                 chevron; no whitespace between its children, so the run lays
+                 out exactly as the bare roll buttons did. -->
+            <span class="ddb-prof-item ddb-tool-entry"
+              ><button
+                type="button"
+                class="ddb-prof-item ddb-prof-item-rollable"
+                data-action="roll"
+                data-type="tool"
+                data-key={tool.key}
+                data-reference-tooltip={toolReferences[tool.key]}
+                data-tidy-sheet-part={CONSTANTS.SHEET_PARTS.TOOL_ROLLER}
+                data-tidy-draggable
+                data-context-menu={CONSTANTS.CONTEXT_MENU_TYPE_KEYED_FAVORITE}
+                data-has-roll-modes
+                disabled={!context.owner}
+              >
+                {tool.label}
+                <span class="ddb-prof-mod">{modifier.sign}{modifier.value}</span
+                >{#if i < context.tools.length - 1}<span class="ddb-prof-sep"
+                    >,</span
+                  >{/if}
+              </button>{@render toolDetailTrigger(tool)}</span
             >
-              {tool.label}
-              <span class="ddb-prof-mod">{modifier.sign}{modifier.value}</span
-              >{#if i < context.tools.length - 1}<span class="ddb-prof-sep"
-                  >,</span
-                >{/if}
-            </button>
           {:else}
             <span class="ddb-prof-item ddb-empty">
               {localize('TIDY5E.EmptyTools')}

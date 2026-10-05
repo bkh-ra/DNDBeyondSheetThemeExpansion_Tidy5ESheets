@@ -1,4 +1,5 @@
 import type { CONSTANTS } from 'src/constants';
+import type { DdbUserPreferences } from 'src/sheets/ddb/DdbPreferences'; // DDB-FORK
 
 export type UserSheetTypeTabPreferences = {
   sort?: string;
@@ -29,4 +30,6 @@ export type UserPreferences = {
     | typeof CONSTANTS.SPELL_CAST_ACTIVITY_GROUPING_PER_ITEM;
   [CONSTANTS.SHOW_LEGENDARIES_ON_NPC_STATBLOCK_PREFERENCE]?: boolean;
   [CONSTANTS.INCLUDE_SPELLBOOK_IN_NPC_STATBLOCK_PREFERENCE]?: boolean;
+  /** DDB-FORK: per-user preferences of the DDB layout (sparse; see DdbPreferences). */
+  ddb?: Partial<DdbUserPreferences>;
 };

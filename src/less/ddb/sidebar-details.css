@@ -1,0 +1,874 @@
+/* DDB-FORK: the sidebar DETAIL PANE (Wave 2) and its triggers.
+ *
+ *   1. Details tab panel + pane shell (`DdbDetailsTab.svelte`)
+ *   2. Heading, actions, stat strip, move, rules, flavor
+ *      (`character/parts/sidebar/details/*`)
+ *   3. Reused quadrone content inside the pane (item summary, inventory
+ *      tables, currency) at sidebar density
+ *   4. "Show details" triggers in the left column / quick-info band
+ *   5. Sidebar width preference
+ *
+ * Contract (FORK_NOTES.md): every selector starts `.tidy5e-sheet.application.ddb`
+ * (0-4-0) so it beats quadrone's broad rules; every color, font, radius and
+ * spacing step is a `--ddb-*` token. Raw px are component geometry with no
+ * token (trigger and thumbnail sizes, the wide pane width), commented in place.
+ *
+ * ON THE QUADRONE BUTTON LEAK (same trap as `left-column.css`): quadrone's
+ * `:is(button, .button)` rule still MATCHES every button here; anything left
+ * unset leaks (`min-height: 28px`, its `font` shorthand, icon colour/size via
+ * `:where(i)`, and an `:active:not(:disabled)` border/background at 0-5-0).
+ * The explicit resets below are load-bearing.
+ *
+ * Import order: after `ddb/ddb-tokens.css`, `ddb/sidebar.css` and the
+ * `quadrone/*` stack (it is the last DDB import in `src/less/tidy5e.css`).
+ */
+
+/* ------------------------------------------------------------------ */
+/* 1. Details tab panel + pane shell                                  */
+/* ------------------------------------------------------------------ */
+
+/* The tab panel (`.tidy-tab.ddb-details`, from the tab id) holds one pane
+ * that lays itself out; sidebar.css already makes the active panel a flex
+ * column. */
+.tidy5e-sheet.application.ddb .ddb-sidebar-content .tidy-tab.ddb-details-tab {
+  gap: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane {
+  /* --- table re-points for the reused quadrone tables in the pane ---
+   * `.ddb-sidebar-content` already re-points rows, text, links, icons and
+   * fields; these are the header-row values it leaves at quadrone's accent
+   * gradient (the same set `tab-content.css` §1 flattens). */
+  --t5e-table-header-background-left: transparent;
+  --t5e-table-header-background-right: transparent;
+  --t5e-table-header-background-default: transparent;
+  --t5e-table-header-background-container: transparent;
+  --t5e-table-header-border-color: transparent;
+  --t5e-table-header-box-shadow: none;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddb-space-3);
+  min-width: 0;
+  /* Clears the scroll region's right edge (its right inset is the scrollbar
+   * gutter, see sidebar.css) so text never touches the gutter. */
+  padding-inline-end: var(--ddb-space-1);
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  line-height: var(--ddb-lineheight-body);
+  color: var(--ddb-text);
+}
+
+/* Identical block at one extra class, so it outranks
+ * `variables-quadrone.css`'s `.tidy5e-sheet.quadrone.theme-dark` re-points
+ * regardless of import order (the same device as tab-content.css §1). */
+.tidy5e-sheet.application.ddb.theme-dark .ddb-detail-pane {
+  --t5e-table-header-background-left: transparent;
+  --t5e-table-header-background-right: transparent;
+  --t5e-table-header-background-default: transparent;
+  --t5e-table-header-background-container: transparent;
+  --t5e-table-header-border-color: transparent;
+  --t5e-table-header-box-shadow: none;
+}
+
+/* Empty / unavailable state: the sidebar's quiet empty-state voice
+ * (`.ddb-sidebar-empty` in sidebar.css). */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-empty {
+  margin: 0;
+  padding: var(--ddb-space-5) var(--ddb-space-3);
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-label-md);
+  font-style: italic;
+  line-height: var(--ddb-lineheight-body);
+  text-align: center;
+  text-wrap: balance;
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-muted {
+  margin: 0;
+  font-size: var(--ddb-size-label-md);
+  font-style: italic;
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-loading {
+  padding: var(--ddb-space-3);
+  text-align: center;
+  font-size: var(--ddb-size-label-md);
+  color: var(--ddb-text-muted);
+}
+
+/* --- Back / Close row --- */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--ddb-space-1);
+  min-height: 22px; /* the 22px DDB icon-button hit target */
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-back,
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ddb-space-1);
+  width: auto;
+  height: 22px;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0 var(--ddb-space-1);
+  border: none;
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  box-shadow: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  line-height: 1;
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-text-muted);
+  cursor: pointer;
+  transition: color var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-close {
+  width: 22px;
+  margin-inline-start: auto;
+  padding: 0;
+  font-size: var(--ddb-size-label-md);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-back i,
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-close i {
+  margin: 0;
+  font-size: inherit;
+  color: inherit;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-back:hover,
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-close:hover {
+  background: none;
+  box-shadow: none;
+  color: var(--ddb-accent);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-back:active:not(:disabled),
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-close:active:not(:disabled) {
+  border: none;
+  background: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-back:focus-visible,
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-close:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Detail views                                                    */
+/* ------------------------------------------------------------------ */
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddb-space-3);
+  min-width: 0;
+}
+
+/* --- heading --- */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ddb-space-3);
+  min-width: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-img {
+  flex: 0 0 auto;
+  /* 36px thumbnail: two lines of heading tall. */
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  border: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+  border-radius: var(--ddb-radius-control);
+  object-fit: cover;
+  background: var(--ddb-table-row-alt-bg);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-heading {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--ddb-space-half);
+  min-width: 0;
+}
+
+/* `h3`: beats quadrone's `.window-content h3` (Modesto, 0-3-1) and
+ * sidebar.css's `.ddb-sidebar-content h3` label style (0-4-1). */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-name {
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-value-md);
+  font-style: normal;
+  font-weight: var(--ddb-weight-value);
+  letter-spacing: normal;
+  line-height: 1.2;
+  text-transform: none;
+  text-shadow: none;
+  overflow-wrap: anywhere;
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-subtitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--ddb-space-1);
+  min-width: 0;
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-label-md);
+  line-height: var(--ddb-lineheight-body);
+  color: var(--ddb-text-muted);
+}
+
+/* Link from an activity back to its item. */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-parent {
+  display: inline;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  box-shadow: none;
+  font: inherit;
+  text-align: left;
+  color: var(--ddb-link);
+  cursor: pointer;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-parent:hover {
+  background: none;
+  box-shadow: none;
+  text-decoration: underline;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-parent:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* --- actions: Use / Cast / Roll, Open sheet, Favorite --- */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ddb-space-1);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ddb-space-1);
+  box-sizing: border-box;
+  width: auto;
+  height: 22px; /* the DDB control height (chips are 22px too) */
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0 var(--ddb-space-3);
+  border: var(--ddb-border-width-panel) solid var(--ddb-accent);
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  box-shadow: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-style: normal;
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  line-height: 1;
+  text-transform: var(--ddb-transform-label);
+  white-space: nowrap;
+  color: var(--ddb-text);
+  cursor: pointer;
+  transition:
+    background-color var(--ddb-transition),
+    color var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-button i {
+  margin: 0;
+  font-size: var(--ddb-size-label);
+  vertical-align: baseline;
+  color: inherit;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-button:hover:not(:disabled) {
+  background: var(--ddb-accent-subtle-bg);
+  box-shadow: none;
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-button.active,
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-button:active:not(:disabled) {
+  border: var(--ddb-border-width-panel) solid var(--ddb-accent);
+  background: var(--ddb-accent-subtle-bg);
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-button:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-button:disabled {
+  border-color: var(--ddb-list-border);
+  color: var(--ddb-text-disabled);
+  cursor: default;
+}
+
+/* Primary: the accent-filled action (Use / Cast / Roll), like DDB's pane. */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-button.ddb-detail-button--primary {
+  background: var(--ddb-accent);
+  color: var(--ddb-accent-chip-contrast);
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-detail-pane
+  .ddb-detail-button.ddb-detail-button--primary:hover:not(:disabled),
+.tidy5e-sheet.application.ddb
+  .ddb-detail-pane
+  .ddb-detail-button.ddb-detail-button--primary:active:not(:disabled) {
+  background: var(--ddb-accent-hover);
+  color: var(--ddb-accent-chip-contrast);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-button.ddb-detail-button--primary:disabled {
+  border-color: var(--ddb-list-border);
+  background: var(--ddb-table-row-alt-bg);
+  color: var(--ddb-text-disabled);
+}
+
+/* Icon-only (Favorite). */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-button.ddb-detail-button--icon {
+  width: 22px;
+  padding: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-favorite.active i {
+  color: var(--ddb-accent);
+}
+
+/* --- stat strip --- */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ddb-space-2) var(--ddb-space-3);
+  margin: 0;
+  padding: var(--ddb-space-2) 0;
+  border-top: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-stat {
+  min-width: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-stat-label {
+  margin: 0;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  line-height: 1.2;
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-stat-value {
+  margin: 0;
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-label-md);
+  line-height: var(--ddb-lineheight-body);
+  overflow-wrap: anywhere;
+  color: var(--ddb-text);
+}
+
+/* --- section titles (Contents, Rules) --- */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-section-title {
+  margin: 0 0 var(--ddb-space-1);
+  padding: 0 0 var(--ddb-space-half);
+  border: none;
+  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-style: normal;
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  line-height: 1.2;
+  text-transform: var(--ddb-transform-label);
+  text-shadow: none;
+  color: var(--ddb-heading);
+}
+
+/* --- Move to --- */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-move-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddb-space-half);
+  min-width: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-move-label {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-label);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-move {
+  box-sizing: border-box;
+  width: 100%;
+  height: 24px; /* one control row, as the left column's ability selects */
+  min-height: 0;
+  margin: 0;
+  padding: 0 var(--ddb-space-1);
+  border: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+  border-radius: var(--ddb-radius-input);
+  background: var(--ddb-panel-bg-solid);
+  box-shadow: none;
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-label-md);
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-move:hover:not(:disabled) {
+  border-color: var(--ddb-accent);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-move:focus-visible {
+  outline: none;
+  border-color: var(--ddb-accent);
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* --- rules text and activity flavor --- */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-rules-text,
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-flavor {
+  margin: 0;
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-label-md);
+  line-height: var(--ddb-lineheight-body);
+  overflow-wrap: anywhere;
+  color: var(--ddb-text-prose);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-flavor {
+  font-style: italic;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-rules-text p {
+  margin: 0 0 var(--ddb-space-2);
+}
+
+/* Rich text (rules pages and item descriptions) at pane scale: quadrone's
+ * `.editor-rendered-content` headings run 15-28px, sized for a full tab. */
+.tidy5e-sheet.application.ddb .ddb-detail-pane :is(.ddb-detail-rules-text, .ddb-detail-summary .editor-rendered-content) :is(h1, h2, h3, h4, h5, h6) {
+  margin: var(--ddb-space-2) 0 var(--ddb-space-1);
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label-md);
+  font-weight: var(--ddb-weight-label);
+  line-height: 1.2;
+  text-transform: none;
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane :is(.ddb-detail-rules-text, .ddb-detail-summary .editor-rendered-content) :is(ul, ol) {
+  margin: 0 0 var(--ddb-space-2);
+  padding-inline-start: var(--ddb-space-5);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane :is(.ddb-detail-rules-text, .ddb-detail-summary .editor-rendered-content) table {
+  width: 100%;
+  margin: 0 0 var(--ddb-space-2);
+  border-collapse: collapse;
+  font-size: var(--ddb-size-label);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane :is(.ddb-detail-rules-text, .ddb-detail-summary .editor-rendered-content) :is(th, td) {
+  padding: var(--ddb-space-half) var(--ddb-space-1);
+  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+  text-align: left;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Reused quadrone content at sidebar density                      */
+/* ------------------------------------------------------------------ */
+
+/* Item summary (TidyItemSummary): description, property tags, commands. */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddb-space-2);
+  min-width: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-summary .editor-rendered-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddb-space-2);
+  margin: 0;
+  padding: 0;
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-label-md);
+  line-height: var(--ddb-lineheight-body);
+  overflow-wrap: anywhere;
+  color: var(--ddb-text-prose);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-summary .editor-rendered-content p {
+  margin: 0 0 var(--ddb-space-2);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-summary .inline-wrapped-elements {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ddb-space-1);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-summary .tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 0;
+  padding: var(--ddb-space-half) var(--ddb-space-1);
+  border: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-text-muted);
+}
+
+/* Tables (inline activities, container contents): DDB's flat rows, the
+ * subset of `tab-content.css` §2-§5 that the narrow pane needs. */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .tidy-table-header-row {
+  --t5e-theme-color-foreground: var(--ddb-heading);
+  --t5e-theme-color-foreground-diminished: var(--ddb-text-muted);
+  background: transparent;
+  border-radius: 0;
+  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+  box-shadow: none;
+  color: var(--ddb-heading);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .tidy-table-header-row .header-label-cell > *,
+.tidy5e-sheet.application.ddb .ddb-detail-pane .tidy-table-header-row .header-label-cell h3 {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  line-height: 1.3;
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-heading);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .tidy-table-header-cell:not(.primary):not(.header-cell-actions) {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .tidy-table-row {
+  background: var(--ddb-table-row-bg);
+  border-color: var(--ddb-list-border);
+  border-image: none;
+  border-radius: 0;
+  color: var(--ddb-text);
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-label-md);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .tidy-table-row .highlight {
+  background: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .tidy-table-row.rarity {
+  box-shadow: inset var(--ddb-rarity-bar-width) 0 0 0 var(--t5e-item-color);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .tidy-table-row:hover,
+.tidy5e-sheet.application.ddb .ddb-detail-pane .tidy-table-row-container:hover > .tidy-table-row {
+  background: var(--ddb-table-row-hover-bg);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane :is(.tidy-table-cell, .tidy-table-header-cell):not(:last-child) {
+  border-right-color: transparent;
+  border-image: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .tidy-table-cell .item-name,
+.tidy5e-sheet.application.ddb .ddb-detail-pane .tidy-table-cell .cell-name,
+.tidy5e-sheet.application.ddb .ddb-detail-pane .tidy-table-cell .cell-text {
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-label-md);
+  color: var(--ddb-text);
+  text-decoration: none;
+  text-shadow: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .tidy-table-cell .item-name:hover .cell-name {
+  color: var(--ddb-accent);
+  text-decoration: underline;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .tidy-table-cell .cell-context {
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .inline-content-view,
+.tidy5e-sheet.application.ddb .ddb-detail-pane .tidy-table-row ~ .expandable.expanded {
+  background: var(--ddb-table-row-alt-bg);
+  border-color: var(--ddb-list-border);
+  border-image: none;
+}
+
+/* The inline activities table has no responsive column hiding (unlike the
+ * inventory tables, which measure themselves). At the normal pane width it
+ * keeps name + uses; an activity's time and formulas are in its own detail,
+ * one click away. The wide pane has room for them. */
+.tidy5e-sheet.application.ddb
+  .ddb-sidebar:not(.ddb-sidebar-wide)
+  .ddb-detail-pane
+  .inline-activities-table
+  :is([data-tidy-column-key='time'], [data-tidy-column-key='formulas']) {
+  display: none;
+}
+
+/* Activity-row names are plain spans in Tidy; while name clicks open the
+ * detail pane (`data-ddb-click-opens="details"` on the sheet root), they are
+ * clickable too, so give them the pointer the item names already have. */
+.tidy5e-sheet.application.ddb .ddb-sheet[data-ddb-click-opens='details'] [data-activity-id] .item-name {
+  cursor: pointer;
+}
+
+/* --- container contents --- */
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-contents {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddb-space-2);
+  min-width: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-contents-tables {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddb-space-1);
+  min-width: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-currency {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ddb-space-1) var(--ddb-space-2);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-currency .input-group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ddb-space-half);
+  margin: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-currency .currency-item {
+  box-sizing: border-box;
+  width: 5ch; /* a 4-digit purse plus padding */
+  min-width: 0;
+  height: 20px;
+  padding: 0 var(--ddb-space-half);
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-label-md);
+  text-align: right;
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-pane .ddb-detail-currency .denomination {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-text-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. "Show details" triggers                                         */
+/* ------------------------------------------------------------------ */
+
+/* Shared chevron: a 14px square (the size of the box config gears) that is
+ * invisible until its host is hovered or something in it has keyboard focus.
+ * Always absolutely positioned, so it never moves the layout it sits in, and
+ * always placed INSIDE its host box (or above it), so it can never add
+ * scrollable overflow to the left column's scroll regions. */
+.tidy5e-sheet.application.ddb .ddb-detail-trigger {
+  position: absolute;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 14px;
+  height: 14px;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--ddb-radius-control);
+  background: var(--ddb-panel-bg-solid);
+  box-shadow: none;
+  font-size: var(--ddb-size-label);
+  line-height: 1;
+  color: var(--ddb-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity var(--ddb-transition),
+    color var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-trigger i {
+  margin: 0;
+  font-size: var(--ddb-size-label);
+  vertical-align: baseline;
+  color: inherit;
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-trigger:hover {
+  background: var(--ddb-panel-bg-solid);
+  box-shadow: none;
+  color: var(--ddb-accent);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-trigger:active:not(:disabled) {
+  border: none;
+  background: var(--ddb-panel-bg-solid);
+}
+
+.tidy5e-sheet.application.ddb .ddb-detail-trigger:focus-visible {
+  opacity: 1;
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+  color: var(--ddb-accent);
+}
+
+/* Reveal on host hover, or keyboard focus anywhere in the host (`:focus-visible`
+ * rather than `:focus-within`, so a mouse-clicked roll button does not leave
+ * the chevron showing). */
+.tidy5e-sheet.application.ddb .ddb-save-entry:is(:hover, :has(:focus-visible)) > .ddb-detail-trigger,
+.tidy5e-sheet.application.ddb .ddb-ability-box:is(:hover, :has(:focus-visible)) > .ddb-detail-trigger,
+.tidy5e-sheet.application.ddb .ddb-tool-entry:is(:hover, :has(:focus-visible)) > .ddb-detail-trigger,
+.tidy5e-sheet.application.ddb .ddb-tool-row:is(:hover, :has(:focus-visible)) > .ddb-detail-trigger {
+  opacity: 1;
+}
+
+/* SAVES: inside the hexagon bar, just left of the modifier circle
+ * (`--ddb-save-circle` is set inline by DdbSavingThrowsBox). */
+.tidy5e-sheet.application.ddb .ddb-save-entry > .ddb-detail-trigger--save {
+  top: 50%;
+  right: calc(var(--ddb-save-circle, 28px) + var(--ddb-space-half));
+  transform: translateY(-50%);
+}
+
+/* ABILITY BOXES: the empty lower-left corner of the card, just above its
+ * bottom edge (the roller's 0.96875rem bottom inset) and clear of the
+ * centred score badge. The config gear owns the top-right corner. */
+.tidy5e-sheet.application.ddb .ddb-ability-box > .ddb-detail-trigger--ability {
+  left: var(--ddb-space-1);
+  bottom: calc(0.96875rem + var(--ddb-space-half));
+}
+
+/* TOOLS, play mode: the wrapper anchors the chevron at the entry's top-right,
+ * straddling its top edge — inside the box horizontally, so a tool at the end
+ * of a wrapped line never pushes past the scrolling box body. */
+.tidy5e-sheet.application.ddb .ddb-tool-entry {
+  position: relative;
+}
+
+.tidy5e-sheet.application.ddb .ddb-tool-entry > .ddb-detail-trigger--tool {
+  top: calc(var(--ddb-space-2) * -1);
+  right: 0;
+}
+
+/* TOOLS, edit mode: the end of the name column, before the config gear
+ * (the row grid is `16px 34px 1fr 16px` with a 4px gap). */
+.tidy5e-sheet.application.ddb .ddb-tool-row {
+  position: relative;
+}
+
+.tidy5e-sheet.application.ddb .ddb-tool-row > .ddb-detail-trigger--tool {
+  top: 50%;
+  right: calc(16px + var(--ddb-space-1) + var(--ddb-space-half));
+  transform: translateY(-50%);
+}
+
+/* SKILLS: the bonus chip IS the trigger. A transparent button covers the
+ * bonus cell (the chip itself is untouched, so nothing moves); hover and
+ * keyboard focus restyle the chip through `:has()`. */
+.tidy5e-sheet.application.ddb .ddb-skill-row .ddb-skills-col-bonus {
+  position: relative;
+}
+
+.tidy5e-sheet.application.ddb .ddb-skills-col-bonus > .ddb-detail-trigger--overlay {
+  inset: 0;
+  z-index: 1;
+  width: auto;
+  height: auto;
+  background: none;
+  opacity: 1;
+}
+
+.tidy5e-sheet.application.ddb .ddb-skills-col-bonus > .ddb-detail-trigger--overlay:hover,
+.tidy5e-sheet.application.ddb .ddb-skills-col-bonus > .ddb-detail-trigger--overlay:active:not(:disabled) {
+  background: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-skills-col-bonus > .ddb-detail-trigger--overlay:focus-visible {
+  box-shadow: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-skills-col-bonus:has(> .ddb-detail-trigger:hover) .ddb-skill-bonus {
+  border-color: var(--ddb-accent);
+  color: var(--ddb-link);
+}
+
+.tidy5e-sheet.application.ddb .ddb-skills-col-bonus:has(> .ddb-detail-trigger:focus-visible) .ddb-skill-bonus {
+  border-color: var(--ddb-accent);
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. Sidebar width preference (`sidebarWidth: 'wide'`)               */
+/* ------------------------------------------------------------------ */
+
+/* The grid track is `auto` (sidebar.css), so a wider pane simply takes the
+ * width from the primary column. 320px: room for two stat columns and the
+ * contents table's quantity/weight columns. `:not(.collapsed)` leaves the
+ * rail rule in sidebar.css in charge when collapsed. */
+.tidy5e-sheet.application.ddb .ddb-sidebar.ddb-sidebar-wide:not(.collapsed) {
+  --ddb-sidebar-width: 320px;
+}

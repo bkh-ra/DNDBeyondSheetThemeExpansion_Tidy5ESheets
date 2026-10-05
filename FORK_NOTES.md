@@ -41,7 +41,12 @@ Repository: `origin` = https://github.com/bkh-ra/DNDBeyondSheetThemeExpansion_Ti
 | `src/mixins/TidyDocumentSheetMixin.svelte.ts` | `sheetSizePreferenceKey` seam for the remembered window size |
 | `src/sheets/quadrone/Tidy5eActorSheetQuadroneBase.svelte.ts` | `mountsWindowHeaderModeToggle` seam (passed to `ActorHeaderStart` as `hideModeToggle`) |
 | `src/sheets/quadrone/Tidy5eCharacterSheetQuadrone.svelte.ts` | seam getters `tabRuntime` / `sidebarTabRuntime` / `rootComponent` / `contextMenuLayout` / `tabConfigurationSeam` |
-| `src/keybindings/keybind-init.ts` | debug quick-sheet-switch classic matcher excludes the DDB class |
+| `src/keybindings/keybind-init.ts` | debug quick-sheet-switch classic matcher excludes the DDB class; DDB quick switch (`tidyQssDdb`, Shift+B) |
+| `src/integration/modules/PopoutModuleIntegration.ts` | sheet-lock shim skipped for layouts that keep their own toggle (`mountsWindowHeaderModeToggle === false`) |
+| `src/features/user-preferences/user-preferences.types.ts` | `ddb?: Partial<DdbUserPreferences>` (per-user DDB layout preferences, see `src/sheets/ddb/DdbPreferences.ts`) |
+| `src/less/tidy5e.css` | imports the `ddb/*.css` layer (`sidebar-details.css` added in wave 2) |
+| `find-preloaded-images.js` | (fixed 2026-10-04: the scan regex really points at `modules/ddb5e-sheets/images` now; it had silently matched nothing since the fork) |
+| mechanical-rename files | every upstream file that carries only the `SHEET_CSS_CLASS` / asset-URL renames is marked `DDB-FORK: mechanical rename only …`; `npm run check-fork-markers` fails the build gate when an unmarked upstream edit appears |
 
 ## DDB layer specificity contract
 
@@ -67,9 +72,12 @@ world theme, but it owns whatever differs structurally:
 | Per-actor tab config flag | `tab-configuration` | `ddb-tab-configuration` |
 | World tab config entry | `tabConfiguration.Actor.character` | `tabConfiguration.Actor['character-ddb']` |
 | Remembered window size | `sheetPreferences.character` | `sheetPreferences['character-ddb']` |
+| Sidebar tab registry | `CharacterSheetQuadroneSidebarRuntime` | `CharacterSheetDdbSidebarRuntime` = the shared quadrone tabs + a pinned **Details** tab (`ddb-details`, outside tab configuration; forwards `registerTab` so API sidebar tabs still land) |
 | Sidebar tab config | shared (`sidebar-tab-configuration`, `character-sidebar`) | shared |
 | Sidebar open/closed | per tab | single, `sheetPreferences.character.tabs['ddb-sidebar']` |
 | Window-header lock toggle | mounted | not mounted (the DDB banner has its own) |
+| Per-user layout preferences | — | `flags.ddb5e-sheets.userPreferences.ddb.{sidebarSide, sidebarMode, sidebarWidth, clickOpensDetails, skillClick, detailsPaneEnabled, layoutMode}` (`src/sheets/ddb/DdbPreferences.ts`) |
+| Item-name click in the primary pane | inline summary toggle | **details pane** (plain click / Enter); Shift = inline summary, Ctrl/Meta = full sheet; `clickOpensDetails:'inline'` restores quadrone's gesture |
 
 The settings apps never hardwire a layout: they read `document.sheet.tabConfigurationSeam`
 (`{ runtime, flag, worldDocTypeKey?, layoutTitleKey? }`). API registrations targeted at

@@ -151,7 +151,8 @@
   --t5e-table-header-background-left: transparent;
   --t5e-table-header-background-right: transparent;
 
-  background: transparent;
+  background-color: transparent;
+  background-image: none;
   border-radius: 0;
   border-bottom: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
   box-shadow: none;
@@ -162,7 +163,7 @@
  * quadrone; flatten it too. */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row.diminished,
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row.spell-method {
-  background: transparent;
+  background-color: transparent;
   color: var(--ddb-text-muted);
 }
 
@@ -170,15 +171,20 @@
  * rather than quadrone's full gradient fill. `--t5e-method-color` comes from the
  * header's own `.method-<key>` class (SpellTable.svelte; ThemeQuadrone.onReady
  * and `quadrone/apps.css` map it to `--t5e-color-spellcasting-<key>`, and basic
- * theme maps it to transparent). Same inset box-shadow device as the rarity bar
- * in section 5: pixel-identical to a left border but no box-model width, and
- * the flat fill above is untouched. */
+ * theme maps it to transparent). Same background-image device as the rarity bar
+ * in section 5 (see the note there on why it is not an inset box-shadow):
+ * no box-model width, and the flat fill above is untouched. */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row.spell-method {
-  box-shadow: inset var(--ddb-rarity-bar-width) 0 0 0 var(--t5e-method-color, transparent);
+  background-image: linear-gradient(
+    to right,
+    var(--t5e-method-color, transparent) 0,
+    var(--t5e-method-color, transparent) var(--ddb-rarity-bar-width),
+    transparent var(--ddb-rarity-bar-width)
+  );
 }
 
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-header-row:hover {
-  background: var(--ddb-table-row-alt-bg);
+  background-color: var(--ddb-table-row-alt-bg);
   border-bottom-color: var(--ddb-list-border);
 }
 
@@ -248,7 +254,12 @@
 /* ------------------------------------------------------------------ */
 
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row {
-  background: var(--ddb-table-row-bg);
+  /* Colour and image are kept apart on purpose: state and hover rules change
+   * only the colour, so the left-bar images (method colour below, rarity in
+   * section 5) survive them. `background-image: none` drops quadrone's
+   * white-to-transparent state gradients. */
+  background-color: var(--ddb-table-row-bg);
+  background-image: none;
   border-radius: 0;
   /* quadrone declares `border-width: 0 0 1px 0; border-style: solid` and then
    * paints it with a gradient `border-image`. `--t5e-table-row-border-image`
@@ -271,21 +282,27 @@
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.expanded,
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.equipped.expanded,
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.prepared.expanded {
-  background: var(--ddb-table-row-alt-bg);
+  background-color: var(--ddb-table-row-alt-bg);
+  background-image: none;
 }
 
 /* The rows quadrone tints by spellcasting method, `.spell-method:not(.diminished)`
  * (prepared, always-prepared and non-preparable spells; an unprepared spell is
  * `.diminished` and stays untinted), carry the same method left bar as their
- * group header (section 2). The flat fill above is kept; the bar is an inset
- * box-shadow, as for rarity. No :hover twin is needed because the hover rule
- * below only changes the background. */
+ * group header (section 2). The flat fill above is kept; the bar is a
+ * background-image, as for rarity (section 5 explains why). No :hover twin is
+ * needed because the hover rule below only changes the background colour. */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.spell-method:not(.diminished) {
-  box-shadow: inset var(--ddb-rarity-bar-width) 0 0 0 var(--t5e-method-color, transparent);
+  background-image: linear-gradient(
+    to right,
+    var(--t5e-method-color, transparent) 0,
+    var(--t5e-method-color, transparent) var(--ddb-rarity-bar-width),
+    transparent var(--ddb-rarity-bar-width)
+  );
 }
 
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.diminished {
-  background: var(--ddb-table-row-bg);
+  background-color: var(--ddb-table-row-bg);
   color: var(--ddb-text-muted);
 }
 
@@ -301,7 +318,7 @@
 /* Row hover. Declared after the state rules so it wins at equal specificity. */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row:hover,
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row-container:hover > .tidy-table-row {
-  background: var(--ddb-table-row-hover-bg);
+  background-color: var(--ddb-table-row-hover-bg);
 }
 
 /* Vertical cell dividers: DDB's tables have none. */
@@ -350,6 +367,16 @@
   color: var(--ddb-text);
 }
 
+/* The encumbrance meter is an ALWAYS-DARK component (`.meter.theme-dark`,
+ * quadrone/actor/parts/ActorEncumbranceBar.svelte): its track and fills are
+ * dark in both themes and quadrone's `.theme-dark` scope hands it the light
+ * text family. The utility override above would still paint its "/ max" span
+ * near-black in the light theme (wave 2 image review), so inside the meter the
+ * utility classes defer to the label's own colour. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .meter.theme-dark .label :is(.color-text-default, .color-text-lighter) {
+  color: inherit;
+}
+
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .color-text-lighter,
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .color-text-gold,
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .color-text-gold-emphasis,
@@ -377,13 +404,15 @@
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .inline-content-view .tidy-table-row-container,
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row ~ .expandable.expanded,
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .expandable .expandable .tidy-table-row.expanded {
-  background: var(--ddb-table-row-alt-bg);
+  background-color: var(--ddb-table-row-alt-bg);
+  background-image: none;
   border-image: none;
   border-color: var(--ddb-panel-border);
 }
 
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .inline-content-view .tidy-table-header-row {
-  background: transparent;
+  background-color: transparent;
+  background-image: none;
 }
 
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row-container.context {
@@ -398,27 +427,42 @@
  * `quadrone/apps.css` from `.rarity.common | .uncommon | .rare | .veryrare |
  * .legendary | .artifact`). Reuse it as a left bar.
  *
- * Rendered as an INSET box-shadow rather than `border-left-width` on purpose:
- * it is pixel-identical to a --ddb-rarity-bar-width left border but adds no box-model width, so
- * Tidy's flex column math is untouched (per the layout constraint). */
+ * Rendered as a BACKGROUND-IMAGE gradient rather than `border-left-width` on
+ * purpose: it is pixel-identical to a --ddb-rarity-bar-width left border but
+ * adds no box-model width, so Tidy's flex column math is untouched (per the
+ * layout constraint). It was an inset box-shadow until 2026-10-04: Chromium
+ * anti-aliases the shadow's inner rect separately from the box, so on rows
+ * whose edges fall on fractional pixels a ~25% bar-coloured fringe ran the
+ * full row width along the top/bottom edge (the "thin tinted lines" of the
+ * wave 1 image review). A background image is clipped exactly like the row
+ * fill, so it cannot fringe. The row rules above set only `background-color`
+ * for states and hover, so the image survives them. */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.rarity {
-  background: var(--ddb-table-row-bg);
-  box-shadow: inset var(--ddb-rarity-bar-width) 0 0 0 var(--t5e-item-color);
+  background-color: var(--ddb-table-row-bg);
+  background-image: linear-gradient(
+    to right,
+    var(--t5e-item-color) 0,
+    var(--t5e-item-color) var(--ddb-rarity-bar-width),
+    transparent var(--ddb-rarity-bar-width)
+  );
 }
 
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.rarity.equipped,
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.rarity.expanded {
-  background: var(--ddb-table-row-alt-bg);
-  box-shadow: inset var(--ddb-rarity-bar-width) 0 0 0 var(--t5e-item-color);
+  background-color: var(--ddb-table-row-alt-bg);
 }
 
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.rarity:hover {
-  background: var(--ddb-table-row-hover-bg);
-  box-shadow: inset var(--ddb-rarity-bar-width) 0 0 0 var(--t5e-item-color);
+  background-color: var(--ddb-table-row-hover-bg);
 }
 
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-row.rarity.diminished {
-  box-shadow: inset var(--ddb-rarity-bar-width) 0 0 0 var(--ddb-text-disabled);
+  background-image: linear-gradient(
+    to right,
+    var(--ddb-text-disabled) 0,
+    var(--ddb-text-disabled) var(--ddb-rarity-bar-width),
+    transparent var(--ddb-rarity-bar-width)
+  );
 }
 
 /* ------------------------------------------------------------------ */
@@ -732,9 +776,14 @@
 }
 
 /* The Actions tab footer (section-organization switch, help, tab config) gets
- * the same pin. Unlike the inventory footer it is rendered INSIDE
- * `.tab-content`, as `.sheet-footer.sheet-tab-footer`
- * (quadrone/actor/tabs/CharacterSheetTab.svelte), which changes two things:
+ * the same pin, and so do the Spellbook footer (`.spellbook-footer.sticky-footer`,
+ * quadrone/actor/parts/ActorSpellbookFooter.svelte) and the Features footer
+ * (`.sticky-footer`, CharacterFeaturesTab.svelte). Quadrone already pins those
+ * two but paints no background behind them: in the dark theme their contents
+ * are translucent, so list rows showed through the pinned spellcasting cards
+ * (wave 2 image review). Unlike the inventory footer all three are rendered
+ * INSIDE `.tab-content` (the Actions one as `.sheet-footer.sheet-tab-footer`,
+ * quadrone/actor/tabs/CharacterSheetTab.svelte), which changes two things:
  *   - `.tab-content` is a plain block in this pane: quadrone's flex-column rule
  *     for it is scoped to `.main-content > .tidy-tab`, and the DDB pane is not
  *     `.main-content`. `margin-block-start: auto` would be inert there, so this
@@ -747,14 +796,14 @@
  *     That padding is dropped for this tab only: the footer is the last thing in
  *     the pane and needs no clearance beneath it.
  * `:has()` keys on the footer itself, so a tab without one is untouched. */
-.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab .tab-content:has(> .sheet-footer.sheet-tab-footer) {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab .tab-content:has(> .sheet-footer:is(.sheet-tab-footer, .sticky-footer)) {
   display: flex;
   flex-direction: column;
   flex: 1 0 auto;
   padding-block-end: 0;
 }
 
-.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab .tab-content > .sheet-footer.sheet-tab-footer {
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab .tab-content > .sheet-footer:is(.sheet-tab-footer, .sticky-footer) {
   position: sticky;
   bottom: 0;
   z-index: 1;

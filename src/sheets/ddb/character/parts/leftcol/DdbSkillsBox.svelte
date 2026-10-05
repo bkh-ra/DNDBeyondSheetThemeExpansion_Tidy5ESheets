@@ -6,6 +6,13 @@
   `src/sheets/quadrone/actor/parts/skills/SkillsCard.svelte`; only the
   presentation differs (bordered bonus chip, CSS pip, no passive column — the
   passives live in the Senses box on this layout).
+
+  DETAILS (Wave 2): the bonus chip doubles as the skill's detail trigger — a
+  transparent `button.ddb-detail-trigger[data-ddb-detail="skill:<key>"]`
+  overlaid on the bonus cell (the chip itself is untouched, so nothing moves),
+  handled by the sheet root's capture listener. The skill NAME keeps rolling
+  unless the user prefers `skillClick: 'details'` (handled in the sheet's
+  `_roll` seam).
 -->
 <script lang="ts">
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
@@ -17,12 +24,20 @@
   import { isNil } from 'src/utils/data';
   import { SettingsProvider } from 'src/settings/settings.svelte';
   import { TidyFlags } from 'src/foundry/TidyFlags';
+  import { DDB_CONSTANTS, DDB_LANG } from 'src/sheets/ddb/ddb-constants';
+  import { ddbLocalize } from 'src/sheets/ddb/ddb-localize';
+  import { DdbPreferences } from 'src/sheets/ddb/DdbPreferences';
   import DdbBox from './DdbBox.svelte';
   import DdbProficiencyPip from './DdbProficiencyPip.svelte';
 
   let context = $derived(getCharacterSheetQuadroneContext());
 
   const localize = FoundryAdapter.localize;
+
+  let detailsEnabled = $derived(
+    DdbPreferences.fromUserPreferences(context.userPreferences)
+      .detailsPaneEnabled,
+  );
 
   /*
     DDB-FORK (F10): honor `TidyFlags.skillsExpanded`, exactly as
@@ -185,6 +200,17 @@
           <span class="ddb-skill-bonus ddb-chip ddb-chip-value">
             <span class="ddb-sign">{modifier.sign}</span>{modifier.value}
           </span>
+          {#if detailsEnabled}
+            <button
+              type="button"
+              class="ddb-detail-trigger ddb-detail-trigger--overlay"
+              data-ddb-detail="skill:{skill.key}"
+              data-tidy-sheet-part={DDB_CONSTANTS.SHEET_PARTS.DETAIL_TRIGGER}
+              aria-label={ddbLocalize(DDB_LANG.DETAIL_SHOW, {
+                name: skill.label,
+              })}
+            ></button>
+          {/if}
         </span>
 
         {#if context.unlocked}
