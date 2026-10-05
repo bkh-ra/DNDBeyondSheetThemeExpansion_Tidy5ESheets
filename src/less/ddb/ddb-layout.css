@@ -117,14 +117,28 @@
  * line.
  *
  * The sidebar track is `auto` rather than a fixed px width on purpose: the
- * pane declares its own width (`--ddb-sidebar-width` in `sidebar.css`) and
+ * pane declares its own width (`--ddb-sidebar-width`, set inline from the
+ * user's dragged width by `DdbSidebar.svelte`; default in `sidebar.css`) and
  * shrinks itself to a rail when collapsed, so the reclaimed width flows to the
- * `1fr` primary column with no state needed here. */
+ * primary column with no state needed here.
+ *
+ * WIDTH MODEL: the primary track is `minmax(--ddb-primary-min-width, 1fr)`,
+ * so its floor is a BASE size the grid pays before anything else. The `auto`
+ * sidebar track grows from 0 toward the pane's width only out of what is left,
+ * and the pane caps itself at its column (`max-width: 100%` in sidebar.css).
+ * Net effect: a wide sidebar takes width from the primary pane down to its
+ * floor and no further (it is drawn narrower instead, until the window
+ * grows), and window width beyond the sidebar's own width goes to the primary
+ * pane. The stat columns are fixed (tokens in `ddb-tokens.css`). */
 .tidy5e-sheet.application.ddb .ddb-columns {
   flex: 0 0 auto;
   min-height: 0;
   display: grid;
-  grid-template-columns: 215px 210px minmax(0, 1fr) auto;
+  grid-template-columns:
+    var(--ddb-col-left-width)
+    var(--ddb-col-skills-width)
+    minmax(var(--ddb-primary-min-width), 1fr)
+    auto;
   gap: 6px;
   align-items: stretch;
 }
@@ -202,20 +216,27 @@
 }
 
 /* Keep the fixed layout intact: the window cannot shrink below the size the
- * fixed panes need (Foundry resize is clamped by these).
+ * fixed panes need (Foundry resize is clamped by these; it reads the COMPUTED
+ * min-width, so the calc() below arrives as a plain px value).
  *
- * Budget: 215 (left) + 210 (skills) + 230 (sidebar) + 3x6 gap + 2x8 body
- * padding = 689px of fixed width; the rest is the primary column. The sidebar
- * added 236px to that budget, so the floor moved 1080 -> 1320 to keep the
- * primary column at the same ~627px it had before (and the default position in
- * `Tidy5eCharacterSheetDdb.svelte.ts` moved 1150 -> 1390 for the same reason).
- * Users who collapse the sidebar get those 236px back for the primary column
+ * Budget: 190 (left) + 204 (skills) + 580 (primary floor) + 220 (sidebar
+ * minimum) + 3x6 gap + 2x8 body padding + 2x1 window border = 1230px. It used
+ * to be a literal 1320 sized to keep the primary column at ~627px; the primary
+ * floor is now explicit (`--ddb-primary-min-width`), so the window floor is
+ * derived from the same tokens the grid uses and cannot drift from it. At the
+ * floor every pane sits at its minimum; the default 1390 width
+ * (`Tidy5eCharacterSheetDdb.svelte.ts`) gives the primary pane 730px beside a
+ * 230px sidebar. Collapsing the sidebar hands its width to the primary pane
  * without resizing. */
 /* `:not(.minimized)` is REQUIRED: Foundry minimizes a window by shrinking it
  * to its title bar, and an unconditional floor fights that — leaving a
  * full-size empty box instead of a collapsed header. */
 .tidy5e-sheet.application.ddb:not(.minimized) {
-  min-width: 1320px;
+  min-width: calc(
+    var(--ddb-col-left-width) + var(--ddb-col-skills-width) +
+      var(--ddb-primary-min-width) + var(--ddb-sidebar-min-width) + 3 * 6px +
+      2 * 8px + 2px
+  );
   min-height: 860px;
 }
 

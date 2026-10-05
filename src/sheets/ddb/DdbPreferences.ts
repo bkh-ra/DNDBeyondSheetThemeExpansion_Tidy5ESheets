@@ -19,8 +19,13 @@ export type DdbUserPreferences = {
   sidebarSide: 'right' | 'left';
   /** Push the primary column aside, or float over it. (Wave 4/8) */
   sidebarMode: 'push' | 'overlay';
-  /** Expanded sidebar width. */
-  sidebarWidth: 'normal' | 'wide';
+  /**
+   * Expanded sidebar width in whole CSS px, set by dragging the pane's left
+   * edge (`DdbSidebar.svelte`). Always within `DDB_SIDEBAR_WIDTH_RANGE`; the
+   * sheet may still render it narrower when the window cannot fit it beside
+   * the primary pane's minimum (see `ddb-layout.css`).
+   */
+  sidebarWidth: number;
   /**
    * What a plain click on an item / spell / feature name does: open it in the
    * sidebar detail pane (`details`), or Tidy's inline summary (`inline`).
@@ -36,11 +41,40 @@ export type DdbUserPreferences = {
 
 export type DdbUserPreferenceKey = keyof DdbUserPreferences;
 
+/** The keys whose values come from a fixed list (everything but the width). */
+export type DdbEnumUserPreferenceKey = Exclude<
+  DdbUserPreferenceKey,
+  'sidebarWidth'
+>;
+
+/**
+ * Bounds of `sidebarWidth`, in px. `min` keeps the favorites rows and the tab
+ * strip usable; `max` stops one pane from taking the sheet. `step` is the
+ * granularity for a settings control; stored widths are whole px and are not
+ * snapped to it (the keyboard moves the handle by 16px, a drag by the pointer).
+ * The CSS floor in `src/less/ddb/ddb-tokens.css` (`--ddb-sidebar-min-width`)
+ * mirrors `min`.
+ */
+export const DDB_SIDEBAR_WIDTH_RANGE = Object.freeze({
+  min: 220,
+  max: 520,
+  step: 10,
+});
+
+/**
+ * The width the two retired `sidebarWidth` values stood for: `'normal'` was
+ * the 230px pane, `'wide'` the 320px one (formerly `.ddb-sidebar-wide`).
+ */
+const LEGACY_SIDEBAR_WIDTHS: Readonly<Record<string, number>> = Object.freeze({
+  normal: 230,
+  wide: 320,
+});
+
 export const DDB_USER_PREFERENCE_DEFAULTS: Readonly<DdbUserPreferences> =
   Object.freeze({
     sidebarSide: 'right',
     sidebarMode: 'push',
-    sidebarWidth: 'normal',
+    sidebarWidth: 230,
     clickOpensDetails: 'details',
     skillClick: 'roll',
     detailsPaneEnabled: true,
@@ -49,22 +83,71 @@ export const DDB_USER_PREFERENCE_DEFAULTS: Readonly<DdbUserPreferences> =
 
 /** Allowed values per key; anything else stored falls back to the default. */
 export const DDB_USER_PREFERENCE_OPTIONS: {
-  readonly [K in DdbUserPreferenceKey]: readonly DdbUserPreferences[K][];
+  readonly [K in DdbEnumUserPreferenceKey]: readonly DdbUserPreferences[K][];
 } = {
   sidebarSide: ['right', 'left'],
   sidebarMode: ['push', 'overlay'],
-  sidebarWidth: ['normal', 'wide'],
   clickOpensDetails: ['details', 'inline'],
   skillClick: ['roll', 'details'],
   detailsPaneEnabled: [true, false],
   layoutMode: ['auto', 'full', 'compact', 'stacked'],
 };
 
+/** Clamp a px width into `DDB_SIDEBAR_WIDTH_RANGE`, as whole px. */
+export function clampSidebarWidth(
+  width: number,
+  max: number = DDB_SIDEBAR_WIDTH_RANGE.max,
+): number {
+  const { min } = DDB_SIDEBAR_WIDTH_RANGE;
+  const upper = Math.max(min, Math.min(max, DDB_SIDEBAR_WIDTH_RANGE.max));
+  return Math.round(Math.min(upper, Math.max(min, width)));
+}
+
+/**
+ * A stored `sidebarWidth` as a px width. Numbers are clamped into range; the
+ * legacy enum values map to the widths they used to draw; anything else
+ * (missing, malformed) is the default.
+ */
+export function normalizeSidebarWidth(value: unknown): number {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return clampSidebarWidth(value);
+  }
+
+  if (typeof value === 'string' && value in LEGACY_SIDEBAR_WIDTHS) {
+    return LEGACY_SIDEBAR_WIDTHS[value];
+  }
+
+  return DDB_USER_PREFERENCE_DEFAULTS.sidebarWidth;
+}
+
+/**
+ * The stored value for `key` if it is valid, else `undefined`. The single
+ * validation path for reads (`normalize`) and writes (`setMany`).
+ */
+function validValue(key: DdbUserPreferenceKey, value: unknown): unknown {
+  if (key === 'sidebarWidth') {
+    return typeof value === 'number' && Number.isFinite(value)
+      ? clampSidebarWidth(value)
+      : undefined;
+  }
+
+  return (DDB_USER_PREFERENCE_OPTIONS[key] as readonly unknown[] | undefined)?.includes(value)
+    ? value
+    : undefined;
+}
+
 /** The sub-key under `userPreferences` that holds the DDB preferences. */
 const PREFERENCE_KEY = 'ddb';
 
+/**
+ * A stored preferences object as it may really be on a user document: sparse,
+ * and possibly holding values from an older version (e.g. `sidebarWidth:
+ * 'wide'`), so its values are not trusted to match `DdbUserPreferences`.
+ */
+type StoredDdbUserPreferences = Partial<Record<DdbUserPreferenceKey, unknown>>;
+
 /** Shape of the shared preferences object as far as this module needs it. */
-type DdbPreferencesHost = { ddb?: Partial<DdbUserPreferences> | null };
+type DdbPreferencesHost = { ddb?: StoredDdbUserPreferences | null };
 
 /**
  * `UserPreferencesService.setPreference` is keyed on `keyof UserPreferences`;
@@ -87,7 +170,7 @@ export class DdbPreferences {
    * stored object.
    */
   static normalize(
-    stored: Partial<DdbUserPreferences> | null | undefined,
+    stored: StoredDdbUserPreferences | null | undefined,
   ): DdbUserPreferences {
     const result = { ...DDB_USER_PREFERENCE_DEFAULTS } as DdbUserPreferences;
 
@@ -98,8 +181,13 @@ export class DdbPreferences {
     for (const key of Object.keys(
       DDB_USER_PREFERENCE_DEFAULTS,
     ) as DdbUserPreferenceKey[]) {
-      const value = stored[key];
-      if ((DDB_USER_PREFERENCE_OPTIONS[key] as readonly unknown[]).includes(value)) {
+      // The width also accepts the retired 'normal' / 'wide' values.
+      const value =
+        key === 'sidebarWidth'
+          ? normalizeSidebarWidth(stored[key])
+          : validValue(key, stored[key]);
+
+      if (value !== undefined) {
         (result as Record<DdbUserPreferenceKey, unknown>)[key] = value;
       }
     }
@@ -134,7 +222,8 @@ export class DdbPreferences {
 
   /**
    * Persist several preferences at once. Only keys with allowed values are
-   * written; everything already stored is kept (flag updates merge).
+   * written (a width is clamped into range first); everything already stored
+   * is kept (flag updates merge).
    */
   static async setMany(values: Partial<DdbUserPreferences>): Promise<void> {
     const sanitized: Partial<DdbUserPreferences> = {};
@@ -143,8 +232,10 @@ export class DdbPreferences {
       DdbUserPreferenceKey,
       unknown,
     ][]) {
-      if ((DDB_USER_PREFERENCE_OPTIONS[key] as readonly unknown[] | undefined)?.includes(value)) {
-        (sanitized as Record<DdbUserPreferenceKey, unknown>)[key] = value;
+      const valid = validValue(key, value);
+
+      if (valid !== undefined) {
+        (sanitized as Record<DdbUserPreferenceKey, unknown>)[key] = valid;
       }
     }
 

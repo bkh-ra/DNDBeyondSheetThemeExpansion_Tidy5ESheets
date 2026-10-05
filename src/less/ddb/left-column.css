@@ -32,8 +32,14 @@
 /* Box frame (DdbBox.svelte)                                          */
 /* ------------------------------------------------------------------ */
 
-/* `position: relative` anchors the frame svg. Padding clears the frame's 8px
- * corner chamfers on every edge. */
+/* `position: relative` anchors the frame svg. Padding clears the frame's
+ * rounded corners on every edge.
+ *
+ * Horizontal padding 8px (was 12px; user request 2026-10-05 to compress the
+ * stat columns): the content rows begin well below the 10px corner radius, so
+ * 8px still leaves ~6px between the 2px outline and any text, and it is the
+ * inset the SKILLS box already used. The vertical padding is unchanged, so no
+ * box moves up or down. */
 .tidy5e-sheet.application.ddb .ddb-box {
   /* Pip diameter, harvested from `.ct-skills-pane__icon--none`. Declared here,
    * on the frame, so descendant row grids and the save-button gutter can size
@@ -43,7 +49,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  padding: var(--ddb-space-5) var(--ddb-space-5) var(--ddb-space-3);
+  padding: var(--ddb-space-5) var(--ddb-space-3) var(--ddb-space-3);
   color: var(--ddb-text);
   font-family: var(--ddb-font-body);
   font-size: var(--ddb-size-body);
@@ -289,9 +295,12 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   grid-template-rows: repeat(3, 30px);
   grid-auto-flow: column;
-  /* Wider column gap than row gap: the captures separate the two save columns
-   * more than the rows, so a pair of entries never reads as one wide row. */
-  gap: var(--ddb-space-1) var(--ddb-space-4);
+  /* Column gap 6px (was 10px), still wider than the 4px row gap: the captures
+   * separate the two save columns more than the rows, so a pair of entries
+   * never reads as one wide row. The narrower gap is part of the stat-column
+   * compression (user request 2026-10-05); each entry keeps ~84px, enough for
+   * the abbreviation and a signed two-digit modifier. */
+  gap: var(--ddb-space-1) var(--ddb-space-2);
 }
 
 /* Positioning context for the pip that floats over the roll button. */
@@ -704,21 +713,30 @@
 /* The one deliberate departure from the shared box padding: DDB runs the skills
  * columns closer to the frame than the stacked boxes (measured off the
  * captures), which is what buys the name column enough room for "Animal
- * Handling" at this width. 8px still clears the frame's 8px corner chamfer,
- * because the first content row starts well below the corner. Vertical padding,
- * the frame and the bottom title stay uniform with the other boxes. */
+ * Handling". 6px (was 8px; stat-column compression, user request 2026-10-05)
+ * still clears the 2px outline by 4px and the rounded corner, because the
+ * first content row starts well below it. Vertical padding, the frame and the
+ * bottom title stay uniform with the other boxes. */
 .tidy5e-sheet.application.ddb .ddb-skills-box {
-  padding-inline: var(--ddb-space-3);
+  padding-inline: var(--ddb-space-2);
 }
 
 /* THE shared grid template: the header labels and every skill row are laid out
  * by this one declaration, so PROF / MOD / SKILL / BONUS always line up.
  * Columns are gapless — each cell pads itself — so the name column keeps the
- * full remainder. */
+ * full remainder.
+ *
+ * Fixed tracks, measured 2026-10-05 (were 26 / 28 / 38): PROF 24px fits its
+ * 22px header label and centres the 10px pip; MOD stays 28px for a three-letter
+ * abbreviation (21.5px) plus its 2px gutters, and for the edit-mode select;
+ * BONUS 36px = the 34px chip + a 2px lead. The SKILLS column width
+ * (`--ddb-col-skills-width`, ddb-tokens.css) is then the narrowest at which the
+ * longest name, "Animal Handling" (85px of text), still fits in EDIT mode,
+ * where the 14px config column below also takes its share. */
 .tidy5e-sheet.application.ddb .ddb-skills-header,
 .tidy5e-sheet.application.ddb .ddb-skill-row {
   display: grid;
-  grid-template-columns: 26px 28px minmax(0, 1fr) 38px;
+  grid-template-columns: 24px 28px minmax(0, 1fr) 36px;
 }
 
 .tidy5e-sheet.application.ddb .ddb-skills-header {
@@ -811,12 +829,14 @@
   padding-inline: var(--ddb-space-half);
 }
 
+/* 2px lead (was 4px): together with the name's 2px trailing pad it keeps a
+ * 4px gap between the longest skill name and its chip. */
 .tidy5e-sheet.application.ddb .ddb-skills-col-bonus {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   min-width: 0;
-  padding-left: var(--ddb-space-1);
+  padding-left: var(--ddb-space-half);
 }
 
 /* The hairline under a skill row runs from the name to the right edge only —
@@ -847,13 +867,14 @@
 
 /* `display: block` (not inline-flex) so `text-overflow` applies; 4px + 18px +
  * 4px fills the 26px row so the name sits optically centred against the bonus
- * chip beside it and their hairlines line up. */
+ * chip beside it and their hairlines line up. The trailing pad is 2px (was
+ * 4px), half of the name-to-chip gap; see `.ddb-skills-col-bonus`. */
 .tidy5e-sheet.application.ddb .ddb-skill-name {
   display: block;
   justify-self: stretch;
   width: 100%;
   min-height: 0;
-  padding: var(--ddb-space-1) var(--ddb-space-1) var(--ddb-space-1) 0;
+  padding: var(--ddb-space-1) var(--ddb-space-half) var(--ddb-space-1) 0;
   border: 0;
   border-bottom: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
   border-radius: 0;
@@ -886,8 +907,9 @@
   box-shadow: var(--ddb-focus-ring);
 }
 
-/* 34px wide + the bonus cell's 4px left pad = the 38px bonus column, so the
- * chip fills the column exactly and every value sits on the same right edge. */
+/* 34px wide + the bonus cell's 2px left pad = the 36px bonus column, so the
+ * chip fills the column exactly and every value sits on the same right edge.
+ * 34px still holds a signed two-digit bonus ("+11") without growing. */
 .tidy5e-sheet.application.ddb .ddb-skill-bonus {
   min-width: 34px;
 }
@@ -897,10 +919,11 @@
 /* ------------------------------------------------------------------ */
 
 /* Edit mode adds a per-skill config column to THE shared grid template above,
- * so the header labels and the rows stay aligned. */
+ * so the header labels and the rows stay aligned. 14px = the gear button
+ * exactly (was 16px); this column is what sizes the SKILLS column width. */
 .tidy5e-sheet.application.ddb .ddb-skills-box.unlocked .ddb-skills-header,
 .tidy5e-sheet.application.ddb .ddb-skills-box.unlocked .ddb-skill-row {
-  grid-template-columns: 26px 28px minmax(0, 1fr) 38px 16px;
+  grid-template-columns: 24px 28px minmax(0, 1fr) 36px 14px;
 }
 
 .tidy5e-sheet.application.ddb .ddb-skills-col-config {
@@ -1040,11 +1063,17 @@
   color: var(--ddb-label);
 }
 
+/* Edit-mode tool rows: the name shares the row with the proficiency dot, the
+ * ability select and the gear, so at the compact 190px column a long name
+ * ("Calligrapher's Supplies") no longer fits on one line. It wraps rather
+ * than ellipsises (wave 2.5 image review): edit mode is transient and the
+ * full name matters more than a fixed row height there. */
 .tidy5e-sheet.application.ddb .ddb-tool-row .ddb-tool-name {
   min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.15;
   text-align: left;
 }
 

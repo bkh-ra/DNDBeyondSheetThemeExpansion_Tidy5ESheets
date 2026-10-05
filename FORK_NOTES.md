@@ -72,11 +72,11 @@ world theme, but it owns whatever differs structurally:
 | Per-actor tab config flag | `tab-configuration` | `ddb-tab-configuration` |
 | World tab config entry | `tabConfiguration.Actor.character` | `tabConfiguration.Actor['character-ddb']` |
 | Remembered window size | `sheetPreferences.character` | `sheetPreferences['character-ddb']` |
-| Sidebar tab registry | `CharacterSheetQuadroneSidebarRuntime` | `CharacterSheetDdbSidebarRuntime` = the shared quadrone tabs + a pinned **Details** tab (`ddb-details`, outside tab configuration; forwards `registerTab` so API sidebar tabs still land) |
+| Sidebar tab registry | `CharacterSheetQuadroneSidebarRuntime` | `CharacterSheetDdbSidebarRuntime` = the shared quadrone tabs **minus Skills & Traits** (the DDB left column already shows them; 2026-10-05) + a pinned **Details** tab (`ddb-details`, outside tab configuration; forwards `registerTab` so API sidebar tabs still land) |
 | Sidebar tab config | shared (`sidebar-tab-configuration`, `character-sidebar`) | shared |
 | Sidebar open/closed | per tab | single, `sheetPreferences.character.tabs['ddb-sidebar']` |
 | Window-header lock toggle | mounted | not mounted (the DDB banner has its own) |
-| Per-user layout preferences | — | `flags.ddb5e-sheets.userPreferences.ddb.{sidebarSide, sidebarMode, sidebarWidth, clickOpensDetails, skillClick, detailsPaneEnabled, layoutMode}` (`src/sheets/ddb/DdbPreferences.ts`) |
+| Per-user layout preferences | — | `flags.ddb5e-sheets.userPreferences.ddb.{sidebarSide, sidebarMode, sidebarWidth (px, 220-520, dragged on the pane edge), clickOpensDetails, skillClick, detailsPaneEnabled, layoutMode}` (`src/sheets/ddb/DdbPreferences.ts`) |
 | Item-name click in the primary pane | inline summary toggle | **details pane** (plain click / Enter); Shift = inline summary, Ctrl/Meta = full sheet; `clickOpensDetails:'inline'` restores quadrone's gesture |
 
 The settings apps never hardwire a layout: they read `document.sheet.tabConfigurationSeam`

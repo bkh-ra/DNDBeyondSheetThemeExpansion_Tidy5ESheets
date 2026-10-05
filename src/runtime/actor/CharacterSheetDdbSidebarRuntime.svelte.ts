@@ -17,6 +17,24 @@ import DdbDetailsTab from 'src/sheets/ddb/character/parts/sidebar/details/DdbDet
 type Context = CharacterSheetQuadroneContext;
 
 /**
+ * Shared sidebar tabs the DDB layout does not show: its left column already
+ * renders skills, saving throws, senses and proficiencies, so the quadrone
+ * "Skills & Traits" sidebar tab (and the older separate Skills / Traits tabs)
+ * only duplicated them (user request 2026-10-05).
+ * They stay registered in the shared runtime (quadrone sheets still use them);
+ * a sidebar tab configuration that lists them simply has no effect here.
+ */
+const LEFT_COLUMN_TAB_IDS: ReadonlySet<string> = new Set([
+  CONSTANTS.TAB_CHARACTER_SIDEBAR_SKILLS,
+  CONSTANTS.TAB_SIDEBAR_SKILLS_AND_TRAITS,
+  CONSTANTS.TAB_SIDEBAR_TRAITS,
+]);
+
+function dropLeftColumnTabs<T extends { id: string }>(tabs: T[]): T[] {
+  return tabs.filter((tab) => !LEFT_COLUMN_TAB_IDS.has(tab.id));
+}
+
+/**
  * DDB-FORK: sidebar tab registry of the DDB layout.
  *
  * The DDB sidebar shows exactly the SHARED character sidebar tabs (Favorites,
@@ -65,7 +83,7 @@ export class CharacterSheetDdbSidebarRuntimeImpl extends ActorSheetQuadroneRunti
   }
 
   async getTabs(context: Context): Promise<Tab[]> {
-    const sharedTabs = await this.#shared.getTabs(context);
+    const sharedTabs = dropLeftColumnTabs(await this.#shared.getTabs(context));
 
     if (!this.isDetailsTabEnabled(context)) {
       return sharedTabs;
@@ -86,15 +104,19 @@ export class CharacterSheetDdbSidebarRuntimeImpl extends ActorSheetQuadroneRunti
   }
 
   _getVisibleTabIds(context: Context) {
-    return this.#shared._getVisibleTabIds(context);
+    return this.#shared
+      ._getVisibleTabIds(context)
+      .filter((id: string) => !LEFT_COLUMN_TAB_IDS.has(id));
   }
 
   getAllRegisteredTabs(): RegisteredTab<Context>[] {
-    return this.#shared.getAllRegisteredTabs();
+    return dropLeftColumnTabs(this.#shared.getAllRegisteredTabs());
   }
 
   getDefaultTabIds(): string[] {
-    return this.#shared.getDefaultTabIds();
+    return this.#shared
+      .getDefaultTabIds()
+      .filter((id) => !LEFT_COLUMN_TAB_IDS.has(id));
   }
 
   registerContent(registeredContent: RegisteredContent<Context>) {

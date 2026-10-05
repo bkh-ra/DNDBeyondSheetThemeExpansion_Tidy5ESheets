@@ -25,8 +25,9 @@ export class Tidy5eCharacterSheetDdb extends Tidy5eCharacterSheetQuadrone {
     classes: [CONSTANTS.SHEET_LAYOUT_DDB],
     position: {
       // 1390 = the pre-sidebar 1150 default + the 230px sidebar column and its
-      // 6px gap, so the primary column keeps the width it was tuned at. The
-      // matching floor lives in `src/less/ddb/ddb-layout.css` (min-width 1320).
+      // 6px gap. The window floor lives in `src/less/ddb/ddb-layout.css`
+      // (min-width, derived from the column tokens: 1230px), so this default
+      // gives the primary pane 730px beside the default 230px sidebar.
       width: 1390,
       height: 950,
     },

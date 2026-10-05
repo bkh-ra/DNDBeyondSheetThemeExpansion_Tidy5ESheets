@@ -117,6 +117,27 @@
   --ddb-transition: 0.1s ease-in-out;
   --ddb-shadow-elevated: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
 
+  /* ---- column budget (theme-invariant) ----
+   * NOT harvested from DDB: this is the layout's own width budget, measured
+   * in the live sheet (2026-10-05, both themes, play and edit mode) and read
+   * by `ddb-layout.css` (grid tracks + window floor) and `DdbSidebar.svelte`
+   * (the resize clamp reads --ddb-primary-min-width off `.ddb-columns`).
+   *   col-left    SAVES / SENSES / PROFICIENCIES. Saves and senses fit from
+   *               ~170px; 190 is held by the proficiency prose, which re-wraps
+   *               below ~187px and would then make the left column the tallest
+   *               one and push the sheet into scrolling (see left-column.css).
+   *   col-skills  SKILLS: the narrowest width at which "Animal Handling" still
+   *               fits in EDIT mode (extra config column) with ~3px to spare.
+   *   primary-min the centre pane's floor: Inventory keeps name, uses, time,
+   *               quantity and roll/formula plus the row menu; Spells keep
+   *               time, target, range and roll. Narrower, Tidy starts dropping
+   *               target / quantity / charges (it hides columns by width).
+   *   sidebar-min mirrors DDB_SIDEBAR_WIDTH_RANGE.min in DdbPreferences.ts. */
+  --ddb-col-left-width: 190px;
+  --ddb-col-skills-width: 204px;
+  --ddb-primary-min-width: 580px;
+  --ddb-sidebar-min-width: 220px;
+
   /* ---- light theme (DDB default) ---- */
   /* DDB renders the header strip dark in BOTH themes (see captures) */
   --ddb-header-bg: #10161a;
