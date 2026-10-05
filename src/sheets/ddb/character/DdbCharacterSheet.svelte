@@ -25,22 +25,29 @@
     ddb-mode-full | -compact | -stacked   from the WINDOW width, or pinned by
         the `layoutMode` preference (`resolveDdbLayoutMode`); `ddb-mode-pinned`
         marks a pinned mode. Stacked is the only mode whose body scrolls.
-    ddb-density-normal | -compact | -dense   from the HEIGHT: the least dense
-        level at which the two stat columns' NATURAL height fits the height
-        the column row gets. `ddb-density-overflow` is added when not even
-        dense fits; the stat columns then scroll themselves (last resort).
+    ddb-density-normal | -compact | -dense   from the HEIGHT, as coarse
+        markers of the fine fit below (ddb-tokens.css documents the mapping).
+        `ddb-density-overflow` is added when not even the densest geometry
+        fits; the stat columns then scroll themselves (last resort).
 
-  How the density is measured, without a layout loop: for each level the
-  sheet's class list is switched to that level SYNCHRONOUSLY (no paint, no
-  ResizeObserver delivery in between), the stat columns' natural height
-  (each box's frame + the sum of its body's blocks, i.e. its content height
-  whatever the flex stretch) and the chrome above the columns (band, gaps,
-  padding) are read, and the class list is restored. Those numbers depend on
-  the content and the column widths only, so they are cached per mode and
-  re-probed only when the stat columns' DOM changes, fonts load, or the mode
-  changes; a window drag merely compares the cached numbers with the new
-  body height. Moving to a LESS dense level needs `DENSITY_HYSTERESIS` px of
-  slack, so a window resting on a threshold does not flap.
+  DENSITY FIT. Every density token is linear in `--ddb-density-fit` (0..1,
+  set inline here in 1/64 steps), and the dense-only features (1px smaller
+  stat text, run-in proficiency labels) are one discrete switch on top. The
+  decision is the smallest fit at which the taller stat column's NATURAL
+  height (each box's frame + the sum of its body's blocks, i.e. its content
+  height whatever the flex stretch) fits the height the column row gets,
+  first without the dense-only features, and only if fit 1 alone cannot do
+  it, with them. "Fits" is monotone in the fit, so it is a binary search.
+
+  Each probe switches the sheet's class and fit SYNCHRONOUSLY (no paint, no
+  ResizeObserver delivery in between), reads the stat columns' natural height
+  and the chrome above them (band, gaps, padding), and the state is restored
+  afterwards. Those numbers depend on the content and the column widths only,
+  so they are cached per mode and dropped when the stat columns' DOM changes,
+  fonts load, or the mode changes; a window drag usually just looks them up.
+  HYSTERESIS: the current fit is kept while the columns fit with at most
+  `STABLE_SLACK` px to spare, so the stat columns end within that distance of
+  the body's bottom and a window resting on a step does not flap.
 -->
 <script lang="ts">
   import DdbHeaderBanner from './parts/header/DdbHeaderBanner.svelte';
@@ -93,13 +100,19 @@
 
   type DdbDensity = 'normal' | 'compact' | 'dense';
 
-  /** Least to most dense; the decision takes the first level that fits. */
+  /** The coarse markers, least to most dense. */
   const DENSITIES: readonly DdbDensity[] = ['normal', 'compact', 'dense'];
 
   const MODES: readonly DdbLayoutMode[] = ['full', 'compact', 'stacked'];
 
-  /** Slack (px) a LESS dense level needs before the sheet moves back to it. */
-  const DENSITY_HYSTERESIS = 12;
+  /** The fit is chosen in 1/FIT_STEPS increments (a few px of height each). */
+  const FIT_STEPS = 64;
+
+  /**
+   * Spare height (px) under the stat columns that the current fit may leave
+   * before the sheet re-fits to a less dense one. Also the hysteresis.
+   */
+  const STABLE_SLACK = 24;
 
   /** Every class this component mirrors onto the window element. */
   const MIRRORED_CLASSES = [
@@ -112,8 +125,13 @@
   let sheetElement = $state<HTMLElement>();
 
   let mode = $state<DdbLayoutMode>('full');
-  let density = $state<DdbDensity>('normal');
+  /** The fine fit, in steps of 1/FIT_STEPS. */
+  let fitStep = $state(0);
+  /** The dense-only (discrete) features are on. */
+  let denseFeatures = $state(false);
   let densityOverflow = $state(false);
+
+  let density = $derived<DdbDensity>(coarseDensity(denseFeatures, fitStep));
   /** The body's client height, for the stacked primary pane. */
   let bodyHeight = $state<number | null>(null);
 
@@ -127,11 +145,22 @@
     chrome: number;
   };
 
-  /** Probe results for one mode; plain (non-reactive) on purpose. */
+  /**
+   * Probe results for one mode, keyed by `probeKey`; plain (non-reactive) on
+   * purpose.
+   */
   let metrics: {
     mode: DdbLayoutMode;
-    levels: Record<DdbDensity, LevelMetrics>;
+    probes: Map<number, LevelMetrics>;
   } | null = null;
+
+  function coarseDensity(dense: boolean, step: number): DdbDensity {
+    return dense ? 'dense' : step > 0 ? 'compact' : 'normal';
+  }
+
+  function probeKey(dense: boolean, step: number): number {
+    return (dense ? FIT_STEPS + 1 : 0) + step;
+  }
 
   function isInFlow(element: Element): element is HTMLElement {
     if (!(element instanceof HTMLElement)) {
@@ -223,36 +252,82 @@
     };
   }
 
+  type FitResult = { dense: boolean; step: number; overflow: boolean };
+
   /**
-   * Measure every density level for `forMode` by switching the sheet's class
-   * list in place and restoring it. All synchronous: nothing is painted and
-   * no ResizeObserver sees the intermediate sizes.
+   * The smallest fit at which the stat columns fit a body `bodyClientHeight`
+   * tall in `forMode`: without the dense-only features if fit 1 allows it,
+   * else with them. Probes switch the sheet's class list and fit in place and
+   * restore them at the end. All synchronous: nothing is painted and no
+   * ResizeObserver sees the intermediate sizes.
    */
-  function probeLevels(
+  function solveFit(
     sheet: HTMLElement,
     parts: LayoutParts,
     forMode: DdbLayoutMode,
-  ): Record<DdbDensity, LevelMetrics> {
-    const saved = sheet.className;
-    const base = saved
+    bodyClientHeight: number,
+  ): FitResult {
+    const probes = metrics!.probes;
+    const savedClass = sheet.className;
+    const savedFit = sheet.style.getPropertyValue('--ddb-density-fit');
+    const base = savedClass
       .split(/\s+/)
       .filter((c) => c && !/^ddb-(mode|density)-/.test(c));
-    const levels = {} as Record<DdbDensity, LevelMetrics>;
+    let touched = false;
 
-    try {
-      for (const level of DENSITIES) {
+    const fits = (dense: boolean, step: number) => {
+      const key = probeKey(dense, step);
+      let probe = probes.get(key);
+
+      if (!probe) {
+        touched = true;
         sheet.className = [
           ...base,
           `ddb-mode-${forMode}`,
-          `ddb-density-${level}`,
+          `ddb-density-${coarseDensity(dense, step)}`,
         ].join(' ');
-        levels[level] = measureLevel(parts);
+        sheet.style.setProperty('--ddb-density-fit', String(step / FIT_STEPS));
+        probe = measureLevel(parts);
+        probes.set(key, probe);
       }
-    } finally {
-      sheet.className = saved;
-    }
 
-    return levels;
+      return probe.natural + probe.chrome <= bodyClientHeight;
+    };
+
+    try {
+      for (const dense of [false, true]) {
+        if (!fits(dense, FIT_STEPS)) {
+          continue;
+        }
+
+        if (fits(dense, 0)) {
+          return { dense, step: 0, overflow: false };
+        }
+
+        // Invariant: `low` does not fit, `high` does.
+        let low = 0;
+        let high = FIT_STEPS;
+
+        while (high - low > 1) {
+          const middle = (low + high) >> 1;
+
+          if (fits(dense, middle)) {
+            high = middle;
+          } else {
+            low = middle;
+          }
+        }
+
+        return { dense, step: high, overflow: false };
+      }
+
+      return { dense: true, step: FIT_STEPS, overflow: true };
+    } finally {
+      if (touched) {
+        sheet.className = savedClass;
+        sheet.style.setProperty('--ddb-density-fit', savedFit);
+      }
+    }
   }
 
   /** The window element is mid-animation or collapsed: sizes are not real. */
@@ -304,42 +379,46 @@
 
     if (nextMode === 'stacked') {
       // The body scrolls in stacked mode; there is no height to fit.
-      density = 'normal';
+      fitStep = 0;
+      denseFeatures = false;
       densityOverflow = false;
       return;
     }
 
     if (metrics?.mode !== nextMode) {
-      metrics = { mode: nextMode, levels: probeLevels(sheet, parts, nextMode) };
-    } else if (
-      sheet.classList.contains(`ddb-mode-${nextMode}`) &&
-      sheet.classList.contains(`ddb-density-${density}`)
-    ) {
-      // The live DOM is at the current level: refresh that entry for free
-      // (layout is clean in an animation frame), so a drifting band or
-      // column height self-corrects without a full probe.
-      metrics.levels[density] = measureLevel(parts);
+      metrics = { mode: nextMode, probes: new Map() };
     }
 
-    const available = (level: DdbDensity) =>
-      parts.body.clientHeight - metrics!.levels[level].chrome;
-    const current = DENSITIES.indexOf(density);
+    const height = parts.body.clientHeight;
+    const currentKey = probeKey(denseFeatures, fitStep);
 
-    let chosen: DdbDensity = 'dense';
-    let overflow = true;
+    if (
+      sheet.classList.contains(`ddb-mode-${nextMode}`) &&
+      sheet.classList.contains(`ddb-density-${density}`) &&
+      sheet.style.getPropertyValue('--ddb-density-fit') ===
+        String(fitStep / FIT_STEPS)
+    ) {
+      // The live DOM is at the current fit: refresh that entry for free
+      // (layout is clean in an animation frame), so a drifting band or
+      // column height self-corrects without a probe.
+      const live = measureLevel(parts);
+      metrics.probes.set(currentKey, live);
 
-    for (const [index, level] of DENSITIES.entries()) {
-      const slack = index < current ? DENSITY_HYSTERESIS : 0;
+      const spare = height - live.chrome - live.natural;
+      const atLoosest = fitStep === 0 && !denseFeatures;
 
-      if (metrics.levels[level].natural <= available(level) - slack) {
-        chosen = level;
-        overflow = false;
-        break;
+      // Hysteresis: keep a fit that still fits without much to spare.
+      if (spare >= 0 && (spare <= STABLE_SLACK || atLoosest)) {
+        densityOverflow = false;
+        return;
       }
     }
 
-    density = chosen;
-    densityOverflow = overflow;
+    const result = solveFit(sheet, parts, nextMode, height);
+
+    fitStep = result.step;
+    denseFeatures = result.dense;
+    densityOverflow = result.overflow;
   }
 
   let frame: number | undefined;
@@ -473,6 +552,7 @@
       'ddb-density-overflow': densityOverflow,
     },
   ]}
+  style:--ddb-density-fit={String(fitStep / FIT_STEPS)}
   style:--ddb-sheet-body-height={mode === 'stacked' && bodyHeight
     ? `${bodyHeight}px`
     : undefined}

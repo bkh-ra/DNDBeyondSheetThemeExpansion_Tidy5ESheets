@@ -457,8 +457,13 @@
  * quadrone sizes with --t5e-field-size-default (28px) — far taller than this
  * 12px row. Every box metric is pinned so the strip cannot grow, and the field
  * is sized in `ch` so it fits a five-figure XP total without measuring. */
+/* Edit mode's XP field. 5ch cut "48000" to "4800" (image review); the box is
+ * now 7ch of text plus its padding and hairlines, enough for any 5e XP total
+ * (level 20 is 355000). */
 .tidy5e-sheet.application.ddb input.ddb-header-xp-input {
-  width: 5ch;
+  width: calc(
+    7ch + 2 * var(--ddb-space-half) + 2 * var(--ddb-border-width-panel)
+  );
   height: auto;
   min-height: 0;
   padding: 0 var(--ddb-space-half);

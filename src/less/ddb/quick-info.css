@@ -162,19 +162,6 @@
   zoom: var(--ddb-ability-box-scale);
 }
 
-/* EDIT MODE: the HP readout gains its temp-max field on a second row and runs
- * ~11.5px above and below its 80px panel (pre-Wave-8; the captions CURRENT /
- * MAX / TEMP sit above the panel's top edge). At normal density the 6 + 6px
- * of body and band padding above the row happened to absorb that; the denser
- * levels pad less, and the body (overflow: hidden) clipped the captions. So
- * in edit mode the band keeps 12px (scaled with the row) of clearance above
- * the row at every density; normal is unchanged (6 + 6). */
-.tidy5e-sheet.application.ddb.sheet-mode-edit .ddb-quick-info {
-  padding-top: max(
-    var(--ddb-quick-info-pad),
-    calc(12px * var(--ddb-ability-box-scale) - var(--ddb-body-pad-top))
-  );
-}
 
 /* The HP manager popover hangs off the HP panel inside the scaled row; undo
  * the scale on it so it always reads at full size. */
@@ -1264,6 +1251,20 @@
   align-items: center;
   gap: var(--ddb-space-half);
   min-width: 0;
+}
+
+/* EDIT MODE adds the temp-max field ("+MAX"), a FIFTH child of a four-track
+ * grid, so it wrapped to a second row: the readout grew to ~91px inside the
+ * 80px panel, the CURRENT / MAX / TEMP captions rode above its top edge and
+ * HIT POINTS fell below it (image review; it predates Wave 8, and the denser
+ * levels then clipped the captions). With a fifth track the four figures sit
+ * on one row again. The tracks narrow to the inputs' own 3rem cap, so the
+ * row (~225px) still fits the readout when compact mode squeezes the panel
+ * to its 20rem floor (~240px). */
+.tidy5e-sheet.application.ddb
+  .ddb-hp-block__fields:has(> .ddb-hp-block__field--tempmax) {
+  grid-template-columns: 3rem auto 3rem 3rem 3rem;
+  column-gap: var(--ddb-space-1);
 }
 
 /* Temp hit points read as a separate figure, set apart from CURRENT / MAX. */

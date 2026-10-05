@@ -597,6 +597,29 @@
  * (other Tidy surfaces, e.g. tab-selection settings, render it), so the icon is
  * hidden here rather than removed from the registry. `icon-start` is the class
  * Tabs.svelte adds whenever a tab has an icon; neutralize its inset too. */
+/* COMPACT layout mode (Wave 8, 1100-1319px windows; the primary pane can be
+ * as narrow as 520px): the nine default tabs need ~620px at 12px with 14px
+ * gaps, so CHARACTER ran past the panel edge. Here the labels drop to the
+ * scale's label step (10px), the gaps to 8px and the strip's inset to 8px:
+ * ~480px. The strip still scrolls sideways if modules add more tabs. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-compact .ddb-tab-strip {
+  padding-inline: var(--ddb-space-3);
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-sheet.ddb-mode-compact
+  .ddb-tab-strip
+  .tidy-tabs.ddb-tabs {
+  gap: var(--ddb-space-3);
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-sheet.ddb-mode-compact
+  .ddb-tab-strip
+  .tab-option.ddb-tab {
+  font-size: var(--ddb-size-label);
+}
+
 .tidy5e-sheet.application.ddb .ddb-tab-strip .tab-option.ddb-tab .tab-icon {
   display: none;
 }

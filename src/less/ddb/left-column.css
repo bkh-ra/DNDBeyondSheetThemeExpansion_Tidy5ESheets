@@ -951,13 +951,22 @@
   color: var(--ddb-label);
 }
 
+/* Edit mode's roll-ability select in the 28px MOD track (26px in compact
+ * mode). Quadrone's select draws its chevron as an 11px background image 8px
+ * in from the right, which in a 24px control lands ON the abbreviation
+ * ("ƎEX", "W\S"; image review). The abbreviation alone needs ~22px, so the
+ * chevron goes and the text is centred in the full width; the select keeps
+ * its border, so it still reads as a control. */
 .tidy5e-sheet.application.ddb .ddb-skill-ability-select {
   width: 100%;
   min-height: 0;
   height: var(--ddb-stat-select-height);
-  padding: 0 var(--ddb-space-half);
+  padding: 0;
+  background-image: none;
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-stat-size-label-md);
+  text-align: center;
+  text-align-last: center;
   text-transform: var(--ddb-transform-label);
   color: var(--ddb-label);
 }
@@ -1019,6 +1028,26 @@
  * 34px still holds a signed two-digit bonus ("+11") without growing. */
 .tidy5e-sheet.application.ddb .ddb-skill-bonus {
   min-width: calc(var(--ddb-skills-track-bonus) - var(--ddb-space-half));
+}
+
+/* STACKED mode (Wave 8): the stat columns are half the window wide, so the
+ * save pills and skill rows would stretch to ~480px and read sparse. Their
+ * content keeps its full-mode width (the column token minus the box's inline
+ * padding), left-aligned in the wider box. */
+.tidy5e-sheet.application.ddb
+  .ddb-sheet.ddb-mode-stacked
+  .ddb-saving-throws-box
+  .ddb-box-body
+  > * {
+  width: 100%;
+  max-width: calc(var(--ddb-col-left-width) - 2 * var(--ddb-space-3));
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-sheet.ddb-mode-stacked
+  .ddb-skills-box
+  :is(.ddb-skills-header, .ddb-skill-row) {
+  max-width: calc(var(--ddb-col-skills-width) - 2 * var(--ddb-skills-pad-inline));
 }
 
 /* ------------------------------------------------------------------ */
@@ -1166,11 +1195,16 @@
   min-height: var(--ddb-tool-row); /* 22px at normal density */
 }
 
+/* Same chevron collision as the SKILLS select (see there): in the 34px track
+ * the chevron landed on the abbreviation's last letter ("IN" + arrow). */
 .tidy5e-sheet.application.ddb .ddb-tool-row .ddb-tool-ability-select {
   width: 100%;
   min-height: 0;
   height: var(--ddb-stat-select-height);
-  padding: 0 var(--ddb-space-half);
+  padding: 0;
+  background-image: none;
+  text-align: center;
+  text-align-last: center;
   font-family: var(--ddb-font-condensed);
   font-size: var(--ddb-stat-size-label-md);
   text-transform: var(--ddb-transform-label);
