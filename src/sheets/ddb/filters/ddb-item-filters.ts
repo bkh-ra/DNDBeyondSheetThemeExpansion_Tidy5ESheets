@@ -2,7 +2,10 @@ import { CONSTANTS } from 'src/constants';
 import { Activities } from 'src/features/activities/activities';
 import { ItemContext } from 'src/features/item/ItemContext';
 import { ItemFilterRuntime } from 'src/runtime/item/ItemFilterRuntime.svelte';
-import { defaultItemFilters } from 'src/runtime/item/default-item-filters';
+import {
+  defaultItemFilters,
+  getAttunementFiltersAsObject,
+} from 'src/runtime/item/default-item-filters';
 import type {
   FilterCategoriesToFilters,
   FilterTabsToCategories,
@@ -12,8 +15,8 @@ import type { Item5e } from 'src/types/item.types';
 import type { Actor5e } from 'src/types/types';
 
 /**
- * DDB-FORK: item filters and filter pins of the DDB layout's Actions and Spells
- * tabs (ddb-next Wave 3).
+ * DDB-FORK: item filters and filter pins of the DDB layout's Actions, Spells
+ * (ddb-next Wave 3) and Inventory (Wave 6) tabs.
  *
  * The DDB sheet keeps Tidy's whole filter machinery (`ItemFilterService`, the
  * filter menu, `FilterToggle`); it only hands the service its own provider
@@ -24,7 +27,9 @@ import type { Actor5e } from 'src/types/types';
  * D&D Beyond's pill rows map onto pinned filters:
  *   Actions: ALL | ATTACK | ACTION | BONUS ACTION | REACTION | OTHER | LIMITED USE
  *   Spells:  ALL | -0- | 1ST ... 9TH (levels the actor owns) | CONCENTRATION | RITUAL
- * "ALL" is not a filter: it is Tidy's clear-all for the tab.
+ *   Inventory (Equipment view): ATTUNED | ATTUNABLE | EQUIPPED
+ * "ALL" is not a filter: it is Tidy's clear-all for the tab (on the Inventory
+ * tab the EQUIPMENT view pill plays that part, DdbInventoryTab.svelte).
  */
 
 /**
@@ -38,6 +43,9 @@ export const DDB_FILTER_NAMES = {
   ATTACK: 'attack',
   LIMITED_USE: 'limitedUse',
   SPELL_LEVEL_PREFIX: 'spell-level-',
+  /** Tidy's own attunement filter (`getAttunementFilters`), reused as is. */
+  ATTUNED: 'attuned',
+  ATTUNABLE: 'attunable',
 } as const;
 
 /** The highest spell level a pill can exist for (CONFIG.DND5E.spellLevels). */
@@ -77,6 +85,30 @@ export const ddbLimitedUseFilter: DdbItemFilter = {
   text: 'TIDY5E.DdbLayout.Actions.LimitedUse',
   pillLabel: 'TIDY5E.DdbLayout.Actions.LimitedUse',
 };
+
+/**
+ * D&D Beyond's "Attunable items": items that can be attuned (attunement
+ * required OR optional) but are not attuned right now; the attuned ones are
+ * the ATTUNED pill. Built from Tidy's own attunement filters
+ * (`getAttunementFilters`), so concealed (unidentified) items stay out exactly
+ * as they do there. Created per filter evaluation: those filters read
+ * `CONFIG.DND5E.attunementTypes` when they are built.
+ */
+export function getDdbAttunableFilter(): DdbItemFilter {
+  const attunement = getAttunementFiltersAsObject();
+  const canAttune = [
+    attunement['attunement-required'],
+    attunement['attunement-optional'],
+  ].filter((filter) => typeof filter?.predicate === 'function');
+
+  return {
+    name: DDB_FILTER_NAMES.ATTUNABLE,
+    predicate: (item) =>
+      !item.system.attuned && canAttune.some((f) => f.predicate(item)),
+    text: 'TIDY5E.DdbLayout.Inventory.Attunable',
+    pillLabel: 'TIDY5E.DdbLayout.Inventory.Attunable',
+  };
+}
 
 export function getDdbSpellLevelFilterName(level: number) {
   return `${DDB_FILTER_NAMES.SPELL_LEVEL_PREFIX}${level}`;
@@ -128,8 +160,21 @@ const DDB_PILL_LABEL_OVERRIDES: Record<string, string> = {
   [defaultItemFilters.ritual.name]: 'TIDY5E.DdbLayout.Spells.Ritual',
 };
 
-function withPillLabel(filter: ItemFilter): DdbItemFilter {
-  const pillLabel = DDB_PILL_LABEL_OVERRIDES[filter.name];
+/**
+ * Inventory-only pill labels. Kept apart from the shared table so the
+ * Actions / Spells filters (some categories there hold `equipped` too) stay
+ * exactly what they were.
+ */
+const DDB_INVENTORY_PILL_LABELS: Record<string, string> = {
+  [DDB_FILTER_NAMES.ATTUNED]: 'TIDY5E.DdbLayout.Inventory.Attuned',
+  [defaultItemFilters.equipped.name]: 'TIDY5E.DdbLayout.Inventory.Equipped',
+};
+
+function withPillLabel(
+  filter: ItemFilter,
+  labels: Record<string, string> = DDB_PILL_LABEL_OVERRIDES,
+): DdbItemFilter {
+  const pillLabel = labels[filter.name];
   return pillLabel ? { ...filter, pillLabel } : filter;
 }
 
@@ -140,15 +185,18 @@ function withPillLabel(filter: ItemFilter): DdbItemFilter {
  */
 function patchCategory(
   value: FilterCategoriesToFilters[string] | undefined,
-  extras: ItemFilter[] = [],
+  extras: ItemFilter[] | (() => ItemFilter[]) = [],
+  labels: Record<string, string> = DDB_PILL_LABEL_OVERRIDES,
 ): (document: any) => ItemFilter[] {
   return (document: any) => {
     const base = !value ? [] : Array.isArray(value) ? value : value(document);
     const names = new Set(base.map((f) => f.name));
+    const added = typeof extras === 'function' ? extras() : extras;
+    const label = (filter: ItemFilter) => withPillLabel(filter, labels);
 
     return [
-      ...base.map(withPillLabel),
-      ...extras.filter((f) => !names.has(f.name)).map(withPillLabel),
+      ...base.map(label),
+      ...added.filter((f) => !names.has(f.name)).map(label),
     ];
   };
 }
@@ -162,7 +210,9 @@ const SPELL_LEVEL_CATEGORY = 'DND5E.SpellLevel';
  * document, plus
  *   - Actions: `attack`, `limitedUse` (Miscellaneous) and the "Other"
  *     activation filter (quadrone's Actions list has no Other);
- *   - Spells: one `spell-level-N` filter per level the actor owns.
+ *   - Spells: one `spell-level-N` filter per level the actor owns;
+ *   - Inventory: `attunable` (Miscellaneous, next to quadrone's `equipped`
+ *     and attunement filters), and the DDB pill labels of its three pins.
  */
 export function getDdbDocumentFilters(document: any): FilterTabsToCategories {
   const quadrone = ItemFilterRuntime.getDocumentFiltersQuadrone(document);
@@ -173,6 +223,7 @@ export function getDdbDocumentFilters(document: any): FilterTabsToCategories {
 
   const actions = quadrone[CONSTANTS.TAB_ACTOR_ACTIONS] ?? {};
   const spellbook = quadrone[CONSTANTS.TAB_ACTOR_SPELLBOOK] ?? {};
+  const inventory = quadrone[CONSTANTS.TAB_ACTOR_INVENTORY] ?? {};
 
   return {
     ...quadrone,
@@ -196,6 +247,18 @@ export function getDdbDocumentFilters(document: any): FilterTabsToCategories {
           category,
           patchCategory(value),
         ]),
+      ),
+    },
+    [CONSTANTS.TAB_ACTOR_INVENTORY]: {
+      ...inventory,
+      [MISC_CATEGORY]: patchCategory(
+        inventory[MISC_CATEGORY],
+        () => [
+          defaultItemFilters.equipped,
+          ...Object.values(getAttunementFiltersAsObject()),
+          getDdbAttunableFilter(),
+        ],
+        DDB_INVENTORY_PILL_LABELS,
       ),
     },
   };
@@ -225,9 +288,21 @@ export const DDB_SPELLBOOK_PINS: readonly string[] = [
 ];
 
 /**
+ * Pinned filters of the DDB Inventory tab: the pills of its Equipment view,
+ * in D&D Beyond's order. (Quadrone pins Action / Bonus / Reaction / Equipped
+ * there; in the DDB layout the pill row replaces the action bar's pinned
+ * group.)
+ */
+export const DDB_INVENTORY_PINS: readonly string[] = [
+  DDB_FILTER_NAMES.ATTUNED,
+  DDB_FILTER_NAMES.ATTUNABLE,
+  defaultItemFilters.equipped.name,
+];
+
+/**
  * `context.filterPins` of the DDB sheet, by actor type. A getter, so pins
  * that integrations add to quadrone's table at runtime are always included;
- * only the Actions and Spells tabs differ from quadrone.
+ * only the Actions, Spells and Inventory tabs differ from quadrone.
  */
 export const DDB_FILTER_PINS: Record<string, Record<string, Set<string>>> = {
   get [CONSTANTS.SHEET_TYPE_CHARACTER]() {
@@ -237,6 +312,7 @@ export const DDB_FILTER_PINS: Record<string, Record<string, Set<string>>> = {
       ] ?? {}),
       [CONSTANTS.TAB_ACTOR_ACTIONS]: new Set(DDB_ACTIONS_PINS),
       [CONSTANTS.TAB_ACTOR_SPELLBOOK]: new Set(DDB_SPELLBOOK_PINS),
+      [CONSTANTS.TAB_ACTOR_INVENTORY]: new Set(DDB_INVENTORY_PINS),
     };
   },
 };
@@ -251,7 +327,9 @@ export function sortByPinOrder<T extends { name: string }>(
       ? DDB_ACTIONS_PINS
       : tabId === CONSTANTS.TAB_ACTOR_SPELLBOOK
         ? DDB_SPELLBOOK_PINS
-        : [];
+        : tabId === CONSTANTS.TAB_ACTOR_INVENTORY
+          ? DDB_INVENTORY_PINS
+          : [];
 
   const rank = (name: string) => {
     const index = order.indexOf(name);

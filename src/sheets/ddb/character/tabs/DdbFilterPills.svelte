@@ -17,6 +17,15 @@
   DOM contract: div.ddb-filter-pills[data-tab-id] >
     button.ddb-filter-pill[data-ddb-filter="all" | <filter name>]
       [data-ddb-filter-state="include" | "exclude" | ""][aria-pressed]
+
+  Optional props (Wave 6, the Inventory tab; Actions / Spells pass none and
+  render exactly as before):
+    leading      a snippet rendered first in the same row (the Inventory view
+                 pills), followed by span.ddb-filter-pills-divider when filter
+                 pills follow it;
+    showAll      false drops the ALL pill (a leading pill plays that part);
+    showFilters  false renders the leading snippet alone (the row stays, so
+                 the sticky offset and the row height do not jump).
 -->
 <script lang="ts">
   import { CONSTANTS } from 'src/constants';
@@ -26,16 +35,24 @@
   import type { ConfiguredItemFilter } from 'src/runtime/item/item.types';
   import { getSheetContext } from 'src/sheets/sheet-context.svelte';
   import type { ActorSheetQuadroneContext } from 'src/types/types';
-  import { getContext } from 'svelte';
+  import { getContext, type Snippet } from 'svelte';
   import { sortByPinOrder } from '../../filters/ddb-item-filters';
   import { observeResize } from 'src/features/resize-observation/attachments';
   import type { Ref } from 'src/features/reactivity/reactivity.types';
 
   interface Props {
     tabId: string;
+    leading?: Snippet;
+    showAll?: boolean;
+    showFilters?: boolean;
   }
 
-  let { tabId }: Props = $props();
+  let {
+    tabId,
+    leading,
+    showAll = true,
+    showFilters = true,
+  }: Props = $props();
 
   const localize = FoundryAdapter.localize;
 
@@ -130,7 +147,7 @@
   }
 </script>
 
-{#if pills.length}
+{#if pills.length || leading}
   <div
     class="ddb-filter-pills"
     role="toolbar"
@@ -139,23 +156,31 @@
     data-tidy-sheet-part="ddb-filter-pills"
     {@attach observeResize(onResize)}
   >
-    <button
-      type="button"
-      class={[
-        'button',
-        'button-toggle',
-        'ddb-filter-pill',
-        'ddb-filter-pill-all',
-        { include: allActive },
-      ]}
-      data-ddb-filter="all"
-      data-ddb-filter-state={allActive ? 'include' : ''}
-      aria-pressed={allActive}
-      onclick={onAllClick}
-    >
-      {localize('TIDY5E.DdbLayout.Actions.All')}
-    </button>
-    {#each pills as filter (filter.name)}
+    {#if leading}
+      {@render leading()}
+      {#if showFilters && pills.length}
+        <span class="ddb-filter-pills-divider" aria-hidden="true"></span>
+      {/if}
+    {/if}
+    {#if showFilters && pills.length && showAll}
+      <button
+        type="button"
+        class={[
+          'button',
+          'button-toggle',
+          'ddb-filter-pill',
+          'ddb-filter-pill-all',
+          { include: allActive },
+        ]}
+        data-ddb-filter="all"
+        data-ddb-filter-state={allActive ? 'include' : ''}
+        aria-pressed={allActive}
+        onclick={onAllClick}
+      >
+        {localize('TIDY5E.DdbLayout.Actions.All')}
+      </button>
+    {/if}
+    {#each showFilters ? pills : [] as filter (filter.name)}
       {const state = $derived(stateOf(filter))}
       {const label = $derived(localize(filter.pillLabel ?? filter.text))}
       <button

@@ -3,7 +3,6 @@ import { ActorSheetQuadroneRuntime } from '../ActorSheetQuadroneRuntime.svelte';
 import { CONSTANTS } from 'src/constants';
 import { TidyFlags } from 'src/foundry/TidyFlags';
 import ActorEffectsTab from 'src/sheets/quadrone/actor/tabs/ActorEffectsTab.svelte';
-import ActorInventoryTab from 'src/sheets/quadrone/actor/tabs/ActorInventoryTab.svelte';
 import ActorJournalTab from 'src/sheets/quadrone/actor/tabs/ActorJournalTab.svelte';
 import CharacterAttributesTab from 'src/sheets/quadrone/actor/tabs/CharacterAttributesTab.svelte';
 import CharacterBiographyTab from 'src/sheets/quadrone/actor/tabs/CharacterBiographyTab.svelte';
@@ -11,6 +10,7 @@ import CharacterFeaturesTab from 'src/sheets/quadrone/actor/tabs/CharacterFeatur
 import CharacterBastionTab from 'src/sheets/quadrone/actor/tabs/CharacterBastionTab.svelte';
 import DdbActionsTab from 'src/sheets/ddb/character/tabs/DdbActionsTab.svelte';
 import DdbSpellsTab from 'src/sheets/ddb/character/tabs/DdbSpellsTab.svelte';
+import DdbInventoryTab from 'src/sheets/ddb/character/tabs/DdbInventoryTab.svelte';
 import * as Bastion from 'src/features/facility/Bastion';
 import { buildCharacterSheetTabOptions } from 'src/settings/tab-options/CharacterSheetTabOptions';
 import { buildActorInventoryTabOptions } from 'src/settings/tab-options/ActorInventoryTabOptions';
@@ -24,9 +24,10 @@ import { buildCharacterFeaturesTabOptions } from 'src/settings/tab-options/Chara
  * Inventory | Features & Traits | Background | Notes) followed by the
  * Foundry-only extra tabs (Effects, Bastion, Character).
  *
- * Actions and Spells mount DDB wrappers (src/sheets/ddb/character/tabs/,
- * ddb-next Wave 3) that compose the quadrone tab with the D&D Beyond pieces
- * around it; the other tabs still reuse the quadrone components verbatim.
+ * Actions and Spells (ddb-next Wave 3) and Inventory (Wave 6) mount DDB
+ * wrappers (src/sheets/ddb/character/tabs/) that compose the quadrone tab
+ * with the D&D Beyond pieces around it; the other tabs still reuse the
+ * quadrone components verbatim.
  * Tab ids are unchanged, so tab configuration, sheet pins and API
  * registrations keep addressing the same tabs.
  */
@@ -61,7 +62,7 @@ export const CharacterSheetDdbRuntime =
       {
         title: 'DND5E.Inventory',
         content: {
-          component: ActorInventoryTab,
+          component: DdbInventoryTab,
           type: 'svelte',
         },
         id: CONSTANTS.TAB_ACTOR_INVENTORY,
