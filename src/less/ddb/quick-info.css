@@ -177,12 +177,22 @@
   min-width: 20rem;
 }
 
-/* STACKED mode (Wave 8, < 1100px): the band cannot fit one row at all, so it
- * wraps; the health panel (right-aligned by its auto margin) drops to a
- * second line under the abilities. The body scrolls in this mode. */
+/* STACKED mode (Wave 8, < 1100px): the band cannot fit one row, so it wraps.
+ * Left to itself the health panel dropped to a second line on its own, pinned
+ * right by its auto margin, with a hole beside it (image review). Instead the
+ * rows are centred and the panel takes a row of its own exactly as wide as
+ * the first (six ability cards + three stat boxes: 47rem), centred under it,
+ * so the band reads as one block. The body scrolls in this mode. */
 .tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-quick-info__row {
   flex-wrap: wrap;
+  justify-content: center;
   row-gap: var(--ddb-space-2);
+}
+
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-hp-block {
+  flex: 1 1 100%;
+  max-width: 47rem;
+  margin-inline: auto;
 }
 
 .tidy5e-sheet.application.ddb .ddb-quick-info__abilities {
@@ -1469,17 +1479,19 @@
  * ------------------------------------------------------------------ */
 
 /* Per-ability config, pinned to the frame's top-right corner so it never
- * displaces the label / modifier / score stack inside the box. */
+ * displaces the label / modifier / score stack inside the box. 12px, 1px off
+ * the corner (was 14px at 2px): the card's chamfered corner leaves room for
+ * it there, and the label below steps aside for it. */
 .tidy5e-sheet.application.ddb .ddb-ability-box__config {
   position: absolute;
-  top: var(--ddb-space-half);
-  right: var(--ddb-space-half);
+  top: 1px;
+  right: 1px;
   z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   min-width: 0;
   min-height: 0;
   padding: 0;
@@ -1492,6 +1504,20 @@
   color: var(--ddb-label);
   cursor: pointer;
   transition: color var(--ddb-transition);
+}
+
+/* EDIT MODE: the gear shares the label's line, and the long labels
+ * (CONSTITUTION 63px, INTELLIGENCE 59px in an 81px card) ran under it. The
+ * label keeps clear of the gear (a 14px right margin moves its centre 7px
+ * left, leaving 63px of line), and a longer translation ellipsises instead
+ * of touching it. */
+.tidy5e-sheet.application.ddb
+  .ddb-ability-box:has(> .ddb-ability-box__config)
+  .ddb-ability-box__label {
+  max-width: calc(100% - 14px);
+  margin-right: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tidy5e-sheet.application.ddb .ddb-ability-box__config:hover {

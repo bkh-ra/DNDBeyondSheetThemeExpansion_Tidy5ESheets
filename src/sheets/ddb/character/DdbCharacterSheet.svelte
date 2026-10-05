@@ -48,6 +48,12 @@
   HYSTERESIS: the current fit is kept while the columns fit with at most
   `STABLE_SLACK` px to spare, so the stat columns end within that distance of
   the body's bottom and a window resting on a step does not flap.
+
+  SKILLS FIT. The global fit is sized to the taller stat column, so the other
+  one can end well short of it. The SKILLS rows get their own fit
+  (`--ddb-skills-fit`, ddb-tokens.css): the loosest one between normal (0)
+  and the global fit at which the SKILLS column still fits, found the same
+  way (binary search, cached, same hysteresis), so both columns end level.
 -->
 <script lang="ts">
   import DdbHeaderBanner from './parts/header/DdbHeaderBanner.svelte';
@@ -129,6 +135,8 @@
   let fitStep = $state(0);
   /** The dense-only (discrete) features are on. */
   let denseFeatures = $state(false);
+  /** The SKILLS rows' own fit, 0..fitStep, in steps of 1/FIT_STEPS. */
+  let skillsFitStep = $state(0);
   let densityOverflow = $state(false);
 
   let density = $derived<DdbDensity>(coarseDensity(denseFeatures, fitStep));
@@ -152,6 +160,8 @@
   let metrics: {
     mode: DdbLayoutMode;
     probes: Map<number, LevelMetrics>;
+    /** SKILLS column natural heights, keyed by `skillsKey`. */
+    skills: Map<number, number>;
   } | null = null;
 
   function coarseDensity(dense: boolean, step: number): DdbDensity {
@@ -160,6 +170,10 @@
 
   function probeKey(dense: boolean, step: number): number {
     return (dense ? FIT_STEPS + 1 : 0) + step;
+  }
+
+  function skillsKey(dense: boolean, step: number, skillsStep: number): number {
+    return probeKey(dense, step) * (FIT_STEPS + 1) + skillsStep;
   }
 
   function isInFlow(element: Element): element is HTMLElement {
@@ -226,6 +240,7 @@
     body: HTMLElement;
     columns: HTMLElement;
     statColumns: HTMLElement[];
+    skillsColumn: HTMLElement | null;
   };
 
   function layoutParts(sheet: HTMLElement): LayoutParts | null {
@@ -242,7 +257,10 @@
       ),
     ];
 
-    return { body, columns, statColumns };
+    const skillsColumn =
+      columns.querySelector<HTMLElement>(':scope > .ddb-col-skills');
+
+    return { body, columns, statColumns, skillsColumn };
   }
 
   function measureLevel(parts: LayoutParts): LevelMetrics {
@@ -254,80 +272,132 @@
 
   type FitResult = { dense: boolean; step: number; overflow: boolean };
 
+  type ProbeSession = {
+    /** Both stat columns at a global fit (the skills rows at it too). */
+    global(dense: boolean, step: number): LevelMetrics;
+    /** The SKILLS column's natural height at its own fit. */
+    skills(dense: boolean, step: number, skillsStep: number): number;
+    /** Restore the sheet's exact class list and inline fits. */
+    end(): void;
+  };
+
   /**
-   * The smallest fit at which the stat columns fit a body `bodyClientHeight`
-   * tall in `forMode`: without the dense-only features if fit 1 allows it,
-   * else with them. Probes switch the sheet's class list and fit in place and
-   * restore them at the end. All synchronous: nothing is painted and no
-   * ResizeObserver sees the intermediate sizes.
+   * Probes on the live sheet, read through the per-mode cache. A probe
+   * switches the sheet's class list and fit custom properties in place and
+   * measures; `end()` restores them. All synchronous: nothing is painted and
+   * no ResizeObserver sees the intermediate sizes.
    */
-  function solveFit(
+  function probeSession(
     sheet: HTMLElement,
     parts: LayoutParts,
     forMode: DdbLayoutMode,
-    bodyClientHeight: number,
-  ): FitResult {
-    const probes = metrics!.probes;
+  ): ProbeSession {
+    const cache = metrics!;
     const savedClass = sheet.className;
     const savedFit = sheet.style.getPropertyValue('--ddb-density-fit');
+    const savedSkillsFit = sheet.style.getPropertyValue('--ddb-skills-fit');
     const base = savedClass
       .split(/\s+/)
       .filter((c) => c && !/^ddb-(mode|density)-/.test(c));
     let touched = false;
 
-    const fits = (dense: boolean, step: number) => {
-      const key = probeKey(dense, step);
-      let probe = probes.get(key);
-
-      if (!probe) {
-        touched = true;
-        sheet.className = [
-          ...base,
-          `ddb-mode-${forMode}`,
-          `ddb-density-${coarseDensity(dense, step)}`,
-        ].join(' ');
-        sheet.style.setProperty('--ddb-density-fit', String(step / FIT_STEPS));
-        probe = measureLevel(parts);
-        probes.set(key, probe);
-      }
-
-      return probe.natural + probe.chrome <= bodyClientHeight;
+    const apply = (dense: boolean, step: number, skillsStep: number) => {
+      touched = true;
+      sheet.className = [
+        ...base,
+        `ddb-mode-${forMode}`,
+        `ddb-density-${coarseDensity(dense, step)}`,
+      ].join(' ');
+      sheet.style.setProperty('--ddb-density-fit', String(step / FIT_STEPS));
+      sheet.style.setProperty(
+        '--ddb-skills-fit',
+        String(skillsStep / FIT_STEPS),
+      );
     };
 
-    try {
-      for (const dense of [false, true]) {
-        if (!fits(dense, FIT_STEPS)) {
-          continue;
+    return {
+      global(dense, step) {
+        const key = probeKey(dense, step);
+        let probe = cache.probes.get(key);
+
+        if (!probe) {
+          apply(dense, step, step);
+          probe = measureLevel(parts);
+          cache.probes.set(key, probe);
         }
 
-        if (fits(dense, 0)) {
-          return { dense, step: 0, overflow: false };
+        return probe;
+      },
+      skills(dense, step, skillsStep) {
+        const key = skillsKey(dense, step, skillsStep);
+        let natural = cache.skills.get(key);
+
+        if (natural === undefined) {
+          apply(dense, step, skillsStep);
+          natural = parts.skillsColumn
+            ? naturalColumnHeight(parts.skillsColumn)
+            : 0;
+          cache.skills.set(key, natural);
         }
 
-        // Invariant: `low` does not fit, `high` does.
-        let low = 0;
-        let high = FIT_STEPS;
-
-        while (high - low > 1) {
-          const middle = (low + high) >> 1;
-
-          if (fits(dense, middle)) {
-            high = middle;
-          } else {
-            low = middle;
-          }
+        return natural;
+      },
+      end() {
+        if (!touched) {
+          return;
         }
 
-        return { dense, step: high, overflow: false };
-      }
-
-      return { dense: true, step: FIT_STEPS, overflow: true };
-    } finally {
-      if (touched) {
         sheet.className = savedClass;
+        // An empty value removes the inline declaration again.
         sheet.style.setProperty('--ddb-density-fit', savedFit);
+        sheet.style.setProperty('--ddb-skills-fit', savedSkillsFit);
+      },
+    };
+  }
+
+  /**
+   * Smallest step in [0, high] at which `fits` holds, given that it holds at
+   * `high`; `fits` is monotone (every density token shrinks with the fit).
+   */
+  function smallestFitting(high: number, fits: (step: number) => boolean) {
+    if (fits(0)) {
+      return 0;
+    }
+
+    // Invariant: `low` does not fit, `high` does.
+    let low = 0;
+
+    while (high - low > 1) {
+      const middle = (low + high) >> 1;
+
+      if (fits(middle)) {
+        high = middle;
+      } else {
+        low = middle;
       }
     }
+
+    return high;
+  }
+
+  /**
+   * The smallest global fit at which both stat columns fit a body
+   * `bodyClientHeight` tall: without the dense-only features if fit 1 allows
+   * it, else with them.
+   */
+  function solveFit(session: ProbeSession, bodyClientHeight: number): FitResult {
+    for (const dense of [false, true]) {
+      const fits = (step: number) => {
+        const probe = session.global(dense, step);
+        return probe.natural + probe.chrome <= bodyClientHeight;
+      };
+
+      if (fits(FIT_STEPS)) {
+        return { dense, step: smallestFitting(FIT_STEPS, fits), overflow: false };
+      }
+    }
+
+    return { dense: true, step: FIT_STEPS, overflow: true };
   }
 
   /** The window element is mid-animation or collapsed: sizes are not real. */
@@ -380,45 +450,66 @@
     if (nextMode === 'stacked') {
       // The body scrolls in stacked mode; there is no height to fit.
       fitStep = 0;
+      skillsFitStep = 0;
       denseFeatures = false;
       densityOverflow = false;
       return;
     }
 
     if (metrics?.mode !== nextMode) {
-      metrics = { mode: nextMode, probes: new Map() };
+      metrics = { mode: nextMode, probes: new Map(), skills: new Map() };
     }
 
     const height = parts.body.clientHeight;
-    const currentKey = probeKey(denseFeatures, fitStep);
+    const session = probeSession(sheet, parts, nextMode);
 
-    if (
-      sheet.classList.contains(`ddb-mode-${nextMode}`) &&
-      sheet.classList.contains(`ddb-density-${density}`) &&
-      sheet.style.getPropertyValue('--ddb-density-fit') ===
-        String(fitStep / FIT_STEPS)
-    ) {
-      // The live DOM is at the current fit: refresh that entry for free
-      // (layout is clean in an animation frame), so a drifting band or
-      // column height self-corrects without a probe.
-      const live = measureLevel(parts);
-      metrics.probes.set(currentKey, live);
+    let dense = denseFeatures;
+    let step = fitStep;
+    let overflow = densityOverflow;
+    let skillsStep = skillsFitStep;
 
-      const spare = height - live.chrome - live.natural;
-      const atLoosest = fitStep === 0 && !denseFeatures;
+    try {
+      // Global fit. Hysteresis: keep one that still fits without much to
+      // spare (normal, the loosest, may spare any amount).
+      const current = session.global(dense, step);
+      const spare = height - current.chrome - current.natural;
+      const keep =
+        !overflow &&
+        spare >= 0 &&
+        (spare <= STABLE_SLACK || (step === 0 && !dense));
 
-      // Hysteresis: keep a fit that still fits without much to spare.
-      if (spare >= 0 && (spare <= STABLE_SLACK || atLoosest)) {
-        densityOverflow = false;
-        return;
+      if (!keep) {
+        ({ dense, step, overflow } = solveFit(session, height));
       }
+
+      // SKILLS fit, within [0, step]: same search, same hysteresis.
+      if (overflow || step === 0) {
+        skillsStep = step;
+      } else {
+        const available = height - session.global(dense, step).chrome;
+        const fits = (s: number) =>
+          session.skills(dense, step, s) <= available;
+        const skillsSpare =
+          skillsStep <= step
+            ? available - session.skills(dense, step, skillsStep)
+            : -1;
+        const keepSkills =
+          skillsSpare >= 0 && (skillsSpare <= STABLE_SLACK || skillsStep === 0);
+
+        if (!keepSkills) {
+          // At the global fit the SKILLS column fits by construction (unless
+          // it is the taller column at its limit, when it stays there).
+          skillsStep = fits(step) ? smallestFitting(step, fits) : step;
+        }
+      }
+    } finally {
+      session.end();
     }
 
-    const result = solveFit(sheet, parts, nextMode, height);
-
-    fitStep = result.step;
-    denseFeatures = result.dense;
-    densityOverflow = result.overflow;
+    fitStep = step;
+    skillsFitStep = skillsStep;
+    denseFeatures = dense;
+    densityOverflow = overflow;
   }
 
   let frame: number | undefined;
@@ -553,6 +644,7 @@
     },
   ]}
   style:--ddb-density-fit={String(fitStep / FIT_STEPS)}
+  style:--ddb-skills-fit={String(skillsFitStep / FIT_STEPS)}
   style:--ddb-sheet-body-height={mode === 'stacked' && bodyHeight
     ? `${bodyHeight}px`
     : undefined}

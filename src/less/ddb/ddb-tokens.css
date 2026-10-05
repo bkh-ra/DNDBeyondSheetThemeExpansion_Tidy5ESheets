@@ -292,6 +292,7 @@
  * band (quick-info.css) scales its row uniformly: 6+95+6 = 107 -> 2+84+2 = 88. */
 .tidy5e-sheet.application.ddb .ddb-sheet {
   --ddb-density-fit: 0;
+  --ddb-skills-fit: var(--ddb-density-fit);
 
   /* Sheet body (ddb-layout.css): padding above the band / below the columns
    * and the band-to-columns gap; gap between boxes in a column (`.ddb-col`). */
@@ -343,6 +344,23 @@
   --ddb-ability-box-scale: calc(1 - 11 / 95 * var(--ddb-density-fit));
   /* INITIATIVE / ARMOR CLASS / HIT DICE atop the primary column (1 -> 0.9). */
   --ddb-combat-row-scale: calc(1 - 0.1 * var(--ddb-density-fit));
+}
+
+/* SKILLS COLUMN FIT. The global fit is sized to the TALLER stat column (the
+ * left one, for most characters), which left SKILLS ending ~110px short of
+ * it. The skill rows therefore have a fit of their own, `--ddb-skills-fit`
+ * (set inline on `.ddb-sheet` by the component; it defaults to the global
+ * fit): the loosest pitch, never looser than normal (fit 0, 32px) and never
+ * denser than the global fit, at which the SKILLS box still fits, so it ends
+ * level with the left column. Only the row pitch follows it; the box frame,
+ * header and text stay on the global fit so both columns read as one set. */
+.tidy5e-sheet.application.ddb .ddb-sheet .ddb-col-skills {
+  --ddb-list-row-margin: round(calc(4px - 4px * var(--ddb-skills-fit)), 1px);
+  --ddb-skill-row: round(calc(26px - 6px * var(--ddb-skills-fit)), 1px);
+  --ddb-skill-row-gap: round(calc(2px - 2px * var(--ddb-skills-fit)), 1px);
+  --ddb-skill-name-pad: round(calc(4px - 2px * var(--ddb-skills-fit)), 1px);
+  --ddb-chip-height: round(calc(22px - 4px * var(--ddb-skills-fit)), 1px);
+  --ddb-stat-select-height: round(calc(20px - 2px * var(--ddb-skills-fit)), 1px);
 }
 
 /* DENSE-ONLY FEATURES (discrete, so they come last): stat-column text 1px
