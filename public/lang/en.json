@@ -110,6 +110,8 @@
   "TIDY5E.DdbLayout.Manage.Preferences": "Preferences",
   "TIDY5E.DdbLayout.Preferences.Title": "DDB Sheet Preferences",
   "TIDY5E.DdbLayout.Preferences.Tooltips": "Tooltips",
+  "TIDY5E.DdbLayout.Preferences.RuleLinkTooltips": "Rule tooltips on links (Actions in Combat, descriptions, armor class)",
+  "TIDY5E.DdbLayout.Preferences.HintTooltips": "Hint tooltips (buttons, chips, columns)",
   "TIDY5E.DdbLayout.Preferences.Activities": "Activities",
   "TIDY5E.DdbLayout.Preferences.Spells": "Spells",
   "TIDY5E.DdbLayout.Preferences.Lists": "Lists",

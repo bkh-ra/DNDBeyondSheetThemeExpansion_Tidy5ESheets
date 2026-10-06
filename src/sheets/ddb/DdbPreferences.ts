@@ -37,6 +37,15 @@ export type DdbUserPreferences = {
   /** Show the pinned Details sidebar tab at all. */
   detailsPaneEnabled: boolean;
   /**
+   * dnd5e's own rule tooltips inside the sheet: rule-page content links
+   * (Actions in Combat, enriched descriptions) and attribution breakdowns
+   * (the AC shield). Tidy's five `referenceTooltip*` settings do not reach
+   * these; see features/tooltips/ddb-tooltip-gate.ts.
+   */
+  ruleLinkTooltips: boolean;
+  /** Hint tooltips: the `data-tooltip` / `title` labels and Tidy's rich tooltips. */
+  hintTooltips: boolean;
+  /**
    * Width-driven layout of the sheet (Wave 8): `auto` picks one from the
    * window width (`resolveDdbLayoutMode`); any other value pins it. The
    * vertical density is never a preference; it always follows the height.
@@ -128,6 +137,8 @@ export const DDB_USER_PREFERENCE_DEFAULTS: Readonly<DdbUserPreferences> =
     skillClick: 'roll',
     detailsPaneEnabled: true,
     layoutMode: 'auto',
+    ruleLinkTooltips: true,
+    hintTooltips: true,
   });
 
 /** Allowed values per key; anything else stored falls back to the default. */
@@ -140,6 +151,8 @@ export const DDB_USER_PREFERENCE_OPTIONS: {
   skillClick: ['roll', 'details'],
   detailsPaneEnabled: [true, false],
   layoutMode: ['auto', 'full', 'compact', 'stacked'],
+  ruleLinkTooltips: [true, false],
+  hintTooltips: [true, false],
 };
 
 /** Clamp a px width into `DDB_SIDEBAR_WIDTH_RANGE`, as whole px. */

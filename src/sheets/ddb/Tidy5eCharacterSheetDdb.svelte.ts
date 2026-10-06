@@ -1,4 +1,5 @@
 import { CONSTANTS } from 'src/constants';
+import { installDdbTooltipGate } from 'src/sheets/ddb/features/tooltips/ddb-tooltip-gate';
 import type { ApplicationConfiguration } from 'src/types/application.types';
 import { Tidy5eCharacterSheetQuadrone } from '../quadrone/Tidy5eCharacterSheetQuadrone.svelte';
 import { CharacterSheetDdbRuntime } from 'src/runtime/actor/CharacterSheetDdbRuntime.svelte';
@@ -61,6 +62,10 @@ export class Tidy5eCharacterSheetDdb extends Tidy5eCharacterSheetQuadrone {
 
   constructor(options?: Partial<ApplicationConfiguration> | undefined) {
     super(options);
+
+    // One window-level listener for every DDB sheet (idempotent): the rule /
+    // hint tooltip switches of the Preferences app.
+    installDdbTooltipGate();
 
     // The service quadrone builds, fed by the DDB provider: quadrone's filters
     // plus the Actions / Spells pill filters (attack, limited use, spell

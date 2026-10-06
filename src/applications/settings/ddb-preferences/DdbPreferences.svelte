@@ -121,7 +121,7 @@
    * (`TIDY5E.DdbLayout.Preferences.<Group>.label` / `.<value>`).
    */
   const DDB_SELECTS: {
-    key: Exclude<DdbEnumUserPreferenceKey, 'detailsPaneEnabled'>;
+    key: Exclude<DdbEnumUserPreferenceKey, 'detailsPaneEnabled' | 'ruleLinkTooltips' | 'hintTooltips'>;
     group: string;
     hint?: string;
   }[] = [
@@ -330,6 +330,18 @@
         (checked) => app.setTooltip(key, checked),
       )}
     {/each}
+    {@render toggleRow(
+      'ddb.ruleLinkTooltips',
+      localize('TIDY5E.DdbLayout.Preferences.RuleLinkTooltips'),
+      values.ddb.ruleLinkTooltips,
+      (checked) => app.setDdb('ruleLinkTooltips', checked),
+    )}
+    {@render toggleRow(
+      'ddb.hintTooltips',
+      localize('TIDY5E.DdbLayout.Preferences.HintTooltips'),
+      values.ddb.hintTooltips,
+      (checked) => app.setDdb('hintTooltips', checked),
+    )}
   </section>
 
   <section class="ddb-prefs-section" data-ddb-pref-section="activities">
