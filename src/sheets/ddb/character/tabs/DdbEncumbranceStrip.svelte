@@ -10,13 +10,14 @@
   ActorEncumbranceBar (weight-distribution tooltip included). tab-strips.css
   hides the quadrone row inside the list: moved, not doubled.
 
-  DOM contract: section.ddb-tab-strip-card.ddb-encumbrance-strip
+  DOM contract: div.ddb-tab-strip (the pinned slot) > section.ddb-tab-strip-card.ddb-encumbrance-strip
     [data-tidy-sheet-part="ddb-encumbrance-strip"] >
       .ddb-tab-strip-card-header > .ddb-tab-strip-title + .ddb-encumbrance-meter > .meter
       .ddb-tab-strip-stats > .ddb-tab-strip-stat[data-stat="str" | "size" |
         "multiplier" | "capacity"] > .value + .label
 -->
 <script lang="ts">
+  import { useTabStripHeight } from './tab-strip.svelte';
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
   import ActorEncumbranceBar from 'src/sheets/quadrone/actor/parts/ActorEncumbranceBar.svelte';
   import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
@@ -24,6 +25,9 @@
   const localize = FoundryAdapter.localize;
 
   let context = $derived(getCharacterSheetQuadroneContext());
+
+  /** Pinned strip slot (tab-strips.css section 0); height published for the pills. */
+  const stripHeight = useTabStripHeight();
 
   let encumbrance = $derived<any>(context.system.attributes.encumbrance);
 
@@ -47,6 +51,7 @@
   });
 </script>
 
+<div class="ddb-tab-strip ddb-encumbrance-strip-host" {@attach stripHeight}>
 <section
   class="ddb-tab-strip-card ddb-encumbrance-strip"
   data-tidy-sheet-part="ddb-encumbrance-strip"
@@ -82,3 +87,4 @@
     </div>
   </div>
 </section>
+</div>

@@ -343,15 +343,22 @@
 /* Where it goes: the tab's header area, ABOVE the filter pills and the
  * search bar, like the Spells tab's spellcasting strip (user request
  * 2026-10-05; waves 3-8 slotted it under the list, above the pinned footer,
- * by dissolving `.tab-content`). DdbActionsTab mounts it first, so it is a
- * plain first child of the scroller: it scrolls away with the first scroll
- * while the pills and the bar under it stay pinned (section 1), and
+ * by dissolving `.tab-content`). DdbActionsTab mounts it first, inside the
+ * pinned strip slot (`.ddb-tab-strip`, tab-strips.css section 0), so it stays
+ * on screen under every pill while the list scrolls beneath it, and
  * CharacterSheetTab's `.tab-content` keeps tab-content.css section 10's
- * flex column with its pinned footer. Same card as the strips (section 5 /
- * tab-strips.css): top padding of the strip, the card's own margin below. */
-.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab > .ddb-actions-in-combat {
+ * flex column with its pinned footer. Same card as the other strips
+ * (section 5 / tab-strips.css), same uniform height: the caps title sits
+ * INLINE with the links (not above them), so at the default pane width the
+ * two link lines fit the shared card height instead of pushing the pills
+ * 16px lower than on the other tabs. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-tab-strip > .ddb-actions-in-combat {
   flex: 0 0 auto;
-  margin-block: var(--ddb-space-2) var(--ddb-space-1);
+  margin: 0;
+  min-height: var(--ddb-tab-strip-card-height);
+  display: flex;
+  align-items: center;
+  gap: var(--ddb-space-3);
   padding: var(--ddb-space-2) var(--ddb-space-3);
   border: var(--ddb-border-width-panel) solid var(--ddb-list-border);
   border-radius: var(--ddb-radius-control);
@@ -366,7 +373,8 @@
  * element is an h4, so the prefix outranks quadrone's `:is(h1, h2, h3 ...)`
  * heading rules as the specificity contract requires. */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-actions-in-combat .ddb-actions-in-combat-title {
-  margin: 0 0 var(--ddb-space-half);
+  flex: 0 0 auto;
+  margin: 0;
   padding: 0;
   border: none;
   font-family: var(--ddb-font-condensed);
@@ -379,6 +387,8 @@
 
 /* One comma-separated run of links, as D&D Beyond prints it. */
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-actions-in-combat .ddb-actions-in-combat-list {
+  flex: 1 1 auto;
+  min-width: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 0 var(--ddb-space-1);

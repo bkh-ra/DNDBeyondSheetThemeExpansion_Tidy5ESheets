@@ -23,6 +23,7 @@
       button.ddb-manage-spells[data-class-identifier]
 -->
 <script lang="ts">
+  import { useTabStripHeight } from './tab-strip.svelte';
   import { CONSTANTS } from 'src/constants';
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
   import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
@@ -41,6 +42,9 @@
   );
 
   let busy = $state(false);
+
+  /** Pinned strip slot (tab-strips.css section 0); height published for the pills. */
+  const stripHeight = useTabStripHeight();
 
   /**
    * The highest spell level the actor has slots for (leveled or pact), so the
@@ -133,8 +137,9 @@
 
 {#if classes.length}
   <div
-    class={['ddb-spellcasting-strip', { multiclass: classes.length > 1 }]}
+    class={['ddb-spellcasting-strip', 'ddb-tab-strip', { multiclass: classes.length > 1 }]}
     data-tidy-sheet-part="ddb-spellcasting-strip"
+    {@attach stripHeight}
   >
     {#each classes as info (info.uuid ?? info.classIdentifier)}
       <section

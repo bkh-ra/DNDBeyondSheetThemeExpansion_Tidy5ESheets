@@ -22,12 +22,16 @@
       .ddb-tab-strip-stats > .ddb-tab-strip-stat[data-stat="level" | "hit-die"] > .value + .label
 -->
 <script lang="ts">
+  import { useTabStripHeight } from './tab-strip.svelte';
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
   import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
 
   const localize = FoundryAdapter.localize;
 
   let context = $derived(getCharacterSheetQuadroneContext());
+
+  /** Pinned strip slot (tab-strips.css section 0); height published for the search bar. */
+  const stripHeight = useTabStripHeight();
 
   type ClassEntry = {
     cls: any;
@@ -66,6 +70,7 @@
   <div
     class={['ddb-tab-strip', 'ddb-class-strip', { multiclass: classes.length > 1 }]}
     data-tidy-sheet-part="ddb-class-strip"
+    {@attach stripHeight}
   >
     {#each classes as entry (entry.cls.id)}
       <section

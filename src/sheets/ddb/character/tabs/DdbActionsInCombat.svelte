@@ -14,6 +14,7 @@
   "ddb-actions-in-combat"] > ul > li[data-rule-key] > a.content-link
 -->
 <script lang="ts">
+  import { useTabStripHeight } from './tab-strip.svelte';
   import { CONSTANTS } from 'src/constants';
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
   import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
@@ -106,21 +107,18 @@
     };
   });
 
-  /** D&D Beyond lists these under ALL and ACTION only. */
-  let visible = $derived.by(() => {
-    const categories = Object.values(context.filterData?.[tabId] ?? {});
-    const active = categories.flat().filter((f) => f.value !== null);
-
-    return (
-      active.length === 0 ||
-      (active.length === 1 &&
-        active[0].name === CONSTANTS.FILTER_ACTIVATION_COST_ACTION &&
-        active[0].value === true)
-    );
-  });
+  /**
+   * D&D Beyond lists these under ALL and ACTION only; the user asked for the
+   * box to stay visible under every pill (2026-10-05), pinned at the top of
+   * the list like the other tabs' header strips. The wrapper is the pinned
+   * strip slot (tab-strips.css section 0) and publishes its height for the
+   * pills under it.
+   */
+  const stripHeight = useTabStripHeight();
 </script>
 
-{#if visible && links.length}
+{#if links.length}
+  <div class="ddb-tab-strip ddb-actions-in-combat-strip" {@attach stripHeight}>
   <section
     class="ddb-actions-in-combat"
     data-tidy-sheet-part="ddb-actions-in-combat"
@@ -135,4 +133,5 @@
       {/each}
     </ul>
   </section>
+  </div>
 {/if}

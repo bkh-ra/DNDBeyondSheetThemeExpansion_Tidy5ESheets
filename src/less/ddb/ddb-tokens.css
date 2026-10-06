@@ -328,6 +328,9 @@
   /* SAVING THROWS extras: concentration row (rule offset + button height). */
   --ddb-concentration-gap: round(calc(6px - 3px * var(--ddb-density-fit)), 1px);
   --ddb-concentration-height: round(calc(24px - 6px * var(--ddb-density-fit)), 1px);
+  /* TAB HEADER STRIPS (tab-strips.css): one card height for every tab's
+   * strip, so the list top never jumps between tabs (user request 2026-10-05). */
+  --ddb-tab-strip-card-height: 3.5rem;
   /* PROFICIENCIES: group separation (margin and padding each), the label to
    * prose gap, the prose line-height, and the edit-mode tool row. */
   --ddb-prof-group-gap: round(calc(10px - 6px * var(--ddb-density-fit)), 1px);

@@ -30,9 +30,19 @@
    * stopping short at the padding box (defect #7). */
   padding: 0;
   background: var(--ddb-panel-bg);
-  /* Geometry only — the visible silhouette is the ::after ring below. */
-  border: var(--ddb-border-width-panel) solid transparent;
-  border-radius: var(--ddb-radius-panel);
+  /* FULL BLEED (user request 2026-10-05): the fill reaches the ring. The ring
+   * (::before) sits gap + 2 x stroke outside the padding box; that band used
+   * to be a transparent MARGIN, so the backdrop showed between the fill and
+   * the line while the left-column boxes and the sidebar fill right up to
+   * theirs. It is a transparent BORDER now, painted over by the background
+   * (background-clip: border-box), its outer radius grown to stay concentric
+   * with the ring. Padding box, silhouette and the ring itself are unchanged.
+   * Rounded to whole pixels: Blink snaps border widths to device pixels
+   * anyway (6.25 -> 6), and the ring's inset below is rounded the same way so
+   * the fill's edge and the ring coincide instead of leaving a 0.25px sliver. */
+  border: round(calc(var(--ddb-panel-double-gap) + 2 * var(--ddb-border-width-panel)), 1px) solid transparent;
+  border-radius: calc(var(--ddb-radius-panel) + var(--ddb-panel-double-gap) + var(--ddb-border-width-panel));
+  background-clip: border-box;
   /* No hairline shadow: in light mode it paints a third ring just outside the
    * border, which is exactly the "soft merged edge" the double outline avoids. */
   box-shadow: none;
@@ -92,8 +102,10 @@
  * padding box, and its radius grows by (gap + stroke) to stay concentric. */
 .tidy5e-sheet.application.ddb .ddb-conditions-defenses::before,
 .tidy5e-sheet.application.ddb .ddb-primary-box::before {
-  inset: calc(
-    -1 * (var(--ddb-panel-double-gap) + 2 * var(--ddb-border-width-panel))
+  /* Rounded like the bleed border above (Blink snaps that to whole pixels). */
+  inset: round(
+    calc(-1 * (var(--ddb-panel-double-gap) + 2 * var(--ddb-border-width-panel))),
+    1px
   );
   border-radius: calc(
     var(--ddb-radius-panel) + var(--ddb-panel-double-gap) +
@@ -102,28 +114,27 @@
   box-shadow: inset 0 0 0 var(--ddb-outline-width) var(--ddb-panel-ring);
 }
 
-/* The outward line is painted outside the panel, and BOTH panels live in
- * `.ddb-col-primary`, which is `overflow: hidden` — so the room for it has to
- * exist inside the column or it is clipped away. Reserving it as a margin
- * (gap + stroke = 5.125px) keeps the 6px grid gap between columns untouched:
- * the outward line simply takes over the position the old border held, and the
- * panel proper steps inward. Chose the full 4px token gap rather than a
- * narrower one precisely because the separation is paid for inside the column,
- * not out of the 6px gutter — at 4px + 1.125px of stroke the two lines stay
- * plainly distinct at the lighter 1.125px weight. */
+/* The outward line is painted outside the padding box, and BOTH panels live
+ * in `.ddb-col-primary`, which is `overflow: hidden` — so the room for it has
+ * to exist inside the column or it is clipped away. That room (gap + stroke
+ * = 5.125px) was a margin until 2026-10-05; it is the transparent bleed
+ * border now (see the base rules above), which the fill paints through, so
+ * the margin is zero and the 6px grid gap between columns stays untouched:
+ * the panel's border box is exactly the old margin box. */
 .tidy5e-sheet.application.ddb .ddb-conditions-defenses,
 .tidy5e-sheet.application.ddb .ddb-primary-box {
-  margin: calc(var(--ddb-panel-double-gap) + var(--ddb-border-width-panel));
+  margin: 0;
   border-color: transparent;
 }
 
 /* ddb-layout.css zeroes the strip's right margin for the fit-content case;
- * inside the combat row it still needs room for its outward line. Same
- * specificity, later import. */
+ * inside the combat row the bleed border already carries the room for its
+ * outward line, so the margin stays zero there too. Same specificity, later
+ * import. */
 .tidy5e-sheet.application.ddb
   .ddb-combat-strip-row
   .ddb-conditions-defenses {
-  margin: calc(var(--ddb-panel-double-gap) + var(--ddb-border-width-panel));
+  margin: 0;
 }
 
 .tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-group {
@@ -539,9 +550,19 @@
   min-height: 0;
   min-width: 0;
   background: var(--ddb-box-bg);
-  /* Geometry only — the visible silhouette is the ::after ring. */
-  border: var(--ddb-border-width-panel) solid transparent;
-  border-radius: var(--ddb-radius-panel);
+  /* FULL BLEED (user request 2026-10-05): the fill reaches the ring. The ring
+   * (::before) sits gap + 2 x stroke outside the padding box; that band used
+   * to be a transparent MARGIN, so the backdrop showed between the fill and
+   * the line while the left-column boxes and the sidebar fill right up to
+   * theirs. It is a transparent BORDER now, painted over by the background
+   * (background-clip: border-box), its outer radius grown to stay concentric
+   * with the ring. Padding box, silhouette and the ring itself are unchanged.
+   * Rounded to whole pixels: Blink snaps border widths to device pixels
+   * anyway (6.25 -> 6), and the ring's inset below is rounded the same way so
+   * the fill's edge and the ring coincide instead of leaving a 0.25px sliver. */
+  border: round(calc(var(--ddb-panel-double-gap) + 2 * var(--ddb-border-width-panel)), 1px) solid transparent;
+  border-radius: calc(var(--ddb-radius-panel) + var(--ddb-panel-double-gap) + var(--ddb-border-width-panel));
+  background-clip: border-box;
   box-shadow: none;
 }
 
