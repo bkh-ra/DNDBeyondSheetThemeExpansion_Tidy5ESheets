@@ -160,7 +160,11 @@ export const CharacterSheetDdbRuntime =
       DDB_EXTRAS.TAB_ID,
       CONSTANTS.TAB_EFFECTS,
       CONSTANTS.TAB_CHARACTER_BASTION,
-      CONSTANTS.TAB_CHARACTER_ATTRIBUTES,
+      // Quadrone's Character tab (TAB_CHARACTER_ATTRIBUTES) stays REGISTERED
+      // above but is not a default tab (user decision 2026-10-05): the DDB
+      // left columns already show skills, saves, senses and proficiencies.
+      // Sheet Settings > Tab Configuration (world key character-ddb, or the
+      // per-actor ddb-tab-configuration flag) brings it back.
     ],
     {
       // Own per-actor flag + world key so DDB and quadrone tab configurations
