@@ -1,4 +1,5 @@
 <script lang="ts">
+  // DDB-FORK: mechanical rename only (asset URL); no behaviour change
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
   import {
     WorldSettingsTabIds,

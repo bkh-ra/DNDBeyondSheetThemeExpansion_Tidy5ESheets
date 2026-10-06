@@ -1,3 +1,4 @@
+// DDB-FORK: mechanical rename only (asset URL); no behaviour change
 const loaded = new Set<string>();
 
 let style: HTMLStyleElement;

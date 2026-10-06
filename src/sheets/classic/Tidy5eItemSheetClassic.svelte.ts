@@ -1,3 +1,4 @@
+// DDB-FORK: mechanical rename only (SHEET_CSS_CLASS); no behaviour change
 import { CONSTANTS } from 'src/constants';
 import { getSvelteApplicationMixin } from 'src/mixins/SvelteApplicationMixin.svelte';
 import { ItemSheetRuntime } from 'src/runtime/item/ItemSheetRuntime';

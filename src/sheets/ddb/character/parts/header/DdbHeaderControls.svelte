@@ -8,6 +8,7 @@
     registered `sheetSettings` action (Tidy5eActorSheetQuadroneBase ->
     `this.openSheetSettings()`), delegated via `data-action`, exactly as the
     quadrone window header control does. No `this`-bound call needed here.
+  Both render only while the sheet is editable (`context.editable`).
 -->
 <script lang="ts">
   import { CONSTANTS } from 'src/constants';
@@ -43,14 +44,17 @@
     >
       <i class={unlocked ? 'fas fa-feather' : 'fas fa-lock'}></i>
     </button>
+    <!-- Same visibility as quadrone's `sheetSettings` window control
+         (Tidy5eActorSheetQuadroneBase DEFAULT_OPTIONS: `this.isEditable`), so
+         a viewer who cannot edit the actor never sees a settings entry. -->
+    <button
+      type="button"
+      class="ddb-header-control"
+      data-action="sheetSettings"
+      aria-label={localize('TIDY5E.SheetSettings.title')}
+      data-tooltip="TIDY5E.SheetSettings.title"
+    >
+      <i class="fas fa-cog"></i>
+    </button>
   {/if}
-  <button
-    type="button"
-    class="ddb-header-control"
-    data-action="sheetSettings"
-    aria-label={localize('TIDY5E.SheetSettings.title')}
-    data-tooltip="TIDY5E.SheetSettings.title"
-  >
-    <i class="fas fa-cog"></i>
-  </button>
 </div>

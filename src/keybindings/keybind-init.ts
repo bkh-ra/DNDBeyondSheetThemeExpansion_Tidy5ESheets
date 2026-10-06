@@ -108,6 +108,20 @@ function registerSheetToggleKeybinding() {
     modifiers: ['Shift'],
   });
 
+  // DDB-FORK: quick switch to the DDB layout (Shift+B; Shift+D is the system default).
+  new QuickSheetSwitchKeybind({
+    registrationKey: 'tidyQssDdb',
+    name: 'Quick Sheet Switch - DDB Sheet',
+    debounceDelay: 1000,
+    invocationCountToTrigger: 3,
+    getSheetKey: (sheetClasses) =>
+      Object.keys(sheetClasses).find((x) =>
+        x.toLocaleLowerCase().includes('ddb'),
+      ),
+    downKey: 'KeyB',
+    modifiers: ['Shift'],
+  });
+
   new QuickSheetSwitchKeybind({
     registrationKey: 'tidyQssDefault',
     name: 'Quick Sheet Switch - System Default Sheet',

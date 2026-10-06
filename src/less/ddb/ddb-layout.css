@@ -4,6 +4,16 @@
  * quick-info band stay put, and the three columns each scroll INTERNALLY.
  * The whole sheet never scrolls as one page.
  *
+ * Wave 8 (user requirement: "no vertical scrolling in the window, only in the
+ * centre list"): `.ddb-sheet-body` is `overflow: hidden` and the column row
+ * takes exactly the height left under the band. The two stat columns are made
+ * to FIT that height by the vertical density (`ddb-density-normal | -compact |
+ * -dense` on `.ddb-sheet`, tokens in ddb-tokens.css), which
+ * DdbCharacterSheet.svelte picks by measuring. The width-driven layout mode
+ * (`ddb-mode-full | -compact | -stacked`, same component, `layoutMode`
+ * preference) replaces the old viewport @media fallback; STACKED is the one
+ * mode whose body scrolls, because nothing else fits a ~760px window.
+ *
  * Backdrop model: the DDB sheet root suppresses quadrone's themed header
  * chrome (accent background + 18.75rem grayscale banner pseudo-elements,
  * which otherwise bleed through as a colored strip) and instead paints the
@@ -15,6 +25,10 @@
 /* --- suppress quadrone root chrome, repaint root --- */
 .tidy5e-sheet.application.ddb {
   background: var(--ddb-page-bg);
+  /* Width of the collapsed sidebar rail: just enough for the 28px toggle.
+   * Declared at the root (not on the pane) because the overlay grid track and
+   * the overlay window floor below are sized by it too. */
+  --ddb-sidebar-rail-width: 28px;
 }
 
 .tidy5e-sheet.application.ddb::before,
@@ -37,7 +51,17 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  /* full-sheet backdrop: page tint over the character's theme image */
+  /* full-sheet backdrop: page tint over the character's theme image, over the
+   * sheet's header colour.
+   *
+   * DDB-FORK (look flip): Sheet Settings > Theme > "Header Background Color"
+   * (`--t5e-theme-color-header`) now has quadrone's semantics
+   * (`quadrone/header.css`, `&:not(.theme-parchment)`): it is the ground UNDER
+   * the header image, not a fill for the banner strip (which stays
+   * --ddb-header-bg, see header.css). It shows wherever the art does not
+   * cover, and fully if no image resolves; unset, the ground is the page
+   * colour as before. The parchment/basic rule below still paints the plain
+   * page surface, matching quadrone, which drops the header colour there too. */
   background:
     linear-gradient(
       color-mix(in srgb, var(--ddb-page-bg) var(--ddb-backdrop-tint-top), transparent),
@@ -45,7 +69,7 @@
     ),
     var(--t5e-sheet-header-bg, var(--t5e-background-image, none)) top center /
       cover no-repeat,
-    var(--ddb-page-bg);
+    var(--t5e-theme-color-header, var(--ddb-page-bg));
 }
 
 /* DDB-FORK (matrix-sheet new finding 7): "Use Header Background: off" and
@@ -57,9 +81,11 @@
  * banner instead of removing it. Both states now paint the plain DDB page
  * surface, with no backdrop image at all.
  *
- * `actorHeaderBackground` (custom image) and `headerBackgroundColor` are
- * unaffected: the theme provider only emits them while the header background
- * is enabled / a color is set, i.e. while this rule does not apply. */
+ * `actorHeaderBackground` (custom image) is unaffected: the theme provider only
+ * emits it while the header background is enabled, i.e. while this rule does
+ * not apply. `headerBackgroundColor` is deliberately dropped here as well —
+ * quadrone only paints it under `:not(.theme-parchment)`, and the setting's
+ * input is hidden while the header background is off. */
 .tidy5e-sheet.application.ddb.theme-parchment .ddb-sheet,
 .tidy5e-sheet.application.ddb.theme-basic .ddb-sheet {
   background: var(--ddb-page-bg);
@@ -74,14 +100,17 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 6px 8px 8px;
-  /* Safety valve (live-eval defect #3): normally the fixed panes fit and this
-   * never scrolls, but a tall character (extra left-column groups) must scroll
-   * the body rather than slice its bottom boxes off at the window edge.
-   * Thumb at 60% accent — round-2 eval measured the transparent thumb at
-   * ~1.6:1 against the light backdrop, effectively undiscoverable. */
-  overflow: hidden auto;
+  /* 6px / 6 8 8 at normal density, tighter in the denser levels. */
+  gap: var(--ddb-body-gap);
+  padding: var(--ddb-body-pad-top) 8px var(--ddb-body-pad-bottom);
+  /* NEVER scrolls (Wave 8). It used to be a safety valve (live-eval defect
+   * #3) for a character whose stat columns outgrew the window; the density
+   * levels now shrink those columns to fit instead, and below the densest
+   * level the stat columns scroll themselves (`ddb-density-overflow` below),
+   * so the window and its header never move. Stacked mode is the one
+   * exception (mode rules at the end of this file); the scrollbar styling is
+   * for that mode. */
+  overflow: hidden;
   scrollbar-width: thin;
   /* Near-solid accent: at 60% the thumb measured 1.59:1 over the light
    * backdrop — still undiscoverable (round-3 eval). */
@@ -105,24 +134,109 @@
  * line.
  *
  * The sidebar track is `auto` rather than a fixed px width on purpose: the
- * pane declares its own width (`--ddb-sidebar-width` in `sidebar.css`) and
+ * pane declares its own width (`--ddb-sidebar-width`, set inline from the
+ * user's dragged width by `DdbSidebar.svelte`; default in `sidebar.css`) and
  * shrinks itself to a rail when collapsed, so the reclaimed width flows to the
- * `1fr` primary column with no state needed here. */
+ * primary column with no state needed here.
+ *
+ * WIDTH MODEL: the primary track is `minmax(--ddb-primary-min-width, 1fr)`,
+ * so its floor is a BASE size the grid pays before anything else. The `auto`
+ * sidebar track grows from 0 toward the pane's width only out of what is left,
+ * and the pane caps itself at its column (`max-width: 100%` in sidebar.css).
+ * Net effect: a wide sidebar takes width from the primary pane down to its
+ * floor and no further (it is drawn narrower instead, until the window
+ * grows), and window width beyond the sidebar's own width goes to the primary
+ * pane. The stat columns are fixed (tokens in `ddb-tokens.css`). */
 .tidy5e-sheet.application.ddb .ddb-columns {
-  flex: 0 0 auto;
+  /* Wave 8: the row takes exactly the height under the band (it used to be
+   * as tall as the tallest stat column and push the body into scrolling).
+   * `minmax(0, 1fr)` keeps an over-tall stat column from inflating the row:
+   * the density logic measures that case and shrinks the columns instead. */
+  flex: 1 1 0;
   min-height: 0;
   display: grid;
-  grid-template-columns: 215px 210px minmax(0, 1fr) auto;
-  gap: 6px;
+  grid-template-columns:
+    var(--ddb-col-left-width)
+    var(--ddb-col-skills-width)
+    minmax(var(--ddb-primary-min-width), 1fr)
+    auto;
+  grid-template-rows: minmax(0, 1fr);
+  gap: var(--ddb-column-gap);
   align-items: stretch;
+}
+
+/* --- sidebar placement (Preferences > DDB Layout; ddb-next Wave 4) ---
+ *
+ * `.ddb-sheet` carries `ddb-sidebar-left` / `ddb-sidebar-overlay` from the
+ * user's `sidebarSide` / `sidebarMode` (`DdbPreferences.sheetClasses`). All
+ * four combinations keep the resize handle on the pane edge that faces the
+ * primary column (sidebar.css) and the drag direction mirrored to match
+ * (DdbSidebar.svelte).
+ *
+ * LEFT: the sidebar track moves in front of the primary track. The DOM order
+ * stays left / skills / primary / sidebar; `order` on the primary column
+ * re-sequences the grid's auto-placement, and the template swaps the two
+ * flexible tracks so the sidebar keeps its `auto` track and the primary
+ * column keeps its `minmax` floor.
+ *
+ * OVERLAY (right-hand pane only: `ddb-sidebar-overlay` is never set together
+ * with `ddb-sidebar-left`, a left pane always pushes - DdbPreferences
+ * `overlaysContent`): the sidebar column shrinks to a rail-width track. The
+ * collapsed rail still sits in it, so nothing is ever hidden under it; the
+ * EXPANDED pane leaves the flow, is pinned to the column's outer edge and
+ * grows over the primary column's right edge (sidebar.css). The primary column
+ * keeps its full width whatever the pane's width. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-left .ddb-columns {
+  grid-template-columns:
+    var(--ddb-col-left-width)
+    var(--ddb-col-skills-width)
+    auto
+    minmax(var(--ddb-primary-min-width), 1fr);
+}
+
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-left .ddb-col-primary {
+  order: 1;
+}
+
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-overlay .ddb-columns {
+  grid-template-columns:
+    var(--ddb-col-left-width)
+    var(--ddb-col-skills-width)
+    minmax(var(--ddb-primary-min-width), 1fr)
+    var(--ddb-sidebar-rail-width);
+}
+
+
+/* The overlay pane is positioned against its (rail-wide) column and must
+ * paint over the primary column, so the column neither clips nor sits below. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-overlay .ddb-col-sidebar {
+  position: relative;
+  z-index: 5;
+  overflow: visible;
 }
 
 .tidy5e-sheet.application.ddb .ddb-col {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--ddb-stat-gap);
   min-width: 0;
   min-height: 0;
+}
+
+/* LAST RESORT (Wave 8): even the dense level does not fit (a ~640px window
+ * with a long proficiency list in edit mode). The stat columns scroll
+ * themselves rather than the window or the body. `ddb-density-overflow` is
+ * set by DdbCharacterSheet.svelte only in that case. The 2px padding /
+ * negative margin pair keeps the panel frames' outer stroke (which bleeds
+ * ~1px past each box) inside the scrollport instead of clipping it. */
+.tidy5e-sheet.application.ddb
+  .ddb-sheet.ddb-density-overflow
+  :is(.ddb-col-left, .ddb-col-skills) {
+  overflow: hidden auto;
+  padding: 2px;
+  margin: -2px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ddb-accent-transparent) transparent;
 }
 
 /* Keep the grid rectangular: the last box in each stat column stretches to the
@@ -156,6 +270,9 @@
   align-items: center;
   gap: 4px;
   flex: 0 0 auto;
+  /* INITIATIVE / AC / HIT DICE shrink with the density (1 / 0.95 / 0.9):
+   * a uniform zoom keeps the three caption bands on one line. */
+  zoom: var(--ddb-combat-row-scale);
 }
 
 /* The defenses/conditions box hugs its content (DDB parity — live-eval
@@ -189,22 +306,73 @@
   scrollbar-color: var(--ddb-accent-transparent) transparent;
 }
 
-/* Keep the fixed layout intact: the window cannot shrink below the size the
- * fixed panes need (Foundry resize is clamped by these).
+/* WINDOW FLOORS (Wave 8: per layout mode). Foundry's resize and
+ * `setPosition` clamp to the COMPUTED min-width / min-height, so the calc()
+ * and min() below arrive there as plain px values.
  *
- * Budget: 215 (left) + 210 (skills) + 230 (sidebar) + 3x6 gap + 2x8 body
- * padding = 689px of fixed width; the rest is the primary column. The sidebar
- * added 236px to that budget, so the floor moved 1080 -> 1320 to keep the
- * primary column at the same ~627px it had before (and the default position in
- * `Tidy5eCharacterSheetDdb.svelte.ts` moved 1150 -> 1390 for the same reason).
- * Users who collapse the sidebar get those 236px back for the primary column
+ * Which floor applies is a class on the window element, mirrored from
+ * `.ddb-sheet` by DdbCharacterSheet.svelte (`ddb-mode-*`, plus
+ * `ddb-mode-pinned` when the `layoutMode` preference is not `auto`):
+ *   auto (any mode)  760px wide: shrinking the window walks it from full to
+ *                    compact (< 1320) to stacked (< 1100), so the floor is
+ *                    stacked's.
+ *   pinned full      the column-token budget below (1230px; overlay less).
+ *   pinned compact   1100px. Its tokens add up to ~1144px with a 220px
+ *                    sidebar, so between 1100 and ~1144 an expanded sidebar
+ *                    is drawn narrower than its range (the grid gives way,
+ *                    WIDTH MODEL above) until it is collapsed or the window
+ *                    grows. 1100 is also the auto compact/stacked boundary.
+ *   pinned stacked   760px.
+ * HEIGHT: full and compact take min(640px, 100vh) (the densest level's
+ * target), and the `100vh` term keeps the CSS floor from ever pushing the
+ * window past the viewport (a CSS min-height beats Foundry's inline
+ * height). Stacked scrolls, so it has no height floor.
+ *
+ * Full-mode budget (the pre-Wave-8 floor, now only for pinned full):
+ *
+ * Budget: 190 (left) + 204 (skills) + 580 (primary floor) + 220 (sidebar
+ * minimum) + 3x6 gap + 2x8 body padding + 2x1 window border = 1230px. It used
+ * to be a literal 1320 sized to keep the primary column at ~627px; the primary
+ * floor is now explicit (`--ddb-primary-min-width`), so the window floor is
+ * derived from the same tokens the grid uses and cannot drift from it. At the
+ * floor every pane sits at its minimum; the default 1390 width
+ * (`Tidy5eCharacterSheetDdb.svelte.ts`) gives the primary pane 730px beside a
+ * 230px sidebar. Collapsing the sidebar hands its width to the primary pane
  * without resizing. */
 /* `:not(.minimized)` is REQUIRED: Foundry minimizes a window by shrinking it
  * to its title bar, and an unconditional floor fights that — leaving a
  * full-size empty box instead of a collapsed header. */
 .tidy5e-sheet.application.ddb:not(.minimized) {
-  min-width: 1320px;
-  min-height: 860px;
+  min-width: 760px;
+  min-height: min(640px, 100vh);
+}
+
+.tidy5e-sheet.application.ddb.ddb-mode-stacked:not(.minimized) {
+  min-height: 0;
+}
+
+.tidy5e-sheet.application.ddb.ddb-mode-pinned.ddb-mode-compact:not(.minimized) {
+  min-width: 1100px;
+}
+
+.tidy5e-sheet.application.ddb.ddb-mode-pinned.ddb-mode-full:not(.minimized) {
+  min-width: calc(
+    var(--ddb-col-left-width) + var(--ddb-col-skills-width) +
+      var(--ddb-primary-min-width) + var(--ddb-sidebar-min-width) +
+      3 * var(--ddb-column-gap) + 2 * 8px + 2px
+  );
+}
+
+/* Overlay (Wave 4): the sidebar's grid share is only the rail, so the window
+ * floor drops by the difference. */
+.tidy5e-sheet.application.ddb.ddb-mode-pinned.ddb-mode-full:not(
+    .minimized
+  ):has(.ddb-sheet.ddb-sidebar-overlay) {
+  min-width: calc(
+    var(--ddb-col-left-width) + var(--ddb-col-skills-width) +
+      var(--ddb-primary-min-width) + var(--ddb-sidebar-rail-width) +
+      3 * var(--ddb-column-gap) + 2 * 8px + 2px
+  );
 }
 
 /* Minimized: title bar only. */
@@ -231,23 +399,55 @@
   height: 0;
 }
 
-/* Narrow-window fallback (e.g. popped out on a small screen): stack the two
- * stat columns beside each other above primary; the sheet body becomes the
- * scroll region. */
-@media (max-width: 900px) {
-  .tidy5e-sheet.application.ddb {
-    min-width: 0;
-    min-height: 0;
-  }
-  .tidy5e-sheet.application.ddb .ddb-sheet-body {
-    overflow: hidden auto;
-  }
-  .tidy5e-sheet.application.ddb .ddb-columns {
-    grid-template-columns: 1fr 1fr;
-  }
-  .tidy5e-sheet.application.ddb .ddb-col-primary,
-  .tidy5e-sheet.application.ddb .ddb-col-sidebar {
-    grid-column: 1 / -1;
-    overflow: visible;
-  }
+/* STACKED mode (Wave 8; replaces the old `@media (max-width: 900px)`
+ * fallback, which keyed on the BROWSER viewport rather than the window):
+ * the two stat columns side by side, the primary pane and then the sidebar
+ * full-width below them. The one layout whose body scrolls - a ~760px window
+ * has no room for four columns. The primary pane is one body-height tall
+ * (`--ddb-sheet-body-height`, set by DdbCharacterSheet.svelte), so once it
+ * is scrolled into view its list fills the window and scrolls on its own; the
+ * stat columns keep their natural height (density stays normal here). */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-sheet-body {
+  overflow: hidden auto;
+}
+
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-columns,
+.tidy5e-sheet.application.ddb
+  .ddb-sheet.ddb-mode-stacked:is(.ddb-sidebar-left, .ddb-sidebar-overlay)
+  .ddb-columns {
+  flex: 0 0 auto;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-col-primary,
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-col-sidebar {
+  grid-column: 1 / -1;
+}
+
+/* A definite height for the primary pane's flex: 1 / height: 0 list: the
+ * visible body height (a fixed 32rem until the first measurement). The
+ * sidebar-left `order` is reset so the pane order is always stats, primary,
+ * sidebar. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-col-primary {
+  order: 0;
+  height: max(
+    24rem,
+    calc(
+      var(--ddb-sheet-body-height, 32rem) - var(--ddb-body-pad-top) -
+        var(--ddb-body-pad-bottom)
+    )
+  );
+}
+
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-col-sidebar {
+  overflow: visible;
+}
+
+/* A stacked pane is a full-width row again, so the overlay positioning goes
+ * (sidebar.css drops the pane's absolute placement to match). */
+.tidy5e-sheet.application.ddb
+  .ddb-sheet.ddb-mode-stacked.ddb-sidebar-overlay
+  .ddb-col-sidebar {
+  position: static;
 }

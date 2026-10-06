@@ -32,7 +32,12 @@ export abstract class ColumnRuntimeBase<
   ): SectionColumnSpecifications<
     ConfiguredColumnSpecification<TColumnSpecification>
   > {
+    // DDB-FORK: a sheet class may expose `columnPartitionTypeKey` (the DDB
+    // layout answers 'character-ddb') to get its own column partitions ahead
+    // of the document type's. `_sheet` is the cached instance; `.sheet` would
+    // instantiate one during a context computation.
     for (let type of [
+      options.sheetDocument._sheet?.columnPartitionTypeKey,
       options.sheetDocument.type,
       CONSTANTS.COLUMN_SPEC_TYPE_KEY_DEFAULT,
     ]) {

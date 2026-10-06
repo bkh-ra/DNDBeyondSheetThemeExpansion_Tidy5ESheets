@@ -1,3 +1,4 @@
+/* DDB-FORK: asset URLs point at modules/ddb5e-sheets */
 .tidy5e-sheet.application:where(.quadrone.vehicle) {
   --t5e-background-image: url('../../modules/ddb5e-sheets/images/banner-vehicle.webp');
   --t5e-text-warning: var(--t5e-color-palette-orange-70);

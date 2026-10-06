@@ -9,6 +9,12 @@
   Tools reuse the `context.tools` entries and the roll wiring from
   `src/sheets/quadrone/actor/parts/ToolsCard.svelte`, so a tool name here is a
   live tool check rather than dead text.
+
+  DETAILS (Wave 2): every tool carries a hover/focus-revealed chevron
+  (`button.ddb-detail-trigger[data-ddb-detail="tool:<key>"]`). It is
+  absolutely positioned, so neither the inline play-mode run nor the edit-mode
+  rows move; in play mode each tool is wrapped in a `.ddb-tool-entry` span to
+  anchor it (a button cannot nest in the roll button).
 -->
 <script lang="ts">
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
@@ -16,15 +22,24 @@
   import { CONSTANTS } from 'src/constants';
   import type { ActorTraitContext } from 'src/types/types';
   import { isNil } from 'src/utils/data';
+  import { getModifierData } from 'src/utils/formatting';
   import SelectQuadrone from 'src/components/inputs/SelectQuadrone.svelte';
   import SelectOptions from 'src/components/inputs/SelectOptions.svelte';
   import { SettingsProvider } from 'src/settings/settings.svelte';
+  import { DDB_CONSTANTS, DDB_LANG } from 'src/sheets/ddb/ddb-constants';
+  import { ddbLocalize } from 'src/sheets/ddb/ddb-localize';
+  import { DdbPreferences } from 'src/sheets/ddb/DdbPreferences';
   import DdbBox from './DdbBox.svelte';
   import DdbProficiencyPip from './DdbProficiencyPip.svelte';
 
   let context = $derived(getCharacterSheetQuadroneContext());
 
   const localize = FoundryAdapter.localize;
+
+  let detailsEnabled = $derived(
+    DdbPreferences.fromUserPreferences(context.userPreferences)
+      .detailsPaneEnabled,
+  );
 
   /*
     DDB-FORK (matrix-client N3): "Show Tool reference tooltip". Same derivation
@@ -46,6 +61,63 @@
       : {},
   );
 
+  type TraitIcon = { icon: string; label: string };
+
+  /*
+    DDB-FORK: weapon-mastery markers. `_prepareTraits`
+    (Tidy5eActorSheetQuadroneBase) adds a generic `fa-circle-star mastery` icon
+    to every weapon trait entry the character has mastered; quadrone's trait
+    pills draw it (ActorTraitPills.svelte). Those entries are keyed by BASE
+    WEAPON (`longsword`), while the mastery PROPERTY (`sap`) that
+    `CONFIG.DND5E.weaponMasteries` is keyed by lives on the weapon item — so it
+    is resolved from an owned weapon of that base type, the same
+    `weaponMasteries[item.system.mastery]` lookup InventoryTable.svelte makes
+    per row. Unresolved (no such weapon carried), the icon keeps its own generic
+    label. "Show system Weapon Mastery tooltips" swaps the plain tooltip for the
+    rule reference, attached by the sheet's `_applyTooltips` pass (which skips
+    any element that already has a `data-tooltip`).
+  */
+  let masteryByBaseWeapon = $derived.by(() => {
+    const showReference =
+      SettingsProvider.settings.referenceTooltipMastery.get();
+    const result: Record<string, { tooltip: string; reference?: string }> =
+      {};
+
+    for (const weapon of context.actor.itemTypes?.weapon ?? []) {
+      const baseItem: string | undefined = weapon.system?.type?.baseItem;
+      const mastery = CONFIG.DND5E.weaponMasteries?.[weapon.system?.mastery];
+
+      if (isNil(baseItem, '') || !mastery || result[baseItem!]) {
+        continue;
+      }
+
+      result[baseItem!] = {
+        tooltip: localize('TIDY5E.Weapon.Mastery.LabelWithMastery', {
+          mastery: mastery.label,
+        }),
+        reference: showReference ? mastery.reference : undefined,
+      };
+    }
+
+    return result;
+  });
+
+  /** Tooltip attributes for one trait icon: a rule reference or a plain label. */
+  function iconTooltipAttributes(
+    trait: string,
+    entry: ActorTraitContext,
+    icon: TraitIcon,
+  ): Record<string, string | undefined> {
+    const isMastery =
+      trait === 'weapon' && icon.icon.split(/\s+/).includes('mastery');
+    const mastery =
+      isMastery && entry.key ? masteryByBaseWeapon[entry.key] : undefined;
+
+    return mastery?.reference
+      ? { 'data-reference-tooltip': mastery.reference }
+      : { 'data-tooltip': mastery?.tooltip ?? icon.label };
+  }
+
   let armor = $derived(context.traits.armor ?? []);
   let weapons = $derived(context.traits.weapon ?? []);
   let languages = $derived(context.traits.languages ?? []);
@@ -60,6 +132,20 @@
    */
   let specialTraits = $derived(context.specialTraits ?? []);
 </script>
+
+{#snippet toolDetailTrigger(tool: { key: string; label: string })}
+  {#if detailsEnabled}
+    <button
+      type="button"
+      class="ddb-detail-trigger ddb-detail-trigger--chevron ddb-detail-trigger--tool"
+      data-ddb-detail="tool:{tool.key}"
+      data-tidy-sheet-part={DDB_CONSTANTS.SHEET_PARTS.DETAIL_TRIGGER}
+      aria-label={ddbLocalize(DDB_LANG.DETAIL_SHOW, { name: tool.label })}
+    >
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+  {/if}
+{/snippet}
 
 <!--
   No i18n key exists for DDB's combined heading; the closest system strings are
@@ -86,9 +172,14 @@
       {/if}
     </div>
     <div class="ddb-prof-group-items">
+      <!-- Trait icons (in practice the weapon-mastery star) follow the label,
+           inside the comma-separated run. -->
       {#each entries as entry, i (entry.key ?? entry.label)}
         <span class="ddb-prof-item">
-          {entry.label}{#if i < entries.length - 1}<span class="ddb-prof-sep"
+          {entry.label}{#each entry.icons ?? [] as icon}<i
+              class={['ddb-prof-icon', icon.icon]}
+              {...iconTooltipAttributes(trait, entry, icon)}
+            ></i>{/each}{#if i < entries.length - 1}<span class="ddb-prof-sep"
               >,</span
             >{/if}
         </span>
@@ -102,6 +193,7 @@
 <DdbBox
   class="ddb-proficiencies-box"
   title={`${localize('DND5E.Proficiency')} & ${localize('DND5E.Languages')}`}
+  sheetPart="ddb-proficiencies"
 >
   <div class="ddb-prof-groups">
     {@render traitGroup(localize('DND5E.Armor'), armor, 'armor')}
@@ -180,6 +272,7 @@
               >
                 <i class="fa-solid fa-cog"></i>
               </button>
+              {@render toolDetailTrigger(tool)}
             </li>
           {:else}
             <li class="ddb-prof-item ddb-empty">
@@ -189,24 +282,34 @@
         </ul>
       {:else}
         <div class="ddb-prof-group-items">
+          <!-- Each tool carries its check modifier, the figure quadrone's
+               ToolsCard prints in its MODIFIER column. -->
           {#each context.tools as tool, i (tool.key)}
-            <button
-              type="button"
-              class="ddb-prof-item ddb-prof-item-rollable"
-              data-action="roll"
-              data-type="tool"
-              data-key={tool.key}
-              data-reference-tooltip={toolReferences[tool.key]}
-              data-tidy-sheet-part={CONSTANTS.SHEET_PARTS.TOOL_ROLLER}
-              data-tidy-draggable
-              data-context-menu={CONSTANTS.CONTEXT_MENU_TYPE_KEYED_FAVORITE}
-              data-has-roll-modes
-              disabled={!context.owner}
+            {@const modifier = getModifierData(tool.total)}
+            <!-- The wrapper only anchors the absolutely positioned detail
+                 chevron; no whitespace between its children, so the run lays
+                 out exactly as the bare roll buttons did. -->
+            <span class="ddb-prof-item ddb-tool-entry"
+              ><button
+                type="button"
+                class="ddb-prof-item ddb-prof-item-rollable"
+                data-action="roll"
+                data-type="tool"
+                data-key={tool.key}
+                data-reference-tooltip={toolReferences[tool.key]}
+                data-tidy-sheet-part={CONSTANTS.SHEET_PARTS.TOOL_ROLLER}
+                data-tidy-draggable
+                data-context-menu={CONSTANTS.CONTEXT_MENU_TYPE_KEYED_FAVORITE}
+                data-has-roll-modes
+                disabled={!context.owner}
+              >
+                {tool.label}
+                <span class="ddb-prof-mod">{modifier.sign}{modifier.value}</span
+                >{#if i < context.tools.length - 1}<span class="ddb-prof-sep"
+                    >,</span
+                  >{/if}
+              </button>{@render toolDetailTrigger(tool)}</span
             >
-              {tool.label}{#if i < context.tools.length - 1}<span
-                  class="ddb-prof-sep">,</span
-                >{/if}
-            </button>
           {:else}
             <span class="ddb-prof-item ddb-empty">
               {localize('TIDY5E.EmptyTools')}

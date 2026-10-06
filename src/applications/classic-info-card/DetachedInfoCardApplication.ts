@@ -1,3 +1,4 @@
+// DDB-FORK: mechanical rename only (SHEET_CSS_CLASS); no behaviour change
 import type { InfoCardState } from 'src/components/info-card/info-card.svelte';
 import { CONSTANTS } from 'src/constants';
 import { getSvelteApplicationMixin } from 'src/mixins/SvelteApplicationMixin.svelte';

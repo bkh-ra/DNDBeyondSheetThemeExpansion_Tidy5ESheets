@@ -4,7 +4,8 @@
  * Scoped to `.tidy5e-sheet.application.ddb` (0-4-0) per the specificity
  * contract in FORK_NOTES.md; every color, font, radius and spacing step comes
  * from a `--ddb-*` token. Remaining raw values are component geometry with no
- * token (pane width, collapse rail width) and are commented where they appear.
+ * token (pane width, collapse rail width, resize strip) and are commented
+ * where they appear.
  *
  * TWO THINGS THIS FILE HAS TO DO
  * ------------------------------
@@ -35,10 +36,18 @@
 /* ------------------------------------------------------------------ */
 
 .tidy5e-sheet.application.ddb .ddb-sidebar {
-  /* Pane width. 230px matches DDB's right rail against the 215/210 stat
-   * columns; the rail is just wide enough for the 28px toggle button. */
+  /* Pane width. 230px is the default and matches DDB's right rail; the user
+   * drags it anywhere in DDB_SIDEBAR_WIDTH_RANGE (220-520px), and
+   * DdbSidebar.svelte then sets this variable INLINE on this element (only
+   * while expanded, so the rail rule below still wins when collapsed). The
+   * rail width (`--ddb-sidebar-rail-width`, just wide enough for the 28px
+   * toggle button) is declared on the sheet root in ddb-layout.css, because
+   * the overlay grid track is sized by it as well. */
   --ddb-sidebar-width: 230px;
-  --ddb-sidebar-rail-width: 28px;
+  /* Grab strip of the resize handle along the pane's left edge. 8px is a
+   * comfortable pointer target that still ends inside the rows' 14px left
+   * inset, so it never sits over a favorite row or the collapse toggle. */
+  --ddb-sidebar-resizer-width: 8px;
 
   /* `flex: 1 1 auto` fills the grid column's stretched height AND overrides
    * quadrone's `flex-basis: var(--sidebar-expanded-width)`. */
@@ -49,7 +58,12 @@
   flex-direction: column;
   gap: 0;
   width: var(--ddb-sidebar-width);
-  max-width: var(--ddb-sidebar-width);
+  /* Capped at the grid column, not at its own width: when the window cannot
+   * fit the chosen width beside the primary pane's floor, the `auto` track
+   * gives way (ddb-layout.css, WIDTH MODEL) and the pane follows it instead of
+   * overflowing its clipped column. Intrinsic sizing ignores a percentage
+   * max-width, so the track still asks for the full width when there is room. */
+  max-width: 100%;
   min-width: 0;
   min-height: 0;
   /* reset quadrone's slide-out margins + inner padding (see header note) */
@@ -71,6 +85,14 @@
   font-size: var(--ddb-size-body);
   line-height: var(--ddb-lineheight-body);
   transition: width var(--ddb-transition);
+}
+
+/* While the handle is dragged the width must track the pointer 1:1, so the
+ * collapse transition is suspended, and a drag that strays over text must not
+ * start a selection. */
+.tidy5e-sheet.application.ddb .ddb-sidebar.ddb-sidebar-resizing {
+  transition: none;
+  user-select: none;
 }
 
 /* --- the double outline: `::before` = outer silhouette, `::after` = inner line ---
@@ -165,6 +187,115 @@
 }
 
 /* ------------------------------------------------------------------ */
+/* Resize handle (`.ddb-sidebar-resizer`, DdbSidebar.svelte)          */
+/* ------------------------------------------------------------------ */
+
+/* An invisible grab strip down the pane's left edge, above the header and the
+ * scroll region (both z-index 1). It is absolutely positioned, so neither the
+ * strip nor its affordance can move anything, and the pane's own `overflow:
+ * hidden` keeps it inside the panel. `touch-action: none` hands touch and pen
+ * drags to the pointer handlers instead of the browser's panning. Not rendered
+ * while the pane is collapsed to its rail. */
+.tidy5e-sheet.application.ddb .ddb-sidebar-resizer {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 2;
+  width: var(--ddb-sidebar-resizer-width);
+  cursor: col-resize;
+  touch-action: none;
+  outline: none;
+}
+
+/* The affordance: a thin accent line, faded in on hover, keyboard focus and
+ * while dragging. It runs parallel to the panel outline, one outline-width
+ * inside it — drawn ON the outline it would vanish, the outline being the same
+ * accent — and stops a panel radius short of each end so it never cuts across
+ * the rounded corners. */
+.tidy5e-sheet.application.ddb .ddb-sidebar-resizer::after {
+  content: '';
+  position: absolute;
+  inset-block: var(--ddb-radius-panel);
+  inset-inline-start: calc(var(--ddb-outline-width) * 2);
+  width: var(--ddb-outline-width);
+  border-radius: var(--ddb-radius-control);
+  background: var(--ddb-accent);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-sidebar-resizer:hover::after,
+.tidy5e-sheet.application.ddb .ddb-sidebar-resizer:focus-visible::after,
+.tidy5e-sheet.application.ddb .ddb-sidebar.ddb-sidebar-resizing > .ddb-sidebar-resizer::after {
+  opacity: 1;
+}
+
+/* Keyboard focus adds the sheet's focus glow around the line. */
+.tidy5e-sheet.application.ddb .ddb-sidebar-resizer:focus-visible::after {
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* ------------------------------------------------------------------ */
+/* Placement: left / overlay (ddb-next Wave 4)                        */
+/* ------------------------------------------------------------------ */
+
+/* LEFT: the pane sits before the primary column (ddb-layout.css), so the
+ * handle and its affordance line move to the pane's RIGHT edge - always the
+ * edge that faces the primary column. DdbSidebar.svelte mirrors the drag and
+ * the arrow keys to match. The collapse toggle's icon (a pane drawn on the
+ * right) is mirrored with it. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-left .ddb-sidebar-resizer {
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-left .ddb-sidebar-resizer::after {
+  inset-inline-start: auto;
+  inset-inline-end: calc(var(--ddb-outline-width) * 2);
+}
+
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-left .ddb-sidebar-toggle i {
+  transform: scaleX(-1);
+}
+
+/* OVERLAY (right-hand pane only; a left pane always pushes, so
+ * `ddb-sidebar-overlay` never comes with `ddb-sidebar-left`): the column is
+ * only a rail wide (ddb-layout.css). The pane leaves
+ * the flow, fills the column's height and is pinned to its OUTER edge, so an
+ * expanded pane grows over the primary column's edge instead of taking width
+ * from it; collapsed, it is exactly the rail. The `max-width: 100%` cap of the
+ * push layout (the grid column) would pin it to the rail, so it is lifted - the
+ * width range (max 520px) stays under the primary column's 580px floor, so the
+ * pane never covers the whole column. Floating over list rows, the surface is
+ * the opaque panel colour (the push pane's `--ddb-box-bg` is translucent in
+ * Underdark) and gets the elevated shadow. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-overlay .ddb-sidebar {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: auto;
+  inset-inline-end: 0;
+  max-width: none;
+  background: var(--ddb-panel-bg-solid);
+}
+
+/* Expanded over the list, the pane needs an edge that reads as "on top": a
+ * 1px ring outside the panel's own inset outline, plus the elevated shadow. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-overlay .ddb-sidebar:not(.collapsed) {
+  outline: 1px solid var(--ddb-panel-ring);
+  outline-offset: 0;
+  box-shadow: var(--ddb-shadow-elevated);
+}
+
+/* Stacked mode (Wave 8; was `@media (max-width: 900px)`): the pane gets its
+ * own full-width row (ddb-layout.css), so it goes back into the flow. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked.ddb-sidebar-overlay .ddb-sidebar {
+  position: relative;
+  inset: auto;
+  max-width: 100%;
+}
+
+/* ------------------------------------------------------------------ */
 /* Header: tab strip + collapse toggle + tab-config gear              */
 /* ------------------------------------------------------------------ */
 
@@ -182,9 +313,11 @@
   gap: var(--ddb-space-1);
   min-width: 0;
   margin: var(--ddb-panel-double-gap) var(--ddb-panel-double-gap) 0;
-  /* Matches the scroll region's 12px left inset, so the toggle and the list
-   * below it clear the ring by the same ~7px. */
-  padding: 0 var(--ddb-space-3);
+  /* 4px margin + 10px = the scroll region's 14px inline inset on BOTH sides
+   * (its margin plus its scrollbar gutter on the right and the matching
+   * padding on the left, see `.ddb-sidebar-content`), so the toggle lines up
+   * with the favorite icons and the gear with their values. */
+  padding: 0 var(--ddb-space-4);
   /* The divider is a box-shadow band, not a `border-bottom`, for the same
    * reason the frame is (see the lineweight note above): measured, a
    * `border-bottom: 1.125px` rasterizes to 1.000px while this band rasterizes
@@ -347,19 +480,27 @@
   /* Above the rings (see the z-index note on `::before`). */
   position: relative;
   z-index: 1;
-  /* Inline insets are tuned so BOTH sides clear the inner ring by the same
-   * amount. The ring's inner edge sits at gap + line-weight ≈ 5.1px from the
-   * pane edge, so a left inset of 4px margin + 8px padding = 12px leaves ~7px.
-   * The right gets NO padding on purpose: a classic scrollbar is taken out of
-   * the content box, so the reserved gutter IS the right-hand inset. Without
-   * this the right gutter measured ~18px against ~3px on the left — icons
-   * almost touching the ring while values floated in a wide channel.
-   * `scrollbar-gutter: stable` keeps that inset identical whether or not the
-   * list currently overflows. */
+  /* SYMMETRIC INLINE INSETS (user requests 2026-10-05, twice). Margin 4px +
+   * padding 10px on BOTH sides = 14px from the outline to the content while
+   * nothing scrolls. The first cut reserved the right-hand 10px as a permanent
+   * scrollbar gutter (`scrollbar-gutter: stable`, no padding) so rows never
+   * shifted when a scrollbar appeared; but the moment a pane scrolled (the
+   * Details pane nearly always does) the content sat hard against the thumb,
+   * which read as "no right margin". The gutter is on demand now
+   * (`scrollbar-gutter: auto`): the 10px thin scrollbar is carved out of the
+   * box only while the pane overflows, and the 10px padding then stays between
+   * the content and the track (left 14px to the outline, right 10px to the
+   * track and 24px to the outline). The one cost is a 10px content-width
+   * change when a pane starts or stops overflowing. The 4px margin keeps the
+   * thumb off the 2px outline; the header above is padded to the same 14px.
+   *
+   * NOT `stable both-edges`: measured with painted scrollbars, Chromium then
+   * stops painting the right-most glyphs of each favorite row ("3 / 3" drew
+   * as "3 /") as soon as the list really scrolls. */
   margin-inline: var(--ddb-panel-double-gap);
-  padding: var(--ddb-space-2) 0 var(--ddb-space-3) var(--ddb-space-3);
+  padding: var(--ddb-space-2) var(--ddb-space-4) var(--ddb-space-3);
   overflow: hidden auto;
-  scrollbar-gutter: stable;
+  scrollbar-gutter: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--ddb-accent-transparent) transparent;
 
@@ -633,24 +774,24 @@
 /* Narrow-window fallback                                             */
 /* ------------------------------------------------------------------ */
 
-/* Below 900px the grid stacks (see `ddb-layout.css`); the sidebar becomes a
- * full-width block that grows with its content and lets the sheet body scroll,
- * so nothing is clipped on a small popped-out window. */
-@media (max-width: 900px) {
-  .tidy5e-sheet.application.ddb .ddb-sidebar {
-    width: auto;
-    max-width: none;
-  }
+/* Stacked mode (Wave 8; was `@media (max-width: 900px)`, which measured the
+ * browser viewport, not the window): the grid stacks (see `ddb-layout.css`)
+ * and the sidebar becomes a full-width block that grows with its content and
+ * lets the sheet body scroll, so nothing is clipped in a narrow window. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-sidebar,
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-sidebar.collapsed {
+  width: auto;
+  max-width: none;
+}
 
-  .tidy5e-sheet.application.ddb .ddb-sidebar.collapsed {
-    width: auto;
-    max-width: none;
-  }
+/* A full-width stacked pane has no width to drag. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-sidebar-resizer {
+  display: none;
+}
 
-  .tidy5e-sheet.application.ddb .ddb-sidebar-content {
-    flex: 0 0 auto;
-    height: auto;
-    /* Keeps a stacked sidebar from crowding out the primary column. */
-    max-height: 24rem;
-  }
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-sidebar-content {
+  flex: 0 0 auto;
+  height: auto;
+  /* Keeps a stacked sidebar from crowding out the primary column. */
+  max-height: 24rem;
 }

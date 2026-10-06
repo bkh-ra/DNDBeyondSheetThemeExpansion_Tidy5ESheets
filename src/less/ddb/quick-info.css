@@ -129,24 +129,70 @@
 
 /* The band is a single row (INITIATIVE + ARMOR CLASS live in DdbCombatRow atop
  * the primary column), so it is only as tall as the ability boxes plus a
- * hairline of padding: ~107px. Horizontal padding is left to .ddb-sheet-body
- * so the band runs the full width it is given. */
+ * hairline of padding: ~107px at normal density (96 / 88 at compact / dense,
+ * Wave 8). Horizontal padding is left to .ddb-sheet-body so the band runs the
+ * full width it is given. */
 .tidy5e-sheet.application.ddb .ddb-quick-info {
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: var(--ddb-space-2) 0;
+  padding: var(--ddb-quick-info-pad) 0;
   font-family: var(--ddb-font-condensed);
   color: var(--ddb-text);
 }
 
 /* Nothing reflows: every item is a fixed footprint, and the health panel is
- * the only one allowed to give ground if the window is dragged narrow. */
+ * the only one allowed to give ground if the window is dragged narrow.
+ *
+ * DENSITY SCALE (Wave 8). The 95px ability card is what sets the band's
+ * height, but it cannot shrink alone: every frame in the band shares the
+ * BAND BASELINE (the header note of this file), and a smaller card would drop
+ * its frame bottom off that line. So the WHOLE row scales by one factor,
+ * `--ddb-ability-box-scale` (1 / 88:95 / 84:95). `zoom` rather than a
+ * transform: it re-lays the row out at the smaller size (the band really
+ * gets shorter, and text is re-rasterised rather than bitmap-scaled), and the
+ * row's layout width grows by the inverse factor so the HP panel still ends on
+ * the band's right edge. The 10px captions render at ~8.8px at dense, the one
+ * place the band's type shrinks. */
 .tidy5e-sheet.application.ddb .ddb-quick-info__row {
   display: flex;
   flex-wrap: nowrap;
   align-items: flex-start;
   gap: var(--ddb-space-1);
+  zoom: var(--ddb-ability-box-scale);
+}
+
+
+/* The HP manager popover hangs off the HP panel inside the scaled row; undo
+ * the scale on it so it always reads at full size. */
+.tidy5e-sheet.application.ddb .ddb-quick-info__row .ddb-hp-manager {
+  zoom: calc(1 / var(--ddb-ability-box-scale));
+}
+
+/* COMPACT mode (Wave 8, auto at 1100-1319px windows): the band needs ~1088px
+ * of row at the HP panel's 21rem floor, which a 1100px window cannot give at
+ * normal density. The panel's fields group is ~211px, so 20rem (a 298px
+ * interior) still holds CURRENT / MAX / TEMP. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-compact .ddb-hp-block {
+  min-width: 20rem;
+}
+
+/* STACKED mode (Wave 8, < 1100px): the band cannot fit one row, so it wraps.
+ * Left to itself the health panel dropped to a second line on its own, pinned
+ * right by its auto margin, with a hole beside it (image review). Instead the
+ * rows are centred and the panel takes a row of its own exactly as wide as
+ * the first (six ability cards + three stat boxes: 47rem), centred under it,
+ * so the band reads as one block. The body scrolls in this mode. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-quick-info__row {
+  flex-wrap: wrap;
+  justify-content: center;
+  row-gap: var(--ddb-space-2);
+}
+
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-hp-block {
+  flex: 1 1 100%;
+  max-width: 47rem;
+  margin-inline: auto;
 }
 
 .tidy5e-sheet.application.ddb .ddb-quick-info__abilities {
@@ -1073,6 +1119,34 @@
   box-shadow: var(--ddb-focus-ring);
 }
 
+/* LIGHT THEME legibility (wave 4 image review). White text on the light
+ * theme's #40d250 heal green is ~2:1, and the 0.45 opacity fade of the idle
+ * (disabled) state dropped both buttons below legibility.
+ *   - HEAL, armed: dark text on the green (--ddb-text, ~7.7:1). DAMAGE keeps
+ *     white on #d24040 (~4.6:1; dark text there would be ~3.3:1).
+ *   - Idle (no amount typed): no fade. The buttons turn into outlined ghosts in
+ *     their own heal / damage text colours (~4.6:1 on the panel), so "nothing
+ *     to apply" still reads at a glance and the labels stay legible. The ring
+ *     is an inset box-shadow, not a border, so the 18px stack does not grow.
+ * The dark theme keeps its look: these rules are `:not(.theme-dark)`. */
+.tidy5e-sheet.application.ddb:not(.theme-dark) .ddb-hp-block .ddb-hp-block__apply--heal {
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb:not(.theme-dark) .ddb-hp-block .ddb-hp-block__apply:disabled {
+  opacity: 1;
+  background: none;
+  box-shadow: inset 0 0 0 var(--ddb-border-width-panel) currentColor;
+}
+
+.tidy5e-sheet.application.ddb:not(.theme-dark) .ddb-hp-block .ddb-hp-block__apply--heal:disabled {
+  color: var(--ddb-positive-text);
+}
+
+.tidy5e-sheet.application.ddb:not(.theme-dark) .ddb-hp-block .ddb-hp-block__apply--damage:disabled {
+  color: var(--ddb-negative-text);
+}
+
 /* Same quadrone shadow reset as the readout inputs below: this field DOES keep
  * a box, but it must be the panel's own hairline box and nothing else. */
 .tidy5e-sheet.application.ddb .ddb-hp-block .ddb-hp-block__apply-amount {
@@ -1134,6 +1208,43 @@
   color: var(--ddb-label);
 }
 
+/* The title doubles as the HP manager trigger (DdbHpManagerPopover). It must
+ * look exactly like the plain title it replaced — every face property is
+ * inherited from the h2 above — so the panel is unchanged at rest; the button
+ * only adds hover / open / focus states. Box and font are restated because
+ * quadrone's `:is(button, .button)` (0-3-0) brings a 28px min-height and a
+ * `font` shorthand. */
+.tidy5e-sheet.application.ddb .ddb-hp-block__title-button {
+  display: inline;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0 var(--ddb-space-half);
+  border: none;
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  box-shadow: none;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  line-height: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: color var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-block__title-button:hover,
+.tidy5e-sheet.application.ddb .ddb-hp-block__title-button[aria-expanded='true'] {
+  background: none;
+  color: var(--ddb-accent);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-block__title-button:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
 /* Fixed rem tracks, centred as a group: CURRENT / MAX   TEMP. No `1fr` — with
  * flexible tracks the figures drift apart whenever the panel has spare width. */
 .tidy5e-sheet.application.ddb .ddb-hp-block__fields {
@@ -1150,6 +1261,20 @@
   align-items: center;
   gap: var(--ddb-space-half);
   min-width: 0;
+}
+
+/* EDIT MODE adds the temp-max field ("+MAX"), a FIFTH child of a four-track
+ * grid, so it wrapped to a second row: the readout grew to ~91px inside the
+ * 80px panel, the CURRENT / MAX / TEMP captions rode above its top edge and
+ * HIT POINTS fell below it (image review; it predates Wave 8, and the denser
+ * levels then clipped the captions). With a fifth track the four figures sit
+ * on one row again. The tracks narrow to the inputs' own 3rem cap, so the
+ * row (~225px) still fits the readout when compact mode squeezes the panel
+ * to its 20rem floor (~240px). */
+.tidy5e-sheet.application.ddb
+  .ddb-hp-block__fields:has(> .ddb-hp-block__field--tempmax) {
+  grid-template-columns: 3rem auto 3rem 3rem 3rem;
+  column-gap: var(--ddb-space-1);
 }
 
 /* Temp hit points read as a separate figure, set apart from CURRENT / MAX. */
@@ -1354,17 +1479,19 @@
  * ------------------------------------------------------------------ */
 
 /* Per-ability config, pinned to the frame's top-right corner so it never
- * displaces the label / modifier / score stack inside the box. */
+ * displaces the label / modifier / score stack inside the box. 12px, 1px off
+ * the corner (was 14px at 2px): the card's chamfered corner leaves room for
+ * it there, and the label below steps aside for it. */
 .tidy5e-sheet.application.ddb .ddb-ability-box__config {
   position: absolute;
-  top: var(--ddb-space-half);
-  right: var(--ddb-space-half);
+  top: 1px;
+  right: 1px;
   z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   min-width: 0;
   min-height: 0;
   padding: 0;
@@ -1377,6 +1504,20 @@
   color: var(--ddb-label);
   cursor: pointer;
   transition: color var(--ddb-transition);
+}
+
+/* EDIT MODE: the gear shares the label's line, and the long labels
+ * (CONSTITUTION 63px, INTELLIGENCE 59px in an 81px card) ran under it. The
+ * label keeps clear of the gear (a 14px right margin moves its centre 7px
+ * left, leaving 63px of line), and a longer translation ellipsises instead
+ * of touching it. */
+.tidy5e-sheet.application.ddb
+  .ddb-ability-box:has(> .ddb-ability-box__config)
+  .ddb-ability-box__label {
+  max-width: calc(100% - 14px);
+  margin-right: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tidy5e-sheet.application.ddb .ddb-ability-box__config:hover {

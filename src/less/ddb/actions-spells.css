@@ -1,0 +1,582 @@
+/* DDB-FORK: Actions + Spells tab styling of the DDB layout (ddb-next Wave 3).
+ * Every selector starts with .tidy5e-sheet.application.ddb (see FORK_NOTES).
+ *
+ * The two tabs are quadrone's CharacterSheetTab / ActorSpellbookTab wrapped
+ * by DdbActionsTab / DdbSpellsTab (src/sheets/ddb/character/tabs/), so the
+ * tables keep tab-content.css's flat restyle (row fills, 3px method / rarity
+ * bars, pinned footers) untouched. This file only styles what the wrappers
+ * and the DDB columns add, in D&D Beyond's idiom: condensed caps labels, flat
+ * fills, accent kept for the ACTIVE state and the dice boxes.
+ *
+ *   0. --ddb-accent-readable (the accent as a dark-theme foreground)
+ *   1. Filter pill row (DdbFilterPills) + the sticky search bar
+ *   2. Roll buttons: HIT / DC and DAMAGE / EFFECT cells (registry/ddb-columns.ts)
+ *   3. Spell DURATION / EFFECT cells
+ *   4. Actions in Combat box + its slot above the Actions footer
+ *   5. Spellcasting strip (DdbSpellcastingStrip) + the footer cards it replaces
+ *
+ * Colours come from ddb-tokens.css, which already switch per theme; the one
+ * theme fork is section 0's token.
+ */
+
+/* ------------------------------------------------------------------ */
+/* 0. Accent as a readable foreground                                 */
+/* ------------------------------------------------------------------ */
+
+/* The sheet accent is the character's colour and can be anything: on the
+ * dark panel a navy one (Sorko's #00294D) made the dice-box hairlines and the
+ * rule links all but disappear (wave 3 image review). Wherever these tabs use
+ * the accent as a LINE or TEXT colour they take this token instead: the
+ * accent itself in the light theme (unchanged), and in the dark theme the
+ * same hue lifted to at least 0.72 OKLCH lightness with its chroma capped, so
+ * a navy reads as a steel blue and a purple as a lavender. Fills keep the
+ * true accent (with white text they read fine at any lightness). */
+.tidy5e-sheet.application.ddb {
+  --ddb-accent-readable: var(--ddb-accent);
+}
+
+.tidy5e-sheet.application.ddb.theme-dark {
+  --ddb-accent-readable: oklch(from var(--ddb-accent) max(l, 0.72) min(c, 0.15) h);
+}
+
+/* Relative colour syntax needs Chromium 119+; Foundry 14 asks for 146+, so
+ * this only guards odd embedders: a plain tint toward white. */
+@supports not (color: oklch(from red l c h)) {
+  .tidy5e-sheet.application.ddb.theme-dark {
+    --ddb-accent-readable: color-mix(in srgb, var(--ddb-accent) 45%, #fff);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* 1. Filter pill row + sticky search bar                             */
+/* ------------------------------------------------------------------ */
+
+/* ALL | ATTACK | ACTION ...  /  ALL | -0- | 1ST ... | CONCENTRATION | RITUAL.
+ * Wraps rather than scrolls: at the 580px pane floor the Actions row needs two
+ * lines and that beats hiding a group. No inline padding, so the row lines up
+ * with the search bar under it (the pane supplies the gutter). */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-filter-pills {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ddb-space-1);
+  padding-block: var(--ddb-space-2) var(--ddb-space-1);
+}
+
+/* The pills and the search / filter / sort bar under them stay at the top of
+ * the scrolling pane, mirroring the pinned footer at its bottom (tab-content.css
+ * section 10): both are direct children of the scroller (`.tidy-tab`), so
+ * `position: sticky` pins them to it. The bar sits under the pills by the
+ * pills' measured height (`--ddb-pills-height`, set on the tab element by
+ * DdbFilterPills, since the row wraps at narrow widths). The solid pane colour
+ * keeps scrolled rows from showing through, exactly like the footer. On the
+ * Spells tab the spellcasting strip above them scrolls away first. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab > .ddb-filter-pills {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--ddb-panel-bg-solid);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab:has(> .ddb-filter-pills) > .action-bar {
+  position: sticky;
+  top: var(--ddb-pills-height, 0px);
+  z-index: 3;
+  padding-block-end: var(--ddb-space-1);
+  background: var(--ddb-panel-bg-solid);
+}
+
+/* The pills carry Tidy's `button button-toggle` classes (so `.include` /
+ * `.exclude` mean what they mean everywhere in Tidy), but D&D Beyond's pills
+ * are flat caps labels, not quadrone's bordered field buttons: every box
+ * property quadrone's `:is(button, .button)` sets is restated here. The extra
+ * `.ddb-filter-pills` class keeps this above tab-content.css section 6
+ * (same file order, one class more). */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-filter-pills :is(button, .button).ddb-filter-pill {
+  min-height: 0;
+  min-width: 0;
+  width: auto;
+  height: auto;
+  padding: var(--ddb-space-half) var(--ddb-space-2);
+  border: var(--ddb-border-width-panel) solid transparent;
+  border-radius: var(--ddb-radius-control);
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label-md);
+  font-weight: var(--ddb-weight-label);
+  line-height: 1.4;
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-text-muted);
+  transition: var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-filter-pills :is(button, .button).ddb-filter-pill:hover {
+  background: var(--ddb-table-row-alt-bg);
+  border-color: var(--ddb-list-border);
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-filter-pills :is(button, .button).ddb-filter-pill:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* The active pill is the one flat accent fill in the row (accent reserved for
+ * active filter state, tab-content.css requirement 5). ALL is "active" while
+ * nothing on the tab is filtered. The outline is the readable accent (section
+ * 0), so a dark accent's pill still has a visible edge on the dark pane; in
+ * the light theme it equals the fill. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-filter-pills :is(button, .button).ddb-filter-pill.include,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-filter-pills :is(button, .button).ddb-filter-pill.include:hover {
+  background: var(--ddb-accent);
+  border-color: var(--ddb-accent-readable);
+  color: var(--ddb-accent-chip-contrast);
+}
+
+/* Right-click excludes (Tidy's FilterToggle gesture): struck out, never
+ * coloured, like the excluded chips in the action bar. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-filter-pills :is(button, .button).ddb-filter-pill.exclude {
+  background: var(--ddb-table-row-alt-bg);
+  border-color: var(--ddb-list-border);
+  color: var(--ddb-text-disabled);
+  text-decoration: line-through;
+}
+
+/* The pill row replaces the action bar's pinned-filter group (the same
+ * filters, from the same pins): showing both doubled every control and
+ * squeezed the search box to nothing at narrow widths. The filter menu,
+ * sort and tab-config buttons stay. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab:has(> .ddb-filter-pills) > .action-bar > .button-group {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Roll buttons (HIT / DC, DAMAGE, EFFECT)                         */
+/* ------------------------------------------------------------------ */
+
+/* D&D Beyond's dice boxes: a hairline accent box around a bold value,
+ * transparent until hovered. The hairline is the readable accent (section 0):
+ * `--ddb-dice-roll-border` (the death-save button's) is the raw accent and
+ * vanished on the dark pane for dark accents. Restates quadrone's button box
+ * model like the pills do; the `button.` element qualifier puts it above
+ * tab-content.css section 6. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content button.ddb-roll-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ddb-space-half);
+  max-width: 100%;
+  min-width: 2.25rem;
+  min-height: 0;
+  height: 1.375rem;
+  padding: 0 var(--ddb-space-2);
+  border: var(--ddb-border-width-panel) solid var(--ddb-accent-readable);
+  border-radius: var(--ddb-radius-control);
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  font-weight: var(--ddb-weight-value);
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--ddb-text);
+  cursor: pointer;
+  transition: var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content button.ddb-roll-button:hover {
+  background: color-mix(in srgb, var(--ddb-accent-readable) 18%, transparent);
+  border-color: var(--ddb-accent-readable);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content button.ddb-roll-button:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+/* The +/- of a to-hit reads smaller and muted, as on D&D Beyond. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content button.ddb-roll-button .sign {
+  font-size: var(--ddb-size-label-md);
+  font-weight: var(--ddb-weight-label);
+  color: var(--ddb-text-muted);
+}
+
+/* Long formulas truncate inside the box instead of widening the column. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content button.ddb-roll-damage .formula {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content button.ddb-roll-damage .damage-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  --icon-width: 0.875rem;
+  --icon-height: 0.875rem;
+  --icon-fill: var(--ddb-text-muted);
+  color: var(--ddb-text-muted);
+}
+
+/* Up to two formula boxes stack; `+N` sits beside the last one. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-formulas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ddb-space-half);
+  min-width: 0;
+  max-width: 100%;
+  padding-block: var(--ddb-space-half);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-formula-line {
+  display: flex;
+  align-items: center;
+  gap: var(--ddb-space-half);
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* `+N` sits UNDER the boxes, inside the cell: beside the last box it spilled
+ * past the column into USES (wave 3 image review). A short line, so the row
+ * grows by little more than the label height. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-formula-more {
+  flex: 0 0 auto;
+  max-width: 100%;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  line-height: 1;
+  color: var(--ddb-text-muted);
+  cursor: pointer;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-formula-more:hover {
+  color: var(--ddb-accent-readable);
+}
+
+/* A save instead of an attack: ability caps label over the DC, the stacked
+ * form D&D Beyond's HIT / DC column uses. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-roll-save {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-roll-save .ability {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-roll-save .value {
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  font-weight: var(--ddb-weight-value);
+  color: var(--ddb-text);
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Spell DURATION / EFFECT cells                                   */
+/* ------------------------------------------------------------------ */
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-spell-duration {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ddb-space-1);
+  min-width: 0;
+  max-width: 100%;
+  font-size: var(--ddb-size-body);
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-spell-duration .duration {
+  min-width: 0;
+}
+
+/* The boxed C / R tags D&D Beyond prints next to concentration and ritual
+ * spells: outline only, so they never compete with the accent dice boxes.
+ * Modifier classes are `ddb-spell-tag--concentration` / `--ritual`, never the
+ * bare words: quadrone/character.css gives `.concentration` (the saving-throws
+ * block) `position: absolute; left: 0; right: 0`, which turned the tag into a
+ * one-pixel outlined box spanning the whole row wherever the DURATION column
+ * was wide enough to show (user review 2026-10-05, "white bounding boxes").
+ * `position: static` here is the second lock against the same thing. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-spell-tag {
+  position: static;
+  width: auto;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 0.875rem;
+  height: 0.875rem;
+  padding: 0 var(--ddb-space-half);
+  border: var(--ddb-border-width-panel) solid var(--ddb-text-muted);
+  border-radius: var(--ddb-radius-control);
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  line-height: 1;
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-spell-effect {
+  font-size: var(--ddb-size-body);
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-spell-effect .more {
+  font-size: var(--ddb-size-label);
+  color: var(--ddb-text-muted);
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. Actions in Combat                                               */
+/* ------------------------------------------------------------------ */
+
+/* Where it goes: the tab's header area, ABOVE the filter pills and the
+ * search bar, like the Spells tab's spellcasting strip (user request
+ * 2026-10-05; waves 3-8 slotted it under the list, above the pinned footer,
+ * by dissolving `.tab-content`). DdbActionsTab mounts it first, inside the
+ * pinned strip slot (`.ddb-tab-strip`, tab-strips.css section 0), so it stays
+ * on screen under every pill while the list scrolls beneath it, and
+ * CharacterSheetTab's `.tab-content` keeps tab-content.css section 10's
+ * flex column with its pinned footer. Same card as the other strips
+ * (section 5 / tab-strips.css), same uniform height: the caps title sits
+ * INLINE with the links (not above them), so at the default pane width the
+ * two link lines fit the shared card height instead of pushing the pills
+ * 16px lower than on the other tabs. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-tab-strip > .ddb-actions-in-combat {
+  flex: 0 0 auto;
+  margin: 0;
+  min-height: var(--ddb-tab-strip-card-height);
+  display: flex;
+  align-items: center;
+  gap: var(--ddb-space-3);
+  padding: var(--ddb-space-2) var(--ddb-space-3);
+  border: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+  border-radius: var(--ddb-radius-control);
+  background: var(--ddb-table-row-alt-bg);
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  line-height: var(--ddb-lineheight-body);
+  color: var(--ddb-text);
+}
+
+/* Same caps label as the table group headers (tab-content.css section 2). The
+ * element is an h4, so the prefix outranks quadrone's `:is(h1, h2, h3 ...)`
+ * heading rules as the specificity contract requires. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-actions-in-combat .ddb-actions-in-combat-title {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label-md);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-heading);
+}
+
+/* One comma-separated run of links, as D&D Beyond prints it. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-actions-in-combat .ddb-actions-in-combat-list {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--ddb-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-actions-in-combat .ddb-actions-in-combat-list > li {
+  margin: 0;
+  padding: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-actions-in-combat .ddb-actions-in-combat-list > li:not(:last-child)::after {
+  content: ',';
+  color: var(--ddb-text-muted);
+}
+
+/* Foundry's content-link chip (fill, border, book icon) becomes a plain
+ * readable-accent link (section 0): these are prose links, and a dozen chips
+ * in a row read as buttons. The link keeps its data-uuid, so clicks and the
+ * rich rule tooltips still work. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-actions-in-combat a.content-link {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: inherit;
+  white-space: nowrap;
+  color: var(--ddb-accent-readable);
+  text-decoration: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-actions-in-combat a.content-link:hover {
+  text-decoration: underline;
+  text-shadow: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-actions-in-combat a.content-link > i {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. Spellcasting strip                                              */
+/* ------------------------------------------------------------------ */
+
+/* One flat card per spellcasting class: CLASS (ABILITY) | MODIFIER | SPELL
+ * ATTACK | SAVE DC | PREPARED | MANAGE SPELLS. Wraps at narrow widths, the
+ * button dropping to its own line rather than squeezing the numbers.
+ * The strip / card / header / stat rules are SHARED with the other tabs'
+ * header strips through the `.ddb-tab-strip*` aliases (tab-strips.css:
+ * the Inventory encumbrance strip and the Features class strip). */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-strip, .ddb-tab-strip) {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  gap: var(--ddb-space-1);
+  padding-block-start: var(--ddb-space-2);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-card, .ddb-tab-strip-card) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ddb-space-2) var(--ddb-space-5);
+  padding: var(--ddb-space-2) var(--ddb-space-3);
+  border: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+  border-radius: var(--ddb-radius-control);
+  background: var(--ddb-table-row-alt-bg);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-card-header, .ddb-tab-strip-card-header) {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  min-width: 4.5rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-class-name, .ddb-tab-strip-title) {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label-md);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-heading-box);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-ability, .ddb-tab-strip-subtitle) {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-stats, .ddb-tab-strip-stats) {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--ddb-space-2) var(--ddb-space-5);
+}
+
+/* Value over caps label, D&D Beyond's spellcasting header boxes. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-stat, .ddb-tab-strip-stat) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 3rem;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-stat, .ddb-tab-strip-stat) .value {
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-value-md);
+  font-weight: var(--ddb-weight-value);
+  line-height: 1.2;
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-stat, .ddb-tab-strip-stat) .value .sign,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-stat, .ddb-tab-strip-stat) .value .max {
+  font-size: var(--ddb-size-label-md);
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content :is(.ddb-spellcasting-stat, .ddb-tab-strip-stat) .label {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  white-space: nowrap;
+  color: var(--ddb-label);
+}
+
+/* MANAGE SPELLS: D&D Beyond's solid accent action button, edged with the
+ * readable accent (section 0) so a dark accent's button keeps its outline on
+ * the dark pane. Box model restated over quadrone's `:is(button, .button)`,
+ * like the pills. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content button.ddb-manage-spells {
+  flex: 0 0 auto;
+  min-height: 0;
+  width: auto;
+  height: auto;
+  margin-inline-start: auto;
+  padding: var(--ddb-space-1) var(--ddb-space-3);
+  border: var(--ddb-border-width-panel) solid var(--ddb-accent-readable);
+  border-radius: var(--ddb-radius-control);
+  background: var(--ddb-accent);
+  box-shadow: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label-md);
+  font-weight: var(--ddb-weight-label);
+  line-height: 1.3;
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-accent-chip-contrast);
+  cursor: pointer;
+  transition: var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content button.ddb-manage-spells:hover:not(:disabled) {
+  background: var(--ddb-accent-hover);
+  border-color: var(--ddb-accent-readable);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content button.ddb-manage-spells:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content button.ddb-manage-spells:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* The strip replaces quadrone's spellcasting summary cards in the Spells
+ * footer (same data, `context.spellcasting`). The rest of that footer - the
+ * concentration button and the create button - stays pinned as before; with
+ * the cards gone its right-hand group is pushed to the end of the bar. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .spellbook-footer .spellcasting-cards {
+  display: none;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .spellbook-footer .sheet-footer-right {
+  margin-inline-start: auto;
+}

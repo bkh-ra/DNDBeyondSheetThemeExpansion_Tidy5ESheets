@@ -1,3 +1,4 @@
+// DDB-FORK: mechanical rename only (SHEET_CSS_CLASS); no behaviour change
 import ClassicTabSelectionFormApplication from 'src/applications/classic-tab-selection/ClassicTabSelectionFormApplication.svelte';
 import { ThemeSettingsFormApplication } from 'src/applications/classic-theme/ThemeSettingsFormApplication.svelte';
 import { CONSTANTS } from 'src/constants';

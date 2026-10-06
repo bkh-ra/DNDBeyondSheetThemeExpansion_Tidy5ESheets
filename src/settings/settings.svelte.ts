@@ -2100,6 +2100,80 @@ export function createSettings() {
         },
       },
 
+      // DDB-FORK: the DDB layout defaults its Actions tab to the activation
+      // grouping (D&D Beyond order); quadrone keeps the setting above. Read by
+      // Tidy5eCharacterSheetDdb.sheetTabSectionOrganizationDefault through the
+      // SheetSections seam.
+      ddbCharacterSheetTabOrganization: {
+        options: {
+          name: 'TIDY5E.Settings.DdbCharacterSheetTabOrganization.name',
+          hint: 'TIDY5E.Settings.DdbCharacterSheetTabOrganization.hint',
+          scope: 'world',
+          config: true,
+          type: String,
+          choices: {
+            [CONSTANTS.SECTION_ORGANIZATION_ORIGIN]:
+              'TIDY5E.Settings.CharacterSheetTabSectionOrganization.option.origin',
+            [CONSTANTS.SECTION_ORGANIZATION_ACTION]:
+              'TIDY5E.Settings.CharacterSheetTabSectionOrganization.option.action',
+          },
+          default: CONSTANTS.SECTION_ORGANIZATION_ACTION,
+        },
+        get() {
+          return FoundryAdapter.getTidySetting<
+            | typeof CONSTANTS.SECTION_ORGANIZATION_ACTION
+            | typeof CONSTANTS.SECTION_ORGANIZATION_ORIGIN
+          >('ddbCharacterSheetTabOrganization');
+        },
+      },
+
+      // DDB-FORK: alias the API onto the inactive tidy5e-sheet module record
+      // (main.svelte.ts ready hook) so Tidy integrations keep finding it.
+      ddbExposeTidyApiAlias: {
+        options: {
+          name: 'TIDY5E.Settings.DdbExposeTidyApiAlias.name',
+          hint: 'TIDY5E.Settings.DdbExposeTidyApiAlias.hint',
+          scope: 'world',
+          config: true,
+          type: Boolean,
+          default: true,
+          requiresReload: true,
+        },
+        get() {
+          return FoundryAdapter.getTidySetting<boolean>('ddbExposeTidyApiAlias');
+        },
+      },
+
+      // DDB-FORK: the GM-managed backdrop gallery of the DDB Appearance app
+      // (wave 4): a folder the GM rescans, and the resulting file index so
+      // players need no file-browse permission.
+      ddbBackdropFolder: {
+        options: {
+          name: 'TIDY5E.Settings.DdbBackdropFolder.name',
+          hint: 'TIDY5E.Settings.DdbBackdropFolder.hint',
+          scope: 'world',
+          config: false,
+          type: String,
+          default: '',
+        },
+        get() {
+          return FoundryAdapter.getTidySetting<string>('ddbBackdropFolder');
+        },
+      },
+
+      ddbBackdropIndex: {
+        options: {
+          name: 'TIDY5E.Settings.DdbBackdropIndex.name',
+          scope: 'world',
+          config: false,
+          type: Object,
+          default: {},
+        },
+        get() {
+          return FoundryAdapter.getTidySetting<Record<string, any>>('ddbBackdropIndex');
+        },
+      },
+
       characterSheetTabAutomaticallyIncludeUsableItems: {
         options: {
           name: 'TIDY5E.Settings.CharacterSheetTabAutomaticallyIncludeUsableItems.name',

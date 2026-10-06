@@ -1,0 +1,351 @@
+/* DDB-FORK: Inventory upgrades (container / party pills, Other Possessions) of the DDB layout (ddb-next Wave 6).
+ * Every selector starts with .tidy5e-sheet.application.ddb (see FORK_NOTES).
+ *
+ * The tab is quadrone's ActorInventoryTab wrapped by DdbInventoryTab
+ * (src/sheets/ddb/character/tabs/), so the Equipment list keeps
+ * tab-content.css's flat restyle and its pinned footer untouched, and the
+ * pill row keeps actions-spells.css section 1 (sticky row, DDB pill look,
+ * the action bar's pinned group hidden under it). This file only styles
+ * what the wrapper adds:
+ *
+ *   1. View pills (EQUIPMENT | <containers> | PARTY) + the divider before the
+ *      Equipment view's ATTUNED | ATTUNABLE | EQUIPPED filter pills
+ *   2. Other Possessions, slotted between the list and the pinned footer
+ *   3. Container / Party views (header, capacity, tables, currency strip)
+ *
+ * Colours come from ddb-tokens.css (theme-aware); no theme forks here.
+ */
+
+/* ------------------------------------------------------------------ */
+/* 1. View pills                                                      */
+/* ------------------------------------------------------------------ */
+
+/* The group exists for assistive tech (role="group"); its pills wrap with the
+ * rest of the row as if they were direct children of it. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-filter-pills .ddb-inventory-views {
+  display: contents;
+}
+
+/* A hairline between the view pills and the filter pills: the two groups
+ * answer different questions (which list / which items of it). */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-filter-pills .ddb-filter-pills-divider {
+  flex: 0 0 auto;
+  align-self: stretch;
+  width: var(--ddb-border-width-panel);
+  margin-inline: var(--ddb-space-1);
+  margin-block: var(--ddb-space-half);
+  background: var(--ddb-list-border);
+}
+
+/* Container names are user text: keep a long one from eating the row. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-filter-pills :is(button, .button).ddb-filter-pill.ddb-inventory-view-pill {
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The selected view while a filter narrows it (EQUIPMENT doubles as ALL, so
+ * it is only FILLED while nothing filters the list; the filled pill is then
+ * the active filter). Outlined in the readable accent so the row still says
+ * which list is showing. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-filter-pills :is(button, .button).ddb-filter-pill.ddb-inventory-view-pill.current:not(.include) {
+  border-color: var(--ddb-accent-readable, var(--ddb-accent));
+  color: var(--ddb-text);
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Other Possessions                                               */
+/* ------------------------------------------------------------------ */
+
+/* Where it goes: under the Equipment list, ABOVE the pinned footer. The
+ * footer (`.sheet-footer.inventory-footer`) and the section are both direct
+ * children of the scroller (`.tidy-tab`, a flex column), but the footer comes
+ * first in DOM order (it is ActorInventoryTab's last element). `order` puts
+ * the section before it; the footer keeps tab-content.css section 10's sticky
+ * pin and `margin-block-start: auto`. The list's corner-clearance padding
+ * (section 9) would sit between the list and the section, so it moves below
+ * the section instead. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab:has(> .ddb-other-possessions) > .sheet-footer.inventory-footer {
+  order: 2;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab:has(> .ddb-other-possessions) > .tab-content {
+  padding-block-end: var(--ddb-space-2);
+}
+
+/* Inset: the table group titles above (CONSUMABLES, CONTAINERS ...) start
+ * after their expand-chevron column, which quadrone sizes with
+ * --t5e-table-header-row-height (tables.css .expand-button). The section's
+ * header, prose and editor take the same inset; its hairline stays full width
+ * (the border is outside the padding). */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab > .ddb-other-possessions {
+  order: 1;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddb-space-1);
+  margin-block: 0 calc(var(--ddb-space-5) + var(--ddb-radius-panel));
+  padding-block-start: var(--ddb-space-2);
+  padding-inline-start: var(--t5e-table-header-row-height, 1.5rem);
+  border-top: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  line-height: var(--ddb-lineheight-body);
+  color: var(--ddb-text);
+}
+
+/* Collapsed: empty in play mode is one header line, no body gap. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab > .ddb-other-possessions.empty:not(.unlocked):not(.editing) {
+  gap: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-other-possessions .ddb-other-possessions-header {
+  display: flex;
+  align-items: center;
+  gap: var(--ddb-space-1);
+  min-height: 1.5rem;
+}
+
+/* Same caps label as the table group headers (tab-content.css section 2). An
+ * h4, so the DDB prefix outranks quadrone's heading rules. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-other-possessions .ddb-other-possessions-title {
+  flex: 1 1 auto;
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label-md);
+  font-weight: var(--ddb-weight-label);
+  line-height: 1.3;
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-heading);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-other-possessions.empty:not(.unlocked) .ddb-other-possessions-title {
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-other-possessions :is(button, .button).ddb-other-possessions-edit {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-other-possessions :is(button, .button).ddb-other-possessions-edit:hover {
+  color: var(--ddb-accent-readable, var(--ddb-accent));
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-other-possessions .ddb-other-possessions-prose {
+  color: var(--ddb-text-prose, var(--ddb-text));
+  overflow-wrap: anywhere;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-other-possessions .ddb-other-possessions-prose > :first-child {
+  margin-block-start: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-other-possessions .ddb-other-possessions-prose > :last-child {
+  margin-block-end: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-other-possessions .ddb-other-possessions-hint {
+  margin: 0;
+  font-style: italic;
+  color: var(--ddb-text-muted);
+}
+
+/* The editor: a framed field of a usable height (the prose-mirror element
+ * sizes itself to its container). */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-other-possessions .ddb-other-possessions-editor {
+  display: flex;
+  flex-direction: column;
+  min-height: 12rem;
+  border: var(--ddb-border-width-panel) solid var(--ddb-panel-border);
+  border-radius: var(--ddb-radius-input);
+  background: var(--ddb-panel-bg);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-other-possessions .ddb-other-possessions-editor prose-mirror {
+  flex: 1 1 auto;
+  min-height: 12rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Container / Party views                                         */
+/* ------------------------------------------------------------------ */
+
+/* The view is the `.tab-content` of the pane (section 9 padding applies), a
+ * column: header, tables, currency strip. The pinned sheet footer follows it
+ * as a sibling, exactly as on the Equipment view. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab > .ddb-inventory-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddb-space-2);
+  min-width: 0;
+  padding-block-start: var(--ddb-space-1);
+}
+
+/* The view header (name, count, CAPACITY bar) stays at the top of the pane
+ * under the pill row while the list scrolls, like the Equipment view's
+ * search bar (actions-spells.css section 1): sticky to the scroller
+ * (`.tidy-tab`) by the pills' measured height, on the solid pane colour so
+ * rows never show through. It is the view's first child, so it stays pinned
+ * for the whole view. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view .ddb-inventory-view-header {
+  position: sticky;
+  top: var(--ddb-pills-height, 0px);
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ddb-space-1) var(--ddb-space-3);
+  padding-block: var(--ddb-space-1);
+  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+  background: var(--ddb-panel-bg-solid);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view .ddb-inventory-view-title {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: var(--ddb-space-1);
+  min-width: 0;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label-md);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-heading);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view .ddb-inventory-view-title:hover .ddb-inventory-view-name {
+  color: var(--ddb-accent-readable, var(--ddb-accent));
+  text-decoration: underline;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view .ddb-inventory-view-image {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  border-radius: var(--ddb-radius-control);
+  object-fit: cover;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view .ddb-inventory-view-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view .ddb-inventory-view-count {
+  font-size: var(--ddb-size-label);
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view .ddb-inventory-view-readonly {
+  font-size: var(--ddb-size-label);
+  color: var(--ddb-text-muted);
+}
+
+/* CAPACITY  [==== 12 / 30 lb ====]: the container sheet's own meter, given
+ * the rest of the header line. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view .ddb-inventory-capacity {
+  display: flex;
+  flex: 1 1 12rem;
+  align-items: center;
+  gap: var(--ddb-space-2);
+  min-width: 10rem;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view .ddb-inventory-capacity-label,
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view .ddb-inventory-currency-label {
+  flex: 0 0 auto;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view .ddb-inventory-capacity .meter {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* The meter is always dark (`.meter.theme-dark`); its unit ("lb") carries
+ * `.color-text-lightest`, which tab-content.css section 4 maps to the disabled
+ * grey: unreadable on the red fill. It takes the numbers' light label colour,
+ * as tab-content.css already does for the meter's other utility classes. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view .ddb-inventory-capacity .meter.theme-dark .label .units {
+  color: inherit;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view :is(.ddb-inventory-container-contents, .ddb-inventory-party-contents) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddb-space-3);
+  min-width: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view :is(.ddb-inventory-view-empty, .ddb-inventory-view-loading) {
+  margin: 0;
+  padding: var(--ddb-space-3) 0;
+  text-align: center;
+  font-style: italic;
+  color: var(--ddb-text-muted);
+}
+
+/* The container's (or party's) own purse, under its list. The actor's purse
+ * stays in the pinned footer below. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view :is(.ddb-inventory-container-currency, .ddb-inventory-party-currency) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ddb-space-1) var(--ddb-space-2);
+  padding: var(--ddb-space-2) var(--ddb-space-2);
+  border: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+  border-radius: var(--ddb-radius-control);
+  background: var(--ddb-table-row-alt-bg);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view :is(.ddb-inventory-container-currency, .ddb-inventory-party-currency) .input-group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ddb-space-half);
+  margin: 0;
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view :is(.ddb-inventory-container-currency, .ddb-inventory-party-currency) .currency-item {
+  box-sizing: border-box;
+  width: 6ch;
+  min-width: 0;
+  text-align: right;
+  font-family: var(--ddb-font-body);
+  color: var(--ddb-text);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view :is(.ddb-inventory-container-currency, .ddb-inventory-party-currency) .denomination {
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label);
+  font-weight: var(--ddb-weight-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-text-muted);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-inventory-view .ddb-inventory-container-currency :is(button, .button).ddb-inventory-transfer {
+  margin-inline-start: auto;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label-md);
+  text-transform: var(--ddb-transform-label);
+}

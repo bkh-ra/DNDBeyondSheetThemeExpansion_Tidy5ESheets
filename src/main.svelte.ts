@@ -26,6 +26,7 @@ import { Tidy5eItemSheetQuadrone } from './sheets/quadrone/Tidy5eItemSheetQuadro
 import { Tidy5eVehicleSheetQuadrone } from './sheets/quadrone/Tidy5eVehicleSheetQuadrone.svelte';
 import { Tidy5eCharacterSheetQuadrone } from './sheets/quadrone/Tidy5eCharacterSheetQuadrone.svelte';
 import { Tidy5eCharacterSheetDdb } from './sheets/ddb/Tidy5eCharacterSheetDdb.svelte'; // DDB-FORK
+import { registerDdbColumns } from 'src/sheets/ddb/registry/ddb-columns'; // DDB-FORK
 import { Tidy5eNpcSheetQuadrone } from './sheets/quadrone/Tidy5eNpcSheetQuadrone.svelte';
 import { ThemeQuadrone } from './theme/theme-quadrone.svelte';
 import { TidyNotificationsManager } from './features/notifications/TidyNotificationsManager';
@@ -85,6 +86,10 @@ Hooks.once('init', () => {
     },
     utils: registry.getUtils(),
   };
+
+  // DDB-FORK: the DDB layout's columns and partitions ('character-ddb') join
+  // the registry that CONFIG.TIDY5E was just built from.
+  registerDdbColumns();
 
   const documentSheetConfig = foundry.applications.apps.DocumentSheetConfig;
 
@@ -282,6 +287,18 @@ Hooks.once('ready', async () => {
   const tidy5eModule = FoundryAdapter.getModule(CONSTANTS.MODULE_ID);
   const api = Tidy5eSheetsApi._getApi();
   tidy5eModule.api = api;
+
+  // DDB-FORK: integrating modules look for game.modules.get('tidy5e-sheet').api.
+  // The real Tidy is never active alongside this fork (init guard above), so
+  // the same API object is aliased onto that inactive module record when the
+  // world setting allows. Known limit: consumers that also test `.active`
+  // still skip it.
+  if (SettingsProvider.settings.ddbExposeTidyApiAlias.get()) {
+    const legacyModule = game.modules.get(CONSTANTS.LEGACY_FLAG_SCOPE);
+    if (legacyModule && !legacyModule.active) {
+      legacyModule.api = api;
+    }
+  }
 
   if (!SettingsProvider.settings.hideClassic.get()) {
     import('./less/classic/classic.less');

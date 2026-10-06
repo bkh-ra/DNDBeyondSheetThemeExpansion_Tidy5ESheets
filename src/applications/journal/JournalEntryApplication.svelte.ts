@@ -1,3 +1,4 @@
+// DDB-FORK: mechanical rename only (SHEET_CSS_CLASS); no behaviour change
 import { TidyFlags } from 'src/foundry/TidyFlags';
 import type { DocumentJournalEntry } from 'src/foundry/TidyFlags.types';
 import { DocumentSheetDialog } from 'src/applications/DocumentSheetDialog.svelte';

@@ -18,12 +18,20 @@
   as a delta with resistances ignored (`options.ignore ??= true` in the system),
   positive for damage and negative for healing — the same call core dnd5e makes
   from `modifyTokenAttribute` for HP bar drags.
+
+  HP MANAGER (ddb-next Wave 5): the HIT POINTS / DEATH SAVES title is a button
+  (`.ddb-hp-block__title-button`, `aria-haspopup="dialog"`) that opens
+  DdbHpManagerPopover — D&D Beyond's "Hit Points" panel with a live preview,
+  temp HP, Restore life and the HP bonus / max override fields. It is
+  anchored to this panel (absolutely positioned under it), so it needs no
+  window of its own.
 -->
 <script lang="ts">
   import TextInputQuadrone from 'src/components/inputs/TextInputQuadrone.svelte';
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
   import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
   import DdbDeathSaves from './DdbDeathSaves.svelte';
+  import DdbHpManagerPopover from './DdbHpManagerPopover.svelte';
 
   let context = $derived(getCharacterSheetQuadroneContext());
 
@@ -71,6 +79,30 @@
 
     amount = null;
   }
+
+  /** The HP manager popover, opened from the title button. */
+  let managerOpen = $state(false);
+
+  let titleButton = $state<HTMLButtonElement>();
+
+  let managerId = $derived(`${appId}-ddb-hp-manager`);
+
+  /**
+   * Keyboard closes (Escape, the close button) hand focus back to the title
+   * button, which stays rendered while the popover unmounts; a click outside
+   * leaves focus where the click put it.
+   */
+  function closeManager({ restoreFocus }: { restoreFocus: boolean }) {
+    managerOpen = false;
+
+    if (restoreFocus) {
+      titleButton?.focus();
+    }
+  }
+
+  let titleLabel = $derived(
+    localize(context.showDeathSaves ? 'DND5E.DeathSave' : 'DND5E.HitPoints'),
+  );
 </script>
 
 <!--
@@ -84,7 +116,10 @@
      / MAX / TEMP has to be identical across the three, and MAX renders as a
      span rather than an input whenever the sheet is locked. See
      `.ddb-hp-block__value` in quick-info.css. -->
-<section class={['ddb-hp-block', { editable: context.editable }]}>
+<section
+  class={['ddb-hp-block', { editable: context.editable }]}
+  data-tidy-sheet-part="ddb-hp-block"
+>
   {#if context.editable}
     <div class="ddb-hp-block__applicator">
       <button
@@ -223,12 +258,31 @@
       </div>
     {/if}
 
+    <!-- The title doubles as the HP manager trigger for anyone who can edit
+         the actor; viewers keep the plain heading. -->
     <h2 class="ddb-hp-block__title">
-      {localize(
-        context.showDeathSaves ? 'DND5E.DeathSave' : 'DND5E.HitPoints',
-      )}
+      {#if context.editable}
+        <button
+          bind:this={titleButton}
+          type="button"
+          class="ddb-hp-block__title-button"
+          aria-haspopup="dialog"
+          aria-expanded={managerOpen}
+          aria-controls={managerOpen ? managerId : undefined}
+          data-hp-action="open-manager"
+          onclick={() => (managerOpen = !managerOpen)}
+        >
+          {titleLabel}
+        </button>
+      {:else}
+        {titleLabel}
+      {/if}
     </h2>
   </div>
+
+  {#if managerOpen && context.editable}
+    <DdbHpManagerPopover id={managerId} onclose={closeManager} />
+  {/if}
 
   <!--
     Controls stacked in the panel's top-right corner. Mirrors the quadrone

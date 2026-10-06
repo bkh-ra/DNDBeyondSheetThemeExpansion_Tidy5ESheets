@@ -39,6 +39,18 @@
  * fork — the same var-re-point technique tab-content.css uses. */
 .tidy5e-sheet.application.ddb .ddb-header-banner {
   --ddb-text: var(--ddb-header-text);
+  /* DDB-FORK (Wave 4 review): the secondary foregrounds follow the same rule.
+   * The light theme maps --ddb-text-muted / --ddb-label / --ddb-heading to
+   * #5b6970, which nearly vanishes on the dark strip (the species/class line,
+   * LEVEL / XP, the campaign label, the lock and gear). On the banner they
+   * take their Underdark values (ddb-tokens.css, `.theme-dark`), so the strip
+   * reads the same in both themes. */
+  --ddb-header-text-muted: #a2acb2;
+  --ddb-text-muted: var(--ddb-header-text-muted);
+  --ddb-label: var(--ddb-header-text-muted);
+  --ddb-heading: var(--ddb-header-text-muted);
+  /* Hairlines (campaign box, bottom rule) as in Underdark, not light grey. */
+  --ddb-panel-border: color-mix(in srgb, var(--ddb-accent) 60%, transparent);
 
   display: flex;
   flex: 0 0 auto;
@@ -60,16 +72,27 @@
   overflow: hidden;
 }
 
-/* DDB-FORK (matrix-sheet Table 2 row 6): Sheet Settings > Theme > "Header
- * Background Color" emits `--t5e-theme-color-header`, which quadrone paints on
- * its sheet header (`quadrone/header.css:48`) — a header DDB suppresses, so the
- * setting did nothing here. The DDB banner is that header, so it consumes the
- * variable, falling back to the capture-verified dark strip when unset. Gated
- * on `:not(.theme-parchment)` exactly like quadrone, so it applies only while
- * the header background is enabled. */
-.tidy5e-sheet.application.ddb:not(.theme-parchment) .ddb-header-banner {
-  background: var(--t5e-theme-color-header, var(--ddb-header-bg));
+/* DDB-FORK (Wave 4 review): the window header (title and controls) sits on a
+ * strip of the window background above the banner, and `.window-content` is
+ * pulled 20px up under it, so the controls straddle that strip and the
+ * banner. In Underdark both are the same dark; in the light theme the strip
+ * was the light page colour and the controls read half on light, half on dark.
+ * The strip now takes the banner colour in both themes (only on the sheet:
+ * the Manage dialogs share the `ddb` root class but have no banner). Below the
+ * strip the opaque `.window-content` covers this background. */
+.tidy5e-sheet.application.ddb.actor:not(.minimized) {
+  background:
+    linear-gradient(var(--ddb-header-bg), var(--ddb-header-bg)) top / 100%
+      3rem no-repeat,
+    var(--ddb-page-bg);
 }
+
+/* DDB-FORK (matrix-sheet Table 2 row 6, revised): Sheet Settings > Theme >
+ * "Header Background Color" (`--t5e-theme-color-header`) used to repaint this
+ * strip. It now follows quadrone's semantics instead — the colour is the ground
+ * UNDER the header image — so it lives at the bottom of the `.ddb-sheet`
+ * backdrop stack in ddb-layout.css, and the banner always keeps the
+ * capture-verified --ddb-header-bg declared above. */
 
 .tidy5e-sheet.application.ddb .ddb-header-banner .ddb-header-group {
   display: flex;
@@ -315,6 +338,16 @@
   cursor: pointer;
 }
 
+/* It is also keyboard-reachable (role=button, tabindex 0). Keyboard focus
+ * draws an inset accent rule under the name: inset, so the name row's
+ * `overflow: hidden` cannot clip it, and :focus-visible only, so a mouse click
+ * leaves the name exactly as it looks at rest. */
+.tidy5e-sheet.application.ddb h1.ddb-character-name:focus-visible {
+  outline: none;
+  box-shadow: inset 0 calc(-1 * var(--ddb-tab-indicator-width)) 0 0
+    var(--ddb-accent);
+}
+
 /* Editable name uses TextInputQuadrone, which renders an <input>. */
 .tidy5e-sheet.application.ddb input.ddb-character-name {
   flex: 0 1 auto;
@@ -424,8 +457,13 @@
  * quadrone sizes with --t5e-field-size-default (28px) — far taller than this
  * 12px row. Every box metric is pinned so the strip cannot grow, and the field
  * is sized in `ch` so it fits a five-figure XP total without measuring. */
+/* Edit mode's XP field. 5ch cut "48000" to "4800" (image review); the box is
+ * now 7ch of text plus its padding and hairlines, enough for any 5e XP total
+ * (level 20 is 355000). */
 .tidy5e-sheet.application.ddb input.ddb-header-xp-input {
-  width: 5ch;
+  width: calc(
+    7ch + 2 * var(--ddb-space-half) + 2 * var(--ddb-border-width-panel)
+  );
   height: auto;
   min-height: 0;
   padding: 0 var(--ddb-space-half);
@@ -607,6 +645,12 @@
     background-color var(--ddb-transition);
 }
 
+/* The glyph follows the button. Quadrone's light theme colours button icons
+ * itself (a dark grey, near-invisible on the dark strip). */
+.tidy5e-sheet.application.ddb .ddb-header-control > i {
+  color: inherit;
+}
+
 .tidy5e-sheet.application.ddb .ddb-header-control:hover {
   background: var(--ddb-accent-subtle-bg);
   color: var(--ddb-text);
@@ -625,19 +669,22 @@
 /* Narrow widths — shed the least essential slots first                */
 /* ------------------------------------------------------------------ */
 
-@media (max-width: 62.5rem) {
-  .tidy5e-sheet.application.ddb .ddb-header-group-campaign {
-    display: none;
-  }
+/* Wave 8: keyed on the sheet's own layout mode (`.ddb-sheet.ddb-mode-*`, set
+ * from the WINDOW width by DdbCharacterSheet.svelte) instead of the old
+ * `@media (max-width: 62.5rem / 50rem)` pair, which measured the browser
+ * viewport and so never fired for a narrow window on a wide screen. Stacked
+ * (auto: < 1100px, floor 760px) drops the campaign slot and the rest-button
+ * labels together: at 760px the strip has room for the portrait, the name
+ * and icon-only rests, not for both text slots. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-header-group-campaign {
+  display: none;
 }
 
-@media (max-width: 50rem) {
-  .tidy5e-sheet.application.ddb .ddb-rest-button-label {
-    display: none;
-  }
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-rest-button-label {
+  display: none;
+}
 
-  .tidy5e-sheet.application.ddb .ddb-rest-button {
-    width: 1.625rem;
-    padding: 0;
-  }
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-rest-button {
+  width: 1.625rem;
+  padding: 0;
 }

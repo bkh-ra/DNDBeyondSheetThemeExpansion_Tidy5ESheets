@@ -1,3 +1,4 @@
+// DDB-FORK: mechanical rename only (SHEET_CSS_CLASS); no behaviour change
 import { CONSTANTS } from 'src/constants';
 import type {
   ApplicationClosingOptions,

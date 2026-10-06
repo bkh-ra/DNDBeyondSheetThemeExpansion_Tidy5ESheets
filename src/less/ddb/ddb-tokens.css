@@ -52,6 +52,10 @@
   --ddb-pip-filled: var(--ddb-accent);
   --ddb-dice-roll-border: var(--ddb-accent);
   --ddb-stat-modified: var(--ddb-accent);
+  /* Weapon-mastery star after a mastered weapon in PROFICIENCIES (quadrone
+   * tints it with its lighter theme accent). Aliases only, no new values. */
+  --ddb-mastery-icon-color: var(--ddb-accent);
+  --ddb-mastery-icon-size: var(--ddb-size-label);
 
   /* ---- typography (theme-invariant) ----
    * The type scale is exactly six steps; do not add sizes outside it.
@@ -112,6 +116,36 @@
   --ddb-rarity-bar-width: 3px;
   --ddb-transition: 0.1s ease-in-out;
   --ddb-shadow-elevated: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+
+  /* ---- column budget (theme-invariant) ----
+   * NOT harvested from DDB: this is the layout's own width budget, measured
+   * in the live sheet (2026-10-05, both themes, play and edit mode) and read
+   * by `ddb-layout.css` (grid tracks + window floor) and `DdbSidebar.svelte`
+   * (the resize clamp reads --ddb-primary-min-width off `.ddb-columns`).
+   *   col-left    SAVES / SENSES / PROFICIENCIES. Saves and senses fit from
+   *               ~170px; 190 is held by the proficiency prose, which re-wraps
+   *               below ~187px and would then make the left column the tallest
+   *               one and push the sheet into scrolling (see left-column.css).
+   *   col-skills  SKILLS: the narrowest width at which "Animal Handling" still
+   *               fits in EDIT mode (extra config column) with ~3px to spare.
+   *   primary-min the centre pane's floor: Inventory keeps name, uses, time,
+   *               quantity and roll/formula plus the row menu; Spells keep
+   *               time, target, range and roll. Narrower, Tidy starts dropping
+   *               target / quantity / charges (it hides columns by width).
+   *   sidebar-min mirrors DDB_SIDEBAR_WIDTH_RANGE.min in DdbPreferences.ts. */
+  --ddb-col-left-width: 190px;
+  --ddb-col-skills-width: 204px;
+  --ddb-primary-min-width: 580px;
+  --ddb-sidebar-min-width: 220px;
+  /* Gap between the four column tracks (and the window-floor arithmetic). */
+  --ddb-column-gap: 6px;
+  /* SKILLS row grid tracks (left-column.css): PROF pip, MOD abbreviation,
+   * BONUS chip, and the box's inline padding. Mode-scoped so the compact
+   * SKILLS column can still hold "Animal Handling" in edit mode. */
+  --ddb-skills-track-prof: 24px;
+  --ddb-skills-track-mod: 28px;
+  --ddb-skills-track-bonus: 36px;
+  --ddb-skills-pad-inline: var(--ddb-space-2);
 
   /* ---- light theme (DDB default) ---- */
   /* DDB renders the header strip dark in BOTH themes (see captures) */
@@ -206,6 +240,138 @@
   --ddb-tab-inactive-color: #a2acb2;
   --ddb-condition-muted: #a2acb2;
   --ddb-defense-active: #fff;
+}
+
+/* ---- layout modes (ddb-next Wave 8) ----
+ * `.ddb-sheet` carries one of `ddb-mode-full | -compact | -stacked`, chosen
+ * from the window width (or pinned by the `layoutMode` preference, see
+ * `resolveDdbLayoutMode` in DdbPreferences.ts). Full uses the column budget
+ * above. COMPACT (auto: 1100-1319px windows) narrows both stat columns and
+ * the primary floor, and tightens the column gap; the SKILLS tracks shrink
+ * with it so "Animal Handling" (85px of text) still fits in EDIT mode:
+ * 194 - 2x4 padding - 24 - 26 - 34 - 14 (config) = 88px for the name.
+ * The left column's proficiency prose re-wraps at 180px; the density logic
+ * accounts for the extra height (it measures, it does not assume).
+ * STACKED keeps the full tokens; its grid is `1fr 1fr` (ddb-layout.css). */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-compact {
+  --ddb-col-left-width: 180px;
+  --ddb-col-skills-width: 194px;
+  --ddb-primary-min-width: 520px;
+  --ddb-column-gap: 4px;
+  --ddb-skills-track-mod: 26px;
+  --ddb-skills-track-bonus: 34px;
+  --ddb-skills-pad-inline: var(--ddb-space-1);
+}
+
+/* ---- vertical density (ddb-next Wave 8; theme-invariant) ----
+ * NOT harvested: the layout's own vertical budget. The sheet window never
+ * scrolls; `DdbCharacterSheet.svelte` fits the two stat columns to the height
+ * the column row gets.
+ *
+ * ONE CONTINUOUS FACTOR. `--ddb-density-fit` runs from 0 (normal: exactly the
+ * pre-Wave-8 geometry, so a tall window looks unchanged) to 1 (the densest
+ * geometry), and every token below is linear in it: `N - (N - D) * fit`,
+ * rounded to whole px so rows, rules and baselines stay on the pixel grid.
+ * The component sets it inline on `.ddb-sheet` (it MUST be resolved on this
+ * element, which is why these tokens live here and not on the root): the
+ * smallest fit at which the taller stat column still fits, found by
+ * measuring, so the columns end within a few px of the body's bottom.
+ *
+ * COARSE MARKERS (the class on `.ddb-sheet`, for CSS and the audit harness):
+ *   ddb-density-normal   fit = 0, no dense-only features.
+ *   ddb-density-compact  fit > 0, no dense-only features.
+ *   ddb-density-dense    the dense-only features are on (below), at whatever
+ *                        fit is then still needed (often less than 1). They
+ *                        are discrete, so the component only turns them on
+ *                        when fit = 1 alone cannot fit the columns.
+ *   ddb-density-overflow (added to dense) not even dense + fit 1 fits; the
+ *                        stat columns scroll (ddb-layout.css).
+ *
+ * Pitch = row + gap + list margin (Foundry core's `ul li` 0.25rem, made a
+ * token): skills 32 -> 20, senses 34 -> 21, saves 34 -> 25. The quick-info
+ * band (quick-info.css) scales its row uniformly: 6+95+6 = 107 -> 2+84+2 = 88. */
+.tidy5e-sheet.application.ddb .ddb-sheet {
+  --ddb-density-fit: 0;
+  --ddb-skills-fit: var(--ddb-density-fit);
+
+  /* Sheet body (ddb-layout.css): padding above the band / below the columns
+   * and the band-to-columns gap; gap between boxes in a column (`.ddb-col`). */
+  --ddb-body-pad-top: round(calc(6px - 2px * var(--ddb-density-fit)), 1px);
+  --ddb-body-pad-bottom: round(calc(8px - 4px * var(--ddb-density-fit)), 1px);
+  --ddb-body-gap: round(calc(6px - 2px * var(--ddb-density-fit)), 1px);
+  --ddb-stat-gap: round(calc(6px - 2px * var(--ddb-density-fit)), 1px);
+  /* Stat-box frame (left-column.css `.ddb-box`): block padding, the gap
+   * between body blocks, and the bottom title band (gap above it, its top
+   * padding, its height). */
+  --ddb-box-pad-top: round(calc(12px - 7px * var(--ddb-density-fit)), 1px);
+  --ddb-box-pad-bottom: round(calc(8px - 5px * var(--ddb-density-fit)), 1px);
+  --ddb-box-body-gap: round(calc(10px - 7px * var(--ddb-density-fit)), 1px);
+  --ddb-box-footer-gap: round(calc(8px - 7px * var(--ddb-density-fit)), 1px);
+  --ddb-box-footer-pad: round(calc(4px - 4px * var(--ddb-density-fit)), 1px);
+  --ddb-box-footer-height: round(calc(18px - 6px * var(--ddb-density-fit)), 1px);
+  /* Row geometry. */
+  --ddb-list-row-margin: round(calc(4px - 4px * var(--ddb-density-fit)), 1px);
+  --ddb-save-row: round(calc(30px - 7px * var(--ddb-density-fit)), 1px);
+  --ddb-save-row-gap: round(calc(4px - 2px * var(--ddb-density-fit)), 1px);
+  --ddb-sense-row: round(calc(26px - 6px * var(--ddb-density-fit)), 1px);
+  --ddb-sense-row-gap: round(calc(4px - 3px * var(--ddb-density-fit)), 1px);
+  --ddb-skill-row: round(calc(26px - 6px * var(--ddb-density-fit)), 1px);
+  --ddb-skill-row-gap: round(calc(2px - 2px * var(--ddb-density-fit)), 1px);
+  /* Block padding of the skill name inside its row; the name's line box is
+   * the row minus twice this, so the hairline stays on the row's bottom. */
+  --ddb-skill-name-pad: round(calc(4px - 2px * var(--ddb-density-fit)), 1px);
+  --ddb-skills-header-height: round(calc(20px - 6px * var(--ddb-density-fit)), 1px);
+  --ddb-skills-header-gap: round(calc(4px - 2px * var(--ddb-density-fit)), 1px);
+  /* Value pills (skill bonus) and the edit-mode selects inside those rows. */
+  --ddb-chip-height: round(calc(22px - 4px * var(--ddb-density-fit)), 1px);
+  --ddb-stat-select-height: round(calc(20px - 2px * var(--ddb-density-fit)), 1px);
+  /* SAVING THROWS extras: concentration row (rule offset + button height). */
+  --ddb-concentration-gap: round(calc(6px - 3px * var(--ddb-density-fit)), 1px);
+  --ddb-concentration-height: round(calc(24px - 6px * var(--ddb-density-fit)), 1px);
+  /* TAB HEADER STRIPS (tab-strips.css): one card height for every tab's
+   * strip, so the list top never jumps between tabs (user request 2026-10-05). */
+  --ddb-tab-strip-card-height: 3.5rem;
+  /* PROFICIENCIES: group separation (margin and padding each), the label to
+   * prose gap, the prose line-height, and the edit-mode tool row. */
+  --ddb-prof-group-gap: round(calc(10px - 6px * var(--ddb-density-fit)), 1px);
+  --ddb-prof-items-gap: round(calc(4px - 3px * var(--ddb-density-fit)), 1px);
+  --ddb-stat-lineheight: calc(1.4 - 0.2 * var(--ddb-density-fit));
+  --ddb-tool-row: round(calc(22px - 4px * var(--ddb-density-fit)), 1px);
+  /* Stat-column text: the body's two steps; only the dense marker drops them
+   * by 1px (below). The type scale stays six steps; these alias into it. */
+  --ddb-stat-size-body: var(--ddb-size-body);
+  --ddb-stat-size-label-md: var(--ddb-size-label-md);
+  /* Quick-info band (quick-info.css): block padding, and the uniform scale of
+   * the band row (1 -> 84/95). */
+  --ddb-quick-info-pad: round(calc(6px - 4px * var(--ddb-density-fit)), 1px);
+  --ddb-ability-box-scale: calc(1 - 11 / 95 * var(--ddb-density-fit));
+  /* INITIATIVE / ARMOR CLASS / HIT DICE atop the primary column (1 -> 0.9). */
+  --ddb-combat-row-scale: calc(1 - 0.1 * var(--ddb-density-fit));
+}
+
+/* SKILLS COLUMN FIT. The global fit is sized to the TALLER stat column (the
+ * left one, for most characters), which left SKILLS ending ~110px short of
+ * it. The skill rows therefore have a fit of their own, `--ddb-skills-fit`
+ * (set inline on `.ddb-sheet` by the component; it defaults to the global
+ * fit): the loosest pitch, never looser than normal (fit 0, 32px) and never
+ * denser than the global fit, at which the SKILLS box still fits, so it ends
+ * level with the left column. Only the row pitch follows it; the box frame,
+ * header and text stay on the global fit so both columns read as one set. */
+.tidy5e-sheet.application.ddb .ddb-sheet .ddb-col-skills {
+  --ddb-list-row-margin: round(calc(4px - 4px * var(--ddb-skills-fit)), 1px);
+  --ddb-skill-row: round(calc(26px - 6px * var(--ddb-skills-fit)), 1px);
+  --ddb-skill-row-gap: round(calc(2px - 2px * var(--ddb-skills-fit)), 1px);
+  --ddb-skill-name-pad: round(calc(4px - 2px * var(--ddb-skills-fit)), 1px);
+  --ddb-chip-height: round(calc(22px - 4px * var(--ddb-skills-fit)), 1px);
+  --ddb-stat-select-height: round(calc(20px - 2px * var(--ddb-skills-fit)), 1px);
+}
+
+/* DENSE-ONLY FEATURES (discrete, so they come last): stat-column text 1px
+ * smaller (13 -> 12, 12 -> 11), plus the run-in PROFICIENCIES labels and the
+ * smaller saves note (left-column.css). */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-density-dense {
+  --ddb-stat-size-body: 12px;
+  --ddb-stat-size-label-md: 11px;
 }
 
 /* Base type inside the DDB layout */

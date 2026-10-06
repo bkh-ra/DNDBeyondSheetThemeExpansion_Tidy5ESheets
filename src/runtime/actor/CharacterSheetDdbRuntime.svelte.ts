@@ -3,14 +3,16 @@ import { ActorSheetQuadroneRuntime } from '../ActorSheetQuadroneRuntime.svelte';
 import { CONSTANTS } from 'src/constants';
 import { TidyFlags } from 'src/foundry/TidyFlags';
 import ActorEffectsTab from 'src/sheets/quadrone/actor/tabs/ActorEffectsTab.svelte';
-import ActorInventoryTab from 'src/sheets/quadrone/actor/tabs/ActorInventoryTab.svelte';
 import ActorJournalTab from 'src/sheets/quadrone/actor/tabs/ActorJournalTab.svelte';
-import ActorSpellbookTab from 'src/sheets/quadrone/actor/tabs/ActorSpellbookTab.svelte';
 import CharacterAttributesTab from 'src/sheets/quadrone/actor/tabs/CharacterAttributesTab.svelte';
 import CharacterBiographyTab from 'src/sheets/quadrone/actor/tabs/CharacterBiographyTab.svelte';
-import CharacterFeaturesTab from 'src/sheets/quadrone/actor/tabs/CharacterFeaturesTab.svelte';
+import DdbFeaturesTab from 'src/sheets/ddb/character/tabs/DdbFeaturesTab.svelte';
 import CharacterBastionTab from 'src/sheets/quadrone/actor/tabs/CharacterBastionTab.svelte';
-import CharacterSheetTab from 'src/sheets/quadrone/actor/tabs/CharacterSheetTab.svelte';
+import DdbActionsTab from 'src/sheets/ddb/character/tabs/DdbActionsTab.svelte';
+import DdbSpellsTab from 'src/sheets/ddb/character/tabs/DdbSpellsTab.svelte';
+import DdbInventoryTab from 'src/sheets/ddb/character/tabs/DdbInventoryTab.svelte';
+import DdbExtrasTab from 'src/sheets/ddb/character/tabs/DdbExtrasTab.svelte';
+import { DDB_EXTRAS } from 'src/sheets/ddb/features/extras/extras-constants';
 import * as Bastion from 'src/features/facility/Bastion';
 import { buildCharacterSheetTabOptions } from 'src/settings/tab-options/CharacterSheetTabOptions';
 import { buildActorInventoryTabOptions } from 'src/settings/tab-options/ActorInventoryTabOptions';
@@ -20,24 +22,30 @@ import { buildCharacterFeaturesTabOptions } from 'src/settings/tab-options/Chara
 /**
  * DDB-FORK: Tab registry for the DDB (D&D Beyond-style) character sheet layout.
  *
- * Phase 0 (current): reuses the quadrone tab components verbatim so the layout
- * is functional end-to-end; tabs are ordered to match the D&D Beyond primary
- * box (Actions | Spells | Inventory | Features & Traits | Background | Notes)
- * followed by the Foundry-only extra tabs (Effects, Bastion, Character).
+ * Tabs are ordered to match the D&D Beyond primary box (Actions | Spells |
+ * Inventory | Features & Traits | Background | Notes | Extras) followed by
+ * the Foundry-only extra tabs (Effects, Bastion, Character).
  *
- * Later phases will replace these components with DDB-styled versions from
- * src/sheets/ddb/character/tabs/ one at a time.
+ * Actions and Spells (ddb-next Wave 3) and Inventory (Wave 6) mount DDB
+ * wrappers (src/sheets/ddb/character/tabs/) that compose the quadrone tab
+ * with the D&D Beyond pieces around it; the other tabs still reuse the
+ * quadrone components verbatim.
+ * Extras (Wave 7) is the one DDB-only tab (`ddb-extras`,
+ * src/sheets/ddb/character/tabs/DdbExtrasTab.svelte); it is in the default
+ * tab list, so tab configuration shows, orders and hides it like the others.
+ * Tab ids are unchanged, so tab configuration, sheet pins and API
+ * registrations keep addressing the same tabs.
  */
 export const CharacterSheetDdbRuntime =
   new ActorSheetQuadroneRuntime<CharacterSheetQuadroneContext>(
     [
       {
-        // DDB tab labels: localization keys where dnd5e/Tidy provide an exact
-        // match, plain strings otherwise (Tabs.svelte runs every title through
-        // `localize()`, and Foundry echoes unknown keys back verbatim).
+        // DDB tab labels: dnd5e/Tidy localization keys where one is an exact
+        // match, `TIDY5E.DdbLayout.*` keys otherwise (Tabs.svelte runs every
+        // title through `localize()`).
         title: 'DND5E.ActionPl',
         content: {
-          component: CharacterSheetTab,
+          component: DdbActionsTab,
           type: 'svelte',
         },
         id: CONSTANTS.TAB_ACTOR_ACTIONS,
@@ -48,7 +56,7 @@ export const CharacterSheetDdbRuntime =
       {
         title: 'TYPES.Item.spellPl',
         content: {
-          component: ActorSpellbookTab,
+          component: DdbSpellsTab,
           type: 'svelte',
         },
         id: CONSTANTS.TAB_ACTOR_SPELLBOOK,
@@ -59,7 +67,7 @@ export const CharacterSheetDdbRuntime =
       {
         title: 'DND5E.Inventory',
         content: {
-          component: ActorInventoryTab,
+          component: DdbInventoryTab,
           type: 'svelte',
         },
         id: CONSTANTS.TAB_ACTOR_INVENTORY,
@@ -68,10 +76,11 @@ export const CharacterSheetDdbRuntime =
         tabOptionsBuilder: buildActorInventoryTabOptions,
       },
       {
-        // No dnd5e key pairs "Features" with "Traits"; DDB's label is literal.
-        title: 'Features & Traits',
+        // No dnd5e key pairs "Features" with "Traits", so the DDB label has its
+        // own key.
+        title: 'TIDY5E.DdbLayout.Tab.FeaturesAndTraits',
         content: {
-          component: CharacterFeaturesTab,
+          component: DdbFeaturesTab,
           type: 'svelte',
         },
         id: CONSTANTS.TAB_CHARACTER_FEATURES,
@@ -98,6 +107,16 @@ export const CharacterSheetDdbRuntime =
         id: CONSTANTS.TAB_CHARACTER_JOURNAL,
         layout: CONSTANTS.SHEET_LAYOUT_DDB,
         iconClass: 'fa-solid fa-notebook',
+      },
+      {
+        title: 'TIDY5E.DdbLayout.Extras.Title',
+        content: {
+          component: DdbExtrasTab,
+          type: 'svelte',
+        },
+        id: DDB_EXTRAS.TAB_ID,
+        layout: CONSTANTS.SHEET_LAYOUT_DDB,
+        iconClass: 'fa-solid fa-paw',
       },
       {
         title: 'DND5E.Effects',
@@ -138,9 +157,14 @@ export const CharacterSheetDdbRuntime =
       CONSTANTS.TAB_CHARACTER_FEATURES,
       CONSTANTS.TAB_ACTOR_BIOGRAPHY,
       CONSTANTS.TAB_CHARACTER_JOURNAL,
+      DDB_EXTRAS.TAB_ID,
       CONSTANTS.TAB_EFFECTS,
       CONSTANTS.TAB_CHARACTER_BASTION,
-      CONSTANTS.TAB_CHARACTER_ATTRIBUTES,
+      // Quadrone's Character tab (TAB_CHARACTER_ATTRIBUTES) stays REGISTERED
+      // above but is not a default tab (user decision 2026-10-05): the DDB
+      // left columns already show skills, saves, senses and proficiencies.
+      // Sheet Settings > Tab Configuration (world key character-ddb, or the
+      // per-actor ddb-tab-configuration flag) brings it back.
     ],
     {
       // Own per-actor flag + world key so DDB and quadrone tab configurations

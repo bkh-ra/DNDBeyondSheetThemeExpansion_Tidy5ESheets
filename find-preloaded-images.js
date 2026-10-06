@@ -5,8 +5,10 @@ import path from 'path';
 const SRC_FOLDER = './src';
 const OUTPUT_FILE = './src/utils/preloaded-images.generated.ts';
 const SCAN_EXTENSIONS = new Set(['.css', '.less', '.svelte', '.ts', '.hbs']);
+// DDB-FORK: scan for this module's asset path (sources were renamed to
+// modules/ddb5e-sheets/); the upstream regex matched nothing after the fork.
 const IMAGE_REFERENCE =
-  /modules\/tidy5e-sheet\/images\/[\w\-./]+\.(?:webp|png|jpe?g|svg|gif|avif)/gi;
+  /modules\/ddb5e-sheets\/images\/[\w\-./]+\.(?:webp|png|jpe?g|svg|gif|avif)/gi;
 
 function collectFiles(dir, files = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
