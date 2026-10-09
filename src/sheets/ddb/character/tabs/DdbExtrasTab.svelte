@@ -10,7 +10,9 @@
     LINKED      the profiles of its summon activities (read-only)
 
   Adding: drop an Actor anywhere on the tab, or MANAGE EXTRAS (dnd5e's
-  Compendium Browser; Import and link / Link only per chosen actor). The
+  Compendium Browser). Either way only the UUID is linked: a compendium
+  entry is shown read-only and nothing is ever imported or created (user
+  decision 2026-10-09). The
   drop is claimed on this tab's own root (`ondrop`, Actor drops only, with
   stopPropagation) so the sheet's shared `_onDropActor` (dnd5e's transform
   prompt) never sees it; any other drop falls through to the sheet as usual.
