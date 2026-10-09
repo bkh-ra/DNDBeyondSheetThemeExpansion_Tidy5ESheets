@@ -24,7 +24,11 @@ import { FoundryAdapter } from 'src/foundry/foundry-adapter';
 import type { SpellcastingClassContext } from 'src/types/types';
 import { error } from 'src/utils/logging';
 
-const localize = FoundryAdapter.localize;
+// Lazy: this module is imported by the DDB sheet class, which sits in an import
+// cycle with foundry-adapter; a module-scope `FoundryAdapter.localize` read
+// here ran before FoundryAdapter was initialised and threw at startup.
+const localize = (key: string, data?: Record<string, unknown>) =>
+  FoundryAdapter.localize(key, data);
 
 /** Players are locked out of adding / removing here when the GM says so. */
 export function isManageSpellsLocked(): boolean {
