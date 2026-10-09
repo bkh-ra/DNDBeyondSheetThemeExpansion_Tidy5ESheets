@@ -22,7 +22,11 @@ import { FoundryAdapter } from 'src/foundry/foundry-adapter';
 import { TidyFlags } from 'src/foundry/TidyFlags';
 import { error } from 'src/utils/logging';
 
-const localize = FoundryAdapter.localize;
+// Lazy: this module is imported by the DDB sheet class, which sits in an import
+// cycle with foundry-adapter; a module-scope `FoundryAdapter.localize` read
+// here ran before FoundryAdapter was initialised and threw at startup.
+const localize = (key: string, data?: Record<string, unknown>) =>
+  FoundryAdapter.localize(key, data);
 
 const KEEP = '__keep';
 const NEW_SECTION = '__new';

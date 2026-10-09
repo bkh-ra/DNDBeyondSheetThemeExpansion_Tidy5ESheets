@@ -116,6 +116,7 @@ live in `design/audit/`.
 
 ### Releases
 
+- **13.10.5-ddb.10** (2026-10-09, hotfix): ddb.9 threw at startup (a module-scope `FoundryAdapter.localize` read in the new move module ran inside the settings import cycle), so the DDB sheet never registered and characters fell back to the default dnd5e sheet; the read is lazy now.
 - **13.10.5-ddb.9** (2026-10-09): edge auto-scroll while dragging inside the lists, and "Move to…" in the item context menu (sections shown on the tab, default or new section; containers for physical items).
 - **13.10.5-ddb.8** (2026-10-09, hotfix): the Extras tab never imports or creates actors; compendium creatures are linked read-only by UUID and a creature already linked through a world copy is not added again (user report: statblocks kept being added to the campaign).
 - **13.10.5-ddb.7** (2026-10-06, merge commit of `ddb-next` into `ddb`): the DDB layout feature program - detail-pane sidebar, true Actions / Spells tabs, Manage menu with Preferences and Appearance, HP manager and condition panes, inventory views and Other Possessions, Extras tab, height-driven density and width-driven layout modes, quick wins and look flips, plus the 2026-10-05 review rounds (pinned uniform tab header strips, full-bleed panels, tooltip switches, Character tab hidden by default). Gated on the sandbox data folder: full harness suite 297 pass / 34 skips / 0 fails on 5581a69a1.
