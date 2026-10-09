@@ -43,8 +43,6 @@ export const DDB_EXTRAS_LANG = {
     'TIDY5E.DdbLayout.Extras.DismissConfirm',
     'Dismiss {name}? The summoned actor will be deleted.',
   ],
-  IMPORT_LINK: ['TIDY5E.DdbLayout.Extras.ImportLink', 'Import and link'],
-  LINK_ONLY: ['TIDY5E.DdbLayout.Extras.LinkOnly', 'Link (read-only)'],
   AC: ['TIDY5E.DdbLayout.Extras.Ac', 'AC'],
   HP: ['TIDY5E.DdbLayout.Extras.Hp', 'HP'],
   SPEED: ['TIDY5E.DdbLayout.Extras.Speed', 'Speed'],
@@ -65,10 +63,6 @@ export const DDB_EXTRAS_LANG = {
   ALREADY_LINKED: [
     'TIDY5E.DdbLayout.Extras.AlreadyLinked',
     '{name} is already one of the extras.',
-  ],
-  LINK_CHOICE: [
-    'TIDY5E.DdbLayout.Extras.LinkChoice',
-    'Import {name} into the world as a creature you own, or link the compendium entry read-only?',
   ],
   SUMMONED_BY: ['TIDY5E.DdbLayout.Extras.SummonedBy', 'Summoned by {source}'],
   PROFILE_OF: ['TIDY5E.DdbLayout.Extras.ProfileOf', 'Summon profile of {source}'],

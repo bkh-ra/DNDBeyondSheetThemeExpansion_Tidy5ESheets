@@ -6,21 +6,20 @@ import { DDB_EXTRAS, DDB_EXTRAS_LANG } from './extras-constants';
 import { resolveExtraActor, type DdbExtra } from './Extras';
 
 /**
- * DDB-FORK: what the DDB Extras tab DOES (ddb-next Wave 7): link, import,
- * remove, dismiss, open. Every write goes through `DdbFlags.extras` (the
- * character's `flags.ddb5e-sheets.extras`) or the extra's own document.
+ * DDB-FORK: what the DDB Extras tab DOES (ddb-next Wave 7): link, remove,
+ * dismiss, open. Every write goes through `DdbFlags.extras` (the character's
+ * `flags.ddb5e-sheets.extras`) or the extra's own document. The tab NEVER
+ * creates or imports an actor (user decision 2026-10-09: the earlier
+ * "Import and link" choice put a new world copy in the campaign per pick).
  *
- *   link     a world actor: its UUID is added to the flag. A compendium
- *            actor: the user picks Import and link (a world copy owned by
- *            the user and the character's player owners, then linked) or
- *            Link only (the compendium UUID, shown read-only). Users who
- *            may not create actors only get Link only.
+ *   link     a world actor or a compendium entry: its UUID is added to the
+ *            flag; a compendium entry is shown read-only (Open reaches the
+ *            compendium sheet). A creature already linked through a world
+ *            copy of the same compendium entry counts as linked.
  *   remove   takes a UUID out of the flag (confirmed); the actor stays.
  *   dismiss  deletes a summoned creature (its token for a token actor;
  *            confirmed), and drops it from the flag if it was linked too.
  */
-
-const OWNER = () => CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER;
 
 function escapeHtml(text: string): string {
   const div = document.createElement('div');
@@ -133,92 +132,36 @@ export async function dismissExtra(
 }
 
 /**
- * Ask how a compendium actor becomes an extra: 'import' (Import and link),
- * 'link' (Link only) or null (closed). Users without ACTOR_CREATE get 'link'
- * without a question.
- */
-async function chooseLinkMode(
-  doc: any,
-  renderOptions: Record<string, any>,
-): Promise<'import' | 'link' | null> {
-  if (!game.user?.can?.('ACTOR_CREATE')) {
-    return 'link';
-  }
-
-  const name = escapeHtml(doc.name ?? '');
-  const img = escapeHtml(doc.img || 'icons/svg/mystery-man.svg');
-  const text = escapeHtml(
-    ddbLocalize(DDB_EXTRAS_LANG.LINK_CHOICE, { name: doc.name ?? '' }),
-  );
-
-  try {
-    // Foundry 14 reads `renderOptions` (a detached sheet window keeps its
-    // dialogs); Foundry 13 ignores it.
-    const choice = await foundry.applications.api.DialogV2.wait({
-      window: {
-        title: ddbLocalize(DDB_EXTRAS_LANG.MANAGE),
-        icon: 'fa-solid fa-paw',
-      },
-      position: { width: 440 },
-      classes: ['ddb-extras-link-dialog'],
-      content: `<div class="ddb-extras-link-choice" style="display:flex;gap:0.75rem;align-items:center"><img src="${img}" alt="${name}" width="48" height="48" style="flex:0 0 auto;border:none;border-radius:3px;object-fit:cover"><p style="margin:0">${text}</p></div>`,
-      buttons: [
-        {
-          action: 'import',
-          label: ddbLocalize(DDB_EXTRAS_LANG.IMPORT_LINK),
-          icon: 'fa-solid fa-file-import',
-          default: true,
-        },
-        {
-          action: 'link',
-          label: ddbLocalize(DDB_EXTRAS_LANG.LINK_ONLY),
-          icon: 'fa-solid fa-link',
-        },
-      ],
-      rejectClose: false,
-      renderOptions,
-    });
-
-    return choice === 'import' || choice === 'link' ? choice : null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Import a compendium actor as a world actor owned by the user (and by the
- * character's non-GM owners, so the player can run it when a GM imports it).
- */
-async function importExtra(actor: Actor5e, doc: any): Promise<string | null> {
-  const data = game.actors.fromCompendium(doc);
-  data.ownership ??= {};
-  data.ownership[game.user.id] = OWNER();
-
-  for (const user of game.users ?? []) {
-    if (!user.isGM && actor.testUserPermission(user, OWNER())) {
-      data.ownership[user.id] = OWNER();
-    }
-  }
-
-  const created = await Actor.implementation.create(data, {
-    renderSheet: false,
-  });
-
-  return created?.uuid ?? null;
-}
-
-/**
- * Turn actors into extras of `actor`: world actors are linked, compendium
- * actors imported or linked as the user chooses. Duplicates, the character
+ * Turn actors into extras of `actor` by UUID: world actors and compendium
+ * entries alike, nothing imported or created. Duplicates (including a
+ * compendium entry already linked through a world copy of it), the character
  * itself and non-creature actors are skipped.
  */
 export async function linkExtras(
   actor: Actor5e,
   docs: any[],
-  renderOptions: Record<string, any> = {},
+  _renderOptions: Record<string, any> = {},
 ): Promise<string[]> {
   const current = new Set(DdbFlags.extras.get(actor));
   const toLink: string[] = [];
+
+  // Compendium entries already represented by a linked world actor: one
+  // imported from that entry (its compendiumSource) or dnd5e's auto-imported
+  // summon copy (its duplicateSource).
+  const linkedSources = new Set<string>();
+  for (const uuid of current) {
+    const linked: any = uuid.startsWith('Actor.')
+      ? game.actors?.get(uuid.slice('Actor.'.length))
+      : null;
+    for (const source of [
+      linked?._stats?.compendiumSource,
+      linked?._stats?.duplicateSource,
+    ]) {
+      if (typeof source === 'string' && source) {
+        linkedSources.add(source);
+      }
+    }
+  }
 
   for (const doc of docs) {
     if (!doc || doc.uuid === actor.uuid) {
@@ -230,32 +173,19 @@ export async function linkExtras(
       continue;
     }
 
-    if (current.has(doc.uuid) || toLink.includes(doc.uuid)) {
+    if (
+      current.has(doc.uuid) ||
+      toLink.includes(doc.uuid) ||
+      linkedSources.has(doc.uuid)
+    ) {
       ui.notifications.info(
         ddbLocalize(DDB_EXTRAS_LANG.ALREADY_LINKED, { name: doc.name ?? '' }),
       );
       continue;
     }
 
-    if (!doc.pack) {
-      toLink.push(doc.uuid);
-      continue;
-    }
-
-    const mode = await chooseLinkMode(doc, renderOptions);
-
-    if (mode === 'link') {
-      toLink.push(doc.uuid);
-    } else if (mode === 'import') {
-      try {
-        const uuid = await importExtra(actor, doc);
-        if (uuid) {
-          toLink.push(uuid);
-        }
-      } catch (e) {
-        error('Unable to import an extra.', true, e);
-      }
-    }
+    // World actor or compendium entry: the UUID, nothing else.
+    toLink.push(doc.uuid);
   }
 
   if (toLink.length) {
