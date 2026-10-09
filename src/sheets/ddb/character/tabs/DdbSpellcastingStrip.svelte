@@ -8,13 +8,13 @@
   strip replaces those cards on the DDB sheet; actions-spells.css hides
   `.spellbook-footer .spellcasting-cards` but keeps the rest of the footer.
 
-  MANAGE SPELLS opens dnd5e's Compendium Browser in selection mode, locked to
-  spells on the class's spell list (`spelllist: { 'class:<id>': 1 }`, the
-  filter dnd5e 5.3 registers for spells; spells have no `class` filter) up to
-  the highest slot level the actor has, and
-  creates the chosen spells through the sheet's own drop pipeline with
-  `system.sourceItem = 'class:<id>'` (dnd5e 5.3's successor of the
-  deprecated `sourceClass`, which it migrates to exactly that string).
+  MANAGE SPELLS opens the sheet's own dialog (features/spells/
+  ddb-manage-spells.ts, user request 2026-10-09): the character's spells by
+  level with Remove, and "Add spells..." into dnd5e's Compendium Browser for
+  the class (spell list + slot-level lock) with anything already on the sheet
+  skipped. The world setting ddbPlayersCanManageSpells lets a GM lock players
+  out of adding and removing there. (Wave 3 sent the button straight to the
+  browser, which knew nothing about the sheet.)
 
   DOM contract: div.ddb-spellcasting-strip >
     section.ddb-spellcasting-card[data-class-identifier][data-ability] >
@@ -24,11 +24,10 @@
 -->
 <script lang="ts">
   import { useTabStripHeight } from './tab-strip.svelte';
-  import { CONSTANTS } from 'src/constants';
+  import { openManageSpells } from '../../features/spells/ddb-manage-spells';
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
   import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
   import type { SpellcastingClassContext } from 'src/types/types';
-  import { error } from 'src/utils/logging';
 
   const localize = FoundryAdapter.localize;
 
@@ -46,89 +45,17 @@
   /** Pinned strip slot (tab-strips.css section 0); height published for the pills. */
   const stripHeight = useTabStripHeight();
 
-  /**
-   * The highest spell level the actor has slots for (leveled or pact), so the
-   * browser offers what can actually be cast, as D&D Beyond's list does.
-   * 0 = no slots at all: no level lock then (a slotless caster may still be
-   * adding spells for later levels).
-   */
-  function maxSlotLevel(): number {
-    let max = 0;
-
-    for (const [key, slot] of Object.entries<any>(
-      context.actor.system.spells ?? {},
-    )) {
-      if (!(Number(slot?.max) > 0)) {
-        continue;
-      }
-
-      const level = Number(slot.level ?? key.replace(/^spell/, ''));
-      if (Number.isFinite(level)) {
-        max = Math.max(max, level);
-      }
-    }
-
-    return max;
-  }
-
-  async function manageSpells(info: SpellcastingClassContext, event: Event) {
+  async function manageSpells(info: SpellcastingClassContext) {
     const sheet: any = context.sheet ?? context.actor.sheet;
 
-    if (busy || !context.editable || !sheet) {
+    if (busy || !sheet) {
       return;
     }
 
     busy = true;
 
     try {
-      const sourceItem = `class:${info.classIdentifier}`;
-
-      const additional: Record<string, any> = {
-        spelllist: { [sourceItem]: 1 },
-      };
-
-      const maxLevel = maxSlotLevel();
-      if (maxLevel > 0) {
-        additional.level = { min: 0, max: maxLevel };
-      }
-
-      const selected: Set<string> | null =
-        await dnd5e.applications.CompendiumBrowser.select(
-          {
-            filters: {
-              locked: {
-                documentClass: 'Item',
-                types: new Set([CONSTANTS.ITEM_TYPE_SPELL]),
-                additional,
-              },
-            },
-            selection: { min: 1 },
-            tab: 'spells',
-          },
-          sheet._detachOptions?.() ?? {},
-        );
-
-      if (!selected?.size) {
-        return;
-      }
-
-      const documents = await Promise.all(
-        [...selected].map((uuid) => fromUuid(uuid)),
-      );
-
-      const itemData = documents
-        .filter((doc: any) => doc?.type === CONSTANTS.ITEM_TYPE_SPELL)
-        .map((doc: any) => {
-          const data = game.items.fromCompendium(doc);
-          foundry.utils.setProperty(data, 'system.sourceItem', sourceItem);
-          return data;
-        });
-
-      if (itemData.length) {
-        await sheet._onDropItemCreate(itemData, event, 'copy');
-      }
-    } catch (e) {
-      error('Manage Spells failed', false, e);
+      await openManageSpells(sheet, context.actor, info);
     } finally {
       busy = false;
     }
@@ -200,7 +127,7 @@
             class="ddb-manage-spells"
             data-class-identifier={info.classIdentifier}
             disabled={busy}
-            onclick={(event) => manageSpells(info, event)}
+            onclick={() => manageSpells(info)}
           >
             {localize('TIDY5E.DdbLayout.Spells.ManageSpells')}
           </button>

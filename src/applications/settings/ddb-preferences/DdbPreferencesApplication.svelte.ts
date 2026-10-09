@@ -58,7 +58,8 @@ export type DdbTooltipSettingKey = (typeof DDB_TOOLTIP_SETTING_KEYS)[number];
 /** The DDB world settings this app edits (GM only). */
 export type DdbWorldSettingKey =
   | 'ddbCharacterSheetTabOrganization'
-  | 'ddbBackdropFolder';
+  | 'ddbBackdropFolder'
+  | 'ddbPlayersCanManageSpells';
 
 export type DdbPreferencesValues = {
   tooltips: Record<DdbTooltipSettingKey, boolean>;
@@ -112,6 +113,11 @@ function readValues(): DdbPreferencesValues {
             ) ?? CONSTANTS.SECTION_ORGANIZATION_ACTION,
           ddbBackdropFolder:
             FoundryAdapter.getTidySetting<string>('ddbBackdropFolder') ?? '',
+          // Stored as 'true' / 'false' like the other world values here.
+          ddbPlayersCanManageSpells: String(
+            FoundryAdapter.getTidySetting<boolean>('ddbPlayersCanManageSpells') !==
+              false,
+          ),
         }
       : null,
   };
@@ -291,7 +297,7 @@ export class DdbPreferencesApplication extends getSvelteApplicationMixin<
     return this.#write(() => DdbPreferences.reset());
   }
 
-  setWorld(key: DdbWorldSettingKey, value: string) {
+  setWorld(key: DdbWorldSettingKey, value: string | boolean) {
     if (!FoundryAdapter.userIsGm()) {
       return Promise.resolve();
     }

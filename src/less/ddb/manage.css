@@ -672,3 +672,110 @@
   margin: 0;
   color: var(--ddb-text-muted);
 }
+
+/* ------------------------------------------------------------------ */
+/* Manage Spells dialog (features/spells/ddb-manage-spells.ts)        */
+/* ------------------------------------------------------------------ */
+
+/* A DialogV2 window carrying the sheet classes (tidy5e-sheet quadrone ddb),
+ * so the DDB tokens apply; same prefix convention as the apps above. */
+.application.ddb.ddb-manage-spells-dialog .ddb-manage-spells {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ddb-space-3);
+  max-height: 60vh;
+  overflow: hidden auto;
+  font-family: var(--ddb-font-body);
+  font-size: var(--ddb-size-body);
+  color: var(--ddb-text);
+}
+
+.application.ddb.ddb-manage-spells-dialog .ddb-ms-summary,
+.application.ddb.ddb-manage-spells-dialog .ddb-ms-empty {
+  margin: 0;
+  color: var(--ddb-text-muted);
+}
+
+.application.ddb.ddb-manage-spells-dialog .ddb-ms-locked {
+  margin: 0;
+  padding: var(--ddb-space-2) var(--ddb-space-3);
+  border: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+  border-radius: var(--ddb-radius-control);
+  color: var(--ddb-text-muted);
+}
+
+.application.ddb.ddb-manage-spells-dialog .ddb-ms-group > h3 {
+  margin: var(--ddb-space-2) 0 var(--ddb-space-1);
+  padding: 0;
+  border: none;
+  font-family: var(--ddb-font-condensed);
+  font-size: var(--ddb-size-label-md);
+  font-weight: var(--ddb-weight-label);
+  letter-spacing: var(--ddb-letterspacing-label);
+  text-transform: var(--ddb-transform-label);
+  color: var(--ddb-heading);
+}
+
+.application.ddb.ddb-manage-spells-dialog .ddb-ms-count {
+  margin-inline-start: var(--ddb-space-1);
+  color: var(--ddb-text-muted);
+}
+
+.application.ddb.ddb-manage-spells-dialog .ddb-ms-group > ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.application.ddb.ddb-manage-spells-dialog .ddb-ms-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ddb-space-2);
+  min-height: 2rem;
+  padding: var(--ddb-space-half) 0;
+  border-bottom: 1px solid var(--ddb-list-border);
+}
+
+.application.ddb.ddb-manage-spells-dialog .ddb-ms-img {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  border-radius: var(--ddb-radius-control);
+  object-fit: cover;
+}
+
+.application.ddb.ddb-manage-spells-dialog .ddb-ms-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.application.ddb.ddb-manage-spells-dialog .ddb-ms-meta {
+  flex: 0 1 auto;
+  font-size: var(--ddb-size-label-md);
+  color: var(--ddb-text-muted);
+  white-space: nowrap;
+}
+
+.application.ddb.ddb-manage-spells-dialog button.ddb-ms-remove {
+  flex: 0 0 auto;
+  width: 1.75rem;
+  height: 1.75rem;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+  border-radius: var(--ddb-radius-control);
+  background: none;
+  box-shadow: none;
+  color: var(--ddb-text-muted);
+  cursor: pointer;
+}
+
+.application.ddb.ddb-manage-spells-dialog button.ddb-ms-remove:hover {
+  color: var(--ddb-accent-readable, var(--ddb-accent));
+  border-color: var(--ddb-accent-readable, var(--ddb-accent));
+}
