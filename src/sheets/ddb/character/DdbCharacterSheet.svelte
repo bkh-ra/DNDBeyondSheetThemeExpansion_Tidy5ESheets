@@ -56,6 +56,7 @@
   way (binary search, cached, same hysteresis), so both columns end level.
 -->
 <script lang="ts">
+  import { dragAutoScroll } from '../features/drag-scroll/drag-auto-scroll';
   import DdbHeaderBanner from './parts/header/DdbHeaderBanner.svelte';
   import DdbQuickInfoBand from './parts/quickinfo/DdbQuickInfoBand.svelte';
   import DdbCombatRow from './parts/quickinfo/DdbCombatRow.svelte';
@@ -651,6 +652,7 @@
   data-tidy-sheet-part="ddb-sheet"
   data-ddb-click-opens={clickOpens}
   onclickcapture={onClickCapture}
+  {@attach dragAutoScroll()}
 >
   <DdbHeaderBanner />
 
