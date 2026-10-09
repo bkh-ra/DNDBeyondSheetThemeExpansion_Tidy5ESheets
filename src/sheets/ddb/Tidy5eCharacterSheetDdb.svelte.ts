@@ -1,5 +1,6 @@
 import { CONSTANTS } from 'src/constants';
 import { installDdbTooltipGate } from 'src/sheets/ddb/features/tooltips/ddb-tooltip-gate';
+import { installDdbMoveItemMenu } from 'src/sheets/ddb/features/move/ddb-move-item';
 import type { ApplicationConfiguration } from 'src/types/application.types';
 import { Tidy5eCharacterSheetQuadrone } from '../quadrone/Tidy5eCharacterSheetQuadrone.svelte';
 import { CharacterSheetDdbRuntime } from 'src/runtime/actor/CharacterSheetDdbRuntime.svelte';
@@ -66,6 +67,9 @@ export class Tidy5eCharacterSheetDdb extends Tidy5eCharacterSheetQuadrone {
     // One window-level listener for every DDB sheet (idempotent): the rule /
     // hint tooltip switches of the Preferences app.
     installDdbTooltipGate();
+
+    // "Move to..." in every item context menu of a DDB sheet (idempotent).
+    installDdbMoveItemMenu();
 
     // The service quadrone builds, fed by the DDB provider: quadrone's filters
     // plus the Actions / Spells pill filters (attack, limited use, spell
