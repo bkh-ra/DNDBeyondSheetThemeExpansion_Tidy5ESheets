@@ -597,7 +597,7 @@
   align-items: center;
   gap: var(--ddb-space-1);
   margin: 0;
-  padding: var(--ddb-space-3) 0;
+  padding: 5px 0; /* was 8px; compacted 2026-10-09 */
   border: none;
   border-bottom: var(--ddb-tab-indicator-width) solid transparent;
   border-radius: 0;

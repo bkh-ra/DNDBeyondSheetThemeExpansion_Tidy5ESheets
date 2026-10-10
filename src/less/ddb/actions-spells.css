@@ -61,7 +61,8 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--ddb-space-1);
-  padding-block: var(--ddb-space-2) var(--ddb-space-1);
+  /* Compacted 2026-10-09: 3px over, 2px under. */
+  padding-block: 3px var(--ddb-space-half);
 }
 
 /* The pills and the search / filter / sort bar under them stay at the top of
@@ -83,7 +84,7 @@
   position: sticky;
   top: var(--ddb-pills-height, 0px);
   z-index: 3;
-  padding-block-end: var(--ddb-space-1);
+  padding-block-end: var(--ddb-space-half);
   background: var(--ddb-panel-bg-solid);
 }
 
@@ -359,7 +360,7 @@
   display: flex;
   align-items: center;
   gap: var(--ddb-space-3);
-  padding: var(--ddb-space-2) var(--ddb-space-3);
+  padding: var(--ddb-space-1) var(--ddb-space-3); /* 4px block since the 2026-10-09 compaction */
   border: var(--ddb-border-width-panel) solid var(--ddb-list-border);
   border-radius: var(--ddb-radius-control);
   background: var(--ddb-table-row-alt-bg);
@@ -454,7 +455,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--ddb-space-2) var(--ddb-space-5);
-  padding: var(--ddb-space-2) var(--ddb-space-3);
+  padding: var(--ddb-space-1) var(--ddb-space-3); /* 4px block since the 2026-10-09 compaction */
   border: var(--ddb-border-width-panel) solid var(--ddb-list-border);
   border-radius: var(--ddb-radius-control);
   background: var(--ddb-table-row-alt-bg);

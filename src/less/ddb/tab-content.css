@@ -840,3 +840,22 @@
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-cell[data-tidy-column-key='quantity'] .command {
   opacity: 1;
 }
+
+/* ------------------------------------------------------------------ */
+/* 12. Compaction (user request 2026-10-09)                           */
+/* ------------------------------------------------------------------ */
+
+/* Quadrone separates the scroller's direct children (header strip, pills,
+ * search bar, the list, the footer) with a 12px column gap
+ * (`.tidy-tab-contents.active { gap: var(--t5e-size-3x) }`, actors.css) and
+ * the sections inside the list with another 12px
+ * (`.tidy-table-container { gap }`, tables.css). Both read as dead space on
+ * the DDB pane, whose blocks carry their own small paddings; a hairline and
+ * a half step are enough. */
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-tab.tidy-tab-contents.active {
+  gap: var(--ddb-space-half);
+}
+
+.tidy5e-sheet.application.ddb .ddb-primary-box-content .tidy-table-container {
+  gap: var(--ddb-space-2);
+}

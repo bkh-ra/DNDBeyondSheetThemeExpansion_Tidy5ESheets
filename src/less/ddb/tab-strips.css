@@ -38,7 +38,8 @@
   z-index: 4;
   box-sizing: border-box;
   margin: 0;
-  padding-block: var(--ddb-space-2) var(--ddb-space-1);
+  /* Compacted 2026-10-09 (user: "too much empty space"): 3px over, 2px under. */
+  padding-block: 3px var(--ddb-space-half);
   background: var(--ddb-panel-bg-solid);
 }
 
@@ -61,7 +62,7 @@
   position: sticky;
   top: calc(var(--ddb-strip-height, 0px) + var(--ddb-pills-height, 0px));
   z-index: 3;
-  padding-block-end: var(--ddb-space-1);
+  padding-block-end: var(--ddb-space-half);
   background: var(--ddb-panel-bg-solid);
 }
 
