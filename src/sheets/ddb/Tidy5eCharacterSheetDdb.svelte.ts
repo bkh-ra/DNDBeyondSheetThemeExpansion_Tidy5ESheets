@@ -1,6 +1,7 @@
 import { CONSTANTS } from 'src/constants';
 import { installDdbTooltipGate } from 'src/sheets/ddb/features/tooltips/ddb-tooltip-gate';
 import { installDdbMoveItemMenu } from 'src/sheets/ddb/features/move/ddb-move-item';
+import { addSpellsByUuid } from 'src/sheets/ddb/features/spells/ddb-manage-spells';
 import type { ApplicationConfiguration } from 'src/types/application.types';
 import { Tidy5eCharacterSheetQuadrone } from '../quadrone/Tidy5eCharacterSheetQuadrone.svelte';
 import { CharacterSheetDdbRuntime } from 'src/runtime/actor/CharacterSheetDdbRuntime.svelte';
@@ -86,6 +87,16 @@ export class Tidy5eCharacterSheetDdb extends Tidy5eCharacterSheetQuadrone {
    * the components through svelte context, cleared when the sheet closes.
    */
   ddbDetail = new DdbDetailState();
+
+  /**
+   * Add compendium spells to the actor for a class, skipping any already on
+   * the sheet: what the Manage Spells dialog's "Add spells..." does once the
+   * browser returns (features/spells/ddb-manage-spells.ts). Public for
+   * macros and the harness.
+   */
+  ddbAddSpells(classIdentifier: string, uuids: Iterable<string>) {
+    return addSpellsByUuid(this, this.actor, classIdentifier, uuids);
+  }
 
   protected get tabRuntime() {
     return CharacterSheetDdbRuntime;

@@ -2127,6 +2127,24 @@ export function createSettings() {
         },
       },
 
+      // DDB-FORK: GM lockdown of the DDB sheet's Manage Spells dialog for
+      // players (features/spells/ddb-manage-spells.ts); GMs are never locked.
+      ddbPlayersCanManageSpells: {
+        options: {
+          name: 'TIDY5E.Settings.DdbPlayersCanManageSpells.name',
+          hint: 'TIDY5E.Settings.DdbPlayersCanManageSpells.hint',
+          scope: 'world',
+          config: true,
+          type: Boolean,
+          default: true,
+        },
+        get() {
+          return FoundryAdapter.getTidySetting<boolean>(
+            'ddbPlayersCanManageSpells',
+          );
+        },
+      },
+
       // DDB-FORK: alias the API onto the inactive tidy5e-sheet module record
       // (main.svelte.ts ready hook) so Tidy integrations keep finding it.
       ddbExposeTidyApiAlias: {

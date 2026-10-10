@@ -97,9 +97,10 @@ function sectionsOnTab(tab: HTMLElement | null): SectionOption[] {
     }
 
     seen.add(key);
-    const header = element.querySelector(
-      '.tidy-table-header-row .tidy-table-header-cell.primary, .tidy-table-header-row',
-    );
+    // The FIRST header cell is the section title (+ count); the rest are column labels.
+    const header =
+      element.querySelector('.tidy-table-header-row .tidy-table-header-cell') ??
+      element.querySelector('.tidy-table-header-row');
     const label =
       header?.textContent?.replace(/\s+/g, ' ').replace(/\s*\d+(\s*\/\s*\d+)?\s*$/, '').trim() ||
       key;

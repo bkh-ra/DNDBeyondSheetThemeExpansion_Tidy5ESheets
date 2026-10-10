@@ -408,6 +408,13 @@
         localize('TIDY5E.Settings.DdbCharacterSheetTabOrganization.hint'),
       )}
 
+      {@render toggleRow(
+        'world.ddbPlayersCanManageSpells',
+        localize('TIDY5E.DdbLayout.Preferences.PlayersCanManageSpells'),
+        values.world.ddbPlayersCanManageSpells === 'true',
+        (checked) => app.setWorld('ddbPlayersCanManageSpells', checked),
+      )}
+
       <div class="ddb-prefs-row">
         <label
           class="ddb-prefs-label"
