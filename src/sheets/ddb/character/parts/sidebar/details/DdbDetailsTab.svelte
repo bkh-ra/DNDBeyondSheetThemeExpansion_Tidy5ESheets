@@ -232,7 +232,7 @@
     {/key}
   {:else if resolved.kind === 'effect'}
     {#key resolved.effect.uuid}
-      <DdbEffectDetail effect={resolved.effect} {revision} />
+      <DdbEffectDetail activeEffect={resolved.effect} {revision} />
     {/key}
   {:else if resolved.kind === 'skill' || resolved.kind === 'tool'}
     <DdbSkillDetail kind={resolved.kind} key={resolved.key} />

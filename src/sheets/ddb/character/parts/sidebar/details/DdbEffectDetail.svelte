@@ -5,11 +5,21 @@
   rows here like item rows).
 
   Heading (name, image, a link back to the item that carries the effect when
-  there is one), Enable / Disable (an `effect.update` on `disabled`, what the
-  row's toggle does), Open sheet (the effect's own config), a stat strip
-  (source, duration, status) and the very summary quadrone renders inline
-  under the row: the enriched description, the changes table and the effect
-  pills (TidyEffectSummary, reused by import).
+  there is one), Enable / Disable (an `update` on `disabled`, what the row's
+  toggle does), Open sheet (the effect's own config), a stat strip (source,
+  duration, status) and the very summary quadrone renders inline under the
+  row: the enriched description, the changes table and the effect pills
+  (TidyEffectSummary, reused by import).
+
+  NAMING RULE (13.10.5-ddb.16 hotfix): nothing at the top level of this
+  script may be called `effect`. Svelte 5 reads `$effect(...)` as the store
+  subscription of a top-level `effect` binding when one exists, so a prop of
+  that name turned the rune below into `store_get($$props.effect)(...)`, which
+  threw on the first effect click and tripped the sidebar tab's error
+  boundary for the rest of the session (every later selection showed an
+  empty pane). The prop is `activeEffect`; `scripts/check-rune-shadowing.mjs`
+  fails the build on any top-level `effect` / `state` / `derived` / `props`
+  binding in a component.
 -->
 <script lang="ts">
   import TidyEffectSummary from 'src/components/table-quadrone/TidyEffectSummary.svelte';
@@ -29,12 +39,15 @@
   import DdbDetailStatStrip from './DdbDetailStatStrip.svelte';
 
   interface Props {
-    effect: ActiveEffect5e;
+    activeEffect: ActiveEffect5e;
     /** Bumped by the pane whenever the effect (or its item) updates. */
     revision: number;
   }
 
-  let { effect, revision }: Props = $props();
+  let { activeEffect, revision }: Props = $props();
+
+  /** The document, untyped: dnd5e's ActiveEffect5e typing is partial. */
+  let doc = $derived<any>(activeEffect);
 
   let context = $derived(getCharacterSheetQuadroneContext());
 
@@ -44,14 +57,13 @@
 
   /** The item carrying the effect, when the actor itself is not its parent. */
   let parentItem = $derived<any>(
-    (effect as any).parent?.documentName === CONSTANTS.DOCUMENT_NAME_ITEM
-      ? (effect as any).parent
+    doc.parent?.documentName === CONSTANTS.DOCUMENT_NAME_ITEM
+      ? doc.parent
       : null,
   );
 
   let ownedHere = $derived(
-    (effect as any).parent === context.actor ||
-      parentItem?.actor === context.actor,
+    doc.parent === context.actor || parentItem?.actor === context.actor,
   );
 
   let canToggle = $derived(ownedHere && context.editable);
@@ -59,25 +71,24 @@
   let disabled = $derived.by(() => {
     revision;
     context;
-    return !!(effect as any).disabled;
+    return !!doc.disabled;
   });
 
   let suppressed = $derived.by(() => {
     revision;
     context;
-    return !!(effect as any).isSuppressed;
+    return !!doc.isSuppressed;
   });
 
   let sourceName = $derived.by<string>(() => {
     revision;
     context;
-    const e: any = effect;
     try {
       return (
         parentItem?.name ??
-        (typeof e.sourceName === 'string' && e.sourceName
-          ? e.sourceName
-          : (e.parent?.name ?? ''))
+        (typeof doc.sourceName === 'string' && doc.sourceName
+          ? doc.sourceName
+          : (doc.parent?.name ?? ''))
       );
     } catch {
       return parentItem?.name ?? '';
@@ -87,7 +98,6 @@
   let stats = $derived.by<DdbDetailStat[]>(() => {
     revision;
     context;
-    const e: any = effect;
     const out: DdbDetailStat[] = [];
 
     if (sourceName) {
@@ -100,7 +110,7 @@
 
     let durationLabel = '';
     try {
-      durationLabel = (e.duration?.label ?? '').toString().trim();
+      durationLabel = (doc.duration?.label ?? '').toString().trim();
     } catch {
       durationLabel = '';
     }
@@ -132,7 +142,7 @@
 
   $effect(() => {
     revision;
-    const target: any = effect;
+    const target = doc;
     let cancelled = false;
 
     summaryData = undefined;
@@ -163,26 +173,23 @@
       return;
     }
 
-    await (effect as any).update({ disabled: !(effect as any).disabled });
+    await doc.update({ disabled: !doc.disabled });
   }
 
   function openSheet() {
     if (host) {
-      openFullSheet(host, effect);
+      openFullSheet(host, doc);
     } else {
-      context.sheet._openDocumentSheet(effect);
+      context.sheet._openDocumentSheet(doc);
     }
   }
 </script>
 
 <article
   class={['ddb-detail', 'ddb-effect-detail', { disabled, suppressed }]}
-  data-effect-uuid={(effect as any).uuid}
+  data-effect-uuid={doc.uuid}
 >
-  <DdbDetailHeader
-    name={(effect as any).name ?? ''}
-    img={(effect as any).img ?? (effect as any).icon}
-  >
+  <DdbDetailHeader name={doc.name ?? ''} img={doc.img ?? doc.icon}>
     {#snippet subtitleExtra()}
       {#if parentItem}
         <button
@@ -230,7 +237,7 @@
 
   <div class="ddb-detail-summary">
     {#if summaryData}
-      <TidyEffectSummary activeEffect={effect} {summaryData} />
+      <TidyEffectSummary activeEffect={doc} {summaryData} />
     {:else}
       <div class="ddb-detail-loading" aria-busy="true">
         <i class="fa-solid fa-spinner fa-spin"></i>
