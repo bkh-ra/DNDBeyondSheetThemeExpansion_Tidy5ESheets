@@ -2,9 +2,11 @@
   DDB-FORK: Hit Points block in the quick-info band.
 
   Layout mirrors design/captures/athelstan/*/01-actions.png: a compact
-  HEAL / amount / DAMAGE applicator down the left edge, then a three-column
-  readout (CURRENT "/" MAX ... TEMP) with the "HIT POINTS" title centred
-  underneath. Every piece is in normal flow — the only absolutely positioned
+  HEAL / amount / DAMAGE applicator down the left edge, then the readout
+  (CURRENT "/" MAX ... TEMP ... HIT DICE, the last one moved in from the
+  retired combat row on 2026-10-09) with the "HIT POINTS" title centred
+  underneath. The panel is a fixed 19.5rem (--ddb-hp-block-width), compressed
+  that day to D&D Beyond's proportion. Every piece is in normal flow — the only absolutely positioned
   children are the SVG frame and the config cog.
 
   Inline editing follows the quadrone health parts
@@ -29,6 +31,7 @@
 <script lang="ts">
   import TextInputQuadrone from 'src/components/inputs/TextInputQuadrone.svelte';
   import { FoundryAdapter } from 'src/foundry/foundry-adapter';
+  import { ddbLocalize } from 'src/sheets/ddb/ddb-localize';
   import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
   import DdbDeathSaves from './DdbDeathSaves.svelte';
   import DdbHpManagerPopover from './DdbHpManagerPopover.svelte';
@@ -46,6 +49,15 @@
   );
   let hpTemp = $derived(context.system.attributes?.hp?.temp ?? 0);
   let hpTempMax = $derived(context.system.attributes?.hp?.tempmax ?? 0);
+
+  /**
+   * HIT DICE (user request 2026-10-09): the readout's fourth figure, moved in
+   * from the retired combat row. Mirrors quadrone's `.hd-row`: the current /
+   * max figure is itself the hit-dice config control.
+   */
+  const HIT_DICE_LABEL = ['TIDY5E.DdbLayout.QuickInfo.HitDice', 'Hit Dice'] as const;
+  let hdValue = $derived(context.system.attributes?.hd?.value ?? 0);
+  let hdMax = $derived(context.system.attributes?.hd?.max ?? 0);
 
   /**
    * Quadrone badges the HP readout whenever the effective max differs from the
@@ -255,6 +267,28 @@
             />
           </div>
         {/if}
+        <!-- HIT DICE: a figure like the three before it; while the sheet is
+             editable it is the hit-dice config button (quadrone's hd-row). -->
+        <div
+          class="ddb-hp-block__field ddb-hp-block__field--hd"
+          data-tidy-sheet-part="ddb-hit-dice"
+        >
+          <span class="ddb-hp-block__label">{ddbLocalize(HIT_DICE_LABEL)}</span>
+          {#if context.editable}
+            <button
+              type="button"
+              class="ddb-hp-block__value ddb-hp-block__hd-button"
+              data-action="showConfiguration"
+              data-config="hitDice"
+              data-tooltip="DND5E.HitDiceConfig"
+              aria-label={localize('DND5E.HitDiceConfig')}
+            >
+              {hdValue}/{hdMax}
+            </button>
+          {:else}
+            <span class="ddb-hp-block__value">{hdValue}/{hdMax}</span>
+          {/if}
+        </div>
       </div>
     {/if}
 

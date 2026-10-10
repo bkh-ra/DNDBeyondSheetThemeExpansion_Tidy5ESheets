@@ -127,14 +127,24 @@
   border-color: transparent;
 }
 
-/* ddb-layout.css zeroes the strip's right margin for the fit-content case;
- * inside the combat row the bleed border already carries the room for its
- * outward line, so the margin stays zero there too. Same specificity, later
- * import. */
-.tidy5e-sheet.application.ddb
-  .ddb-combat-strip-row
-  .ddb-conditions-defenses {
+/* EFFECTS TAB HEADING STRIP (user request 2026-10-09): the panel is the
+ * Effects tab's pinned strip (DdbEffectsTab, tab-strips.css section 0) and
+ * spans the scroller; the CONDITIONS group takes the spare width so its chips
+ * wrap there, DEFENSES keeps its natural width. The fit-content rules above
+ * still serve the panel wherever else it is hosted. */
+.tidy5e-sheet.application.ddb .ddb-effects-strip .ddb-conditions-defenses {
+  display: flex;
+  width: auto;
+  max-width: none;
+  align-self: stretch;
   margin: 0;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-effects-strip
+  .ddb-conditions-defenses
+  .ddb-cd-group.ddb-conditions {
+  flex: 1 1 auto;
 }
 
 .tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-group {

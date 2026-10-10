@@ -54,46 +54,13 @@
  * stat boxes' inner echo, the shield's inner line, and the ability cards'
  * corner chamfer echoes. The ability card keeps its score well and modifier
  * badge (content frames, not second outlines), at the same bold width. */
-.tidy5e-sheet.application.ddb .ddb-stat-box-shape__echo,
-.tidy5e-sheet.application.ddb .ddb-shield-shape__inner,
-.tidy5e-sheet.application.ddb .ddb-ability-box-shape__corner {
-  display: none;
-}
-
-/* Only the outermost silhouette of each frame is filled; everything drawn on
- * top of it is an outline. */
-.tidy5e-sheet.application.ddb .ddb-stat-box-shape__echo,
-.tidy5e-sheet.application.ddb .ddb-ability-box-shape__well,
-.tidy5e-sheet.application.ddb .ddb-ability-box-shape__corner,
-.tidy5e-sheet.application.ddb .ddb-shield-shape__inner {
+/* 2026-10-09 (user: "no angled edges anymore, just rounded"): the stat frames
+ * are plain rounded rectangles (DdbStatBoxShape) and the ability card's
+ * chamfer strokes left its SVG, so nothing remains to hide. Only the
+ * outermost silhouette of each frame is filled; everything drawn on top of it
+ * is an outline. */
+.tidy5e-sheet.application.ddb .ddb-ability-box-shape__well {
   fill: none;
-}
-
-/* TWO TIERS, and only two.
- *
- * TIER 1 — the plaque itself: the silhouette AND the second edge that runs
- * inside it, plus the ability card's well. On DDB both lines of a
- * double-lined box are drawn at the SAME strength (see the stat boxes in
- * design/captures/estonia-archmage/dark/01-actions.png), and that pairing is
- * what makes a box read as an ornate plaque rather than a plain rectangle.
- * Dimming the second edge is what used to make PROFICIENCY / SPEED / the hexes
- * / the shield look unstyled next to the ability cards: their primary stroke
- * was already full accent and identical, but with only ~1.5 accent lines each
- * against the ability card's five, the pair merged into one soft line and the
- * whole box read flat. These stay at full accent.
- *
- * TIER 2 — the ability card's corner chamfers. Genuinely secondary: they
- * decorate the plaque instead of bounding it, and at full strength they read
- * as four more structural edges competing with the card. (This tier used to
- * hold the card's wings, flanks and laurels; those are gone — see the ornament
- * budget note in DdbAbilityBoxShape.svelte.) */
-.tidy5e-sheet.application.ddb .ddb-ability-box-shape__corner {
-  opacity: var(--ddb-stroke-echo-opacity);
-}
-
-.tidy5e-sheet.application.ddb .ddb-shield-shape__stud {
-  fill: var(--ddb-accent);
-  stroke: none;
 }
 
 /* BOX-INTERIOR SIZING RESET — the reason values used to ride high.
@@ -117,8 +84,7 @@
  * (or a stray `.button` class) cannot silently reintroduce the collapse. */
 .tidy5e-sheet.application.ddb .ddb-stat-box__content,
 .tidy5e-sheet.application.ddb .ddb-ability-box__roller,
-.tidy5e-sheet.application.ddb .ddb-inspiration-box__content,
-.tidy5e-sheet.application.ddb .ddb-ac-shield__content {
+.tidy5e-sheet.application.ddb .ddb-inspiration-box__content {
   height: auto;
   min-height: 0;
 }
@@ -127,9 +93,9 @@
  * Band layout
  * ------------------------------------------------------------------ */
 
-/* The band is a single row (INITIATIVE + ARMOR CLASS live in DdbCombatRow atop
- * the primary column), so it is only as tall as the ability boxes plus a
- * hairline of padding: ~107px at normal density (96 / 88 at compact / dense,
+/* The band is a single row (INITIATIVE + ARMOR CLASS joined it in the 2 x 2 stat grid on 2026-10-09;
+ * the combat row that used to hold them is gone), so it is only as tall as
+ * the ability boxes plus a hairline of padding: ~107px at normal density (96 / 88 at compact / dense,
  * Wave 8). Horizontal padding is left to .ddb-sheet-body so the band runs the
  * full width it is given. */
 .tidy5e-sheet.application.ddb .ddb-quick-info {
@@ -169,13 +135,10 @@
   zoom: calc(1 / var(--ddb-ability-box-scale));
 }
 
-/* COMPACT mode (Wave 8, auto at 1100-1319px windows): the band needs ~1088px
- * of row at the HP panel's 21rem floor, which a 1100px window cannot give at
- * normal density. The panel's fields group is ~211px, so 20rem (a 298px
- * interior) still holds CURRENT / MAX / TEMP. */
-.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-compact .ddb-hp-block {
-  min-width: 20rem;
-}
+/* COMPACT mode (Wave 8, auto at 1100-1319px windows) needs no health-panel
+ * rule any more: the panel is a fixed 19.5rem (2026-10-09), and the band row
+ * (six cards, the 2 x 2 stat grid, inspiration, the panel) is ~1064px at
+ * normal density, under the 1100px floor. */
 
 /* STACKED mode (Wave 8, < 1100px): the band cannot fit one row, so it wraps.
  * Left to itself the health panel dropped to a second line on its own, pinned
@@ -191,6 +154,7 @@
 
 .tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-hp-block {
   flex: 1 1 100%;
+  width: auto;
   max-width: 47rem;
   margin-inline: auto;
 }
@@ -208,7 +172,6 @@
 .tidy5e-sheet.application.ddb .ddb-stat-box__heading,
 .tidy5e-sheet.application.ddb .ddb-stat-box__label,
 .tidy5e-sheet.application.ddb .ddb-ability-box__label,
-.tidy5e-sheet.application.ddb .ddb-ac-shield__label,
 .tidy5e-sheet.application.ddb .ddb-inspiration-box__label,
 .tidy5e-sheet.application.ddb .ddb-hp-block__label,
 .tidy5e-sheet.application.ddb .ddb-death-saves__label {
@@ -545,8 +508,7 @@
  * shield's label is the same role and shares the rule (with the typography
  * block near the top of this file) so the combat row's three captions can
  * never diverge. */
-.tidy5e-sheet.application.ddb .ddb-stat-box__label,
-.tidy5e-sheet.application.ddb .ddb-ac-shield__label {
+.tidy5e-sheet.application.ddb .ddb-stat-box__label {
   max-width: 100%;
   white-space: normal;
   text-align: center;
@@ -641,79 +603,80 @@
   font-weight: 500;
 }
 
-/* ------------------------------------------------------------------ *
- * Combat row: ONE caps-label treatment for all three items
- * ------------------------------------------------------------------ */
-
-/* DdbCombatRow renders INITIATIVE (hex), ARMOR CLASS (shield) and HIT DICE
- * (hex) side by side, outside the band. All three wear the same treatment: a
- * caps label in a fixed band across the TOP of the item, outside the frame,
- * with the shape drawn in whatever height is left beneath it and ONLY the
- * figure inside the shape. (The shield used to carry its "AC" caption inside
- * the outline, which made it the odd one out in a row of three.)
+/* 2 x 2 HALF BOXES (user request 2026-10-09: "create half shapes for
+ * proficiency bonus, Initiative, Speed, and Armor class"). The grid takes
+ * exactly the footprint of the two full-height boxes it replaces (two 5rem
+ * columns, the band's 5rem height, the band's 4px gap) and brings INITIATIVE
+ * and ARMOR CLASS up from the retired combat row:
  *
- * The band is a local custom property — the same device `.ddb-death-saves`
- * uses for `--ddb-pip-size` — so the two frame insets, the interior inset and
- * the label offset are one number in one place and cannot drift. 14px is one
- * `--ddb-size-label` line (10px x 1.1 = 11) plus `--ddb-space-3` of descender
- * clearance and air; it is deliberately not on the spacing scale because it is
- * a type metric, not spacing.
+ *     PROF. BONUS   INITIATIVE
+ *     SPEED         ARMOR CLASS
  *
- * `align-self` is what puts the three captions on a COMMON BASELINE:
- * `.ddb-combat-row` centres its items (ddb-layout.css) and the three are not
- * the same height (62 / 80 / 62), so centred, the hexes' bands sat 9px below
- * the shield's. Flush to the row top, all three label bands — and, because the
- * band is identical, all three frame tops — land on the same line. */
-.tidy5e-sheet.application.ddb .ddb-quick-info__box--initiative,
-.tidy5e-sheet.application.ddb .ddb-quick-info__box--hit-dice,
-.tidy5e-sheet.application.ddb .ddb-ac-shield {
-  --ddb-caps-label-band: 0.875rem; /* 14px */
-
+ * Each box is (80 - 4) / 2 = 38px tall (--ddb-half-box-height, matched by
+ * the 80 x 38 viewBox DdbQuickInfoBand hands the frame): a caps label on top
+ * and the figure under it - the ability card's own reading order - with the
+ * full box's absolute caption and its 2rem caption reserve switched off. */
+.tidy5e-sheet.application.ddb .ddb-quick-info__stats {
+  display: grid;
+  grid-template-columns: 5rem 5rem;
+  grid-template-rows: var(--ddb-half-box-height) var(--ddb-half-box-height);
+  gap: var(--ddb-space-1);
+  flex: 0 0 auto;
   align-self: flex-start;
 }
 
-/* Each label is a child of its item's interior layer, and that layer starts at
- * the bottom of the band — so one negative offset of exactly the band height
- * lifts every one of them into it. */
-.tidy5e-sheet.application.ddb
-  .ddb-quick-info__box--initiative
-  .ddb-stat-box__label,
-.tidy5e-sheet.application.ddb
-  .ddb-quick-info__box--hit-dice
-  .ddb-stat-box__label,
-.tidy5e-sheet.application.ddb .ddb-ac-shield__label {
-  position: absolute;
-  top: calc(-1 * var(--ddb-caps-label-band));
-  left: 0;
-  right: 0;
-  color: var(--ddb-heading-box);
-}
-
-/* Initiative (rendered by DdbCombatRow, outside the band, so it keeps its own
- * compact proportions): a 60 x 48 frame with the caps label riding above it,
- * as DDB draws it. */
-.tidy5e-sheet.application.ddb .ddb-quick-info__box--initiative {
-  width: 3.75rem; /* 60px */
-  height: 3.875rem; /* 62px = 14px label + 48px frame */
+.tidy5e-sheet.application.ddb .ddb-quick-info .ddb-stat-box--half {
+  width: 5rem;
+  height: var(--ddb-half-box-height);
 }
 
 .tidy5e-sheet.application.ddb
-  .ddb-quick-info__box--initiative
-  .ddb-box-background {
-  inset: var(--ddb-caps-label-band) 0 0 0;
-  width: auto;
-  height: auto;
-}
-
-.tidy5e-sheet.application.ddb
-  .ddb-quick-info__box--initiative
+  .ddb-quick-info
+  .ddb-stat-box--half
   .ddb-stat-box__content {
-  inset: var(--ddb-caps-label-band) 0 0 0;
-  padding: 0 var(--ddb-space-half);
+  inset: 0;
+  gap: 1px;
+  padding: var(--ddb-space-half) var(--ddb-space-1);
 }
 
-.tidy5e-sheet.application.ddb .ddb-quick-info__initiative-config,
-.tidy5e-sheet.application.ddb .ddb-ac-shield__config,
+.tidy5e-sheet.application.ddb
+  .ddb-quick-info
+  .ddb-stat-box--half
+  .ddb-stat-box__label {
+  position: static;
+  order: -1;
+  display: block;
+  min-height: 0;
+  padding: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.1;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-quick-info
+  .ddb-stat-box--half
+  .ddb-stat-box__value {
+  font-size: 1.125rem; /* 18px: a caption line and a figure line in 38px */
+  letter-spacing: normal;
+}
+
+/* The edit-mode cog in a half box: smaller and tighter to the corner, so it
+ * clears a long caption ("ARMOR CLASS"). */
+.tidy5e-sheet.application.ddb
+  .ddb-quick-info
+  .ddb-stat-box--half
+  .ddb-stat-box__config {
+  top: 1px;
+  right: 1px;
+  width: 12px;
+  height: 12px;
+  font-size: 9px;
+}
+
+/* The cogs in the health panel's corner stack. (The initiative / AC cogs that
+ * shared these rules left with the combat row on 2026-10-09.) */
 .tidy5e-sheet.application.ddb .ddb-hp-block__config {
   align-self: flex-start;
   min-height: 0; /* same button-sizing leak as the box interiors */
@@ -728,18 +691,12 @@
   transition: var(--ddb-transition);
 }
 
-.tidy5e-sheet.application.ddb .ddb-quick-info__initiative-config:hover,
-.tidy5e-sheet.application.ddb .ddb-ac-shield__config:hover,
 .tidy5e-sheet.application.ddb .ddb-hp-block__config:hover {
   color: var(--ddb-accent);
 }
 
-/* ------------------------------------------------------------------ *
- * Inspiration
- * ------------------------------------------------------------------ */
-
-/* Same 70 x 80 footprint AND the same full-height octagon as PROFICIENCY and
- * SPEED beside it, with the caps label INSIDE the frame like theirs. It used to
+/* Same 80 x 80 footprint AND the same full-height rounded frame as the stat
+ * boxes, with the caps label INSIDE the frame like the full boxes carried it. It used to
  * draw a 52px frame around the token alone and hang the label outside and
  * below: two-thirds the height of its neighbours, and the only label in the
  * band sitting outside its own outline. Nothing here overrides
@@ -882,86 +839,6 @@
 }
 
 /* ------------------------------------------------------------------ *
- * Armor class shield (DdbCombatRow, outside the band)
- * ------------------------------------------------------------------ */
-
-/* Footprint is UNCHANGED at 68 x 80 — the row's width budget is fixed and the
- * primary column below it gets whatever height this row does not take. The
- * caps label band is carved OUT of that 80, exactly as the two hexes carve
- * theirs, rather than added on top of it. */
-.tidy5e-sheet.application.ddb .ddb-ac-shield {
-  position: relative;
-  flex: 0 0 auto;
-  width: 4.25rem; /* 68px */
-  height: 5rem; /* 80px = 14px label band + 66px shield */
-}
-
-/* The shield is drawn in what the band leaves, like every other combat-row
- * frame. Its viewBox is 68 x 80 and the box it now gets is 68 x 66, so the
- * default `xMidYMid meet` scales the silhouette uniformly by 66/80 = 0.825 and
- * centres it: the ink lands on x 5.95 .. 62.05, y 14 .. 78.2. Uniform scale, so
- * the measured heater proportions are intact, the studs stay round, and
- * `vector-effect="non-scaling-stroke"` keeps the double outline at
- * --ddb-border-width-panel. Nothing outside the 68 x 80 element is painted.
- *
- * LABEL-TO-SHAPE GAP. The hexes' flat top edge lands at element y 14.5. With
- * the shield's top flattened (DdbShieldShape, review defect #14) its topmost
- * stud lands at 14.0 and its body edge at 16.06, so all three shapes start
- * within 1.6px of one another under a label band that ends at 11. The old
- * centre-peaked top put the body edge at 20.2 and the shield alone looked like
- * it was hanging away from its caption. */
-.tidy5e-sheet.application.ddb .ddb-ac-shield .ddb-box-background {
-  inset: var(--ddb-caps-label-band) 0 0 0;
-  width: auto;
-  height: auto;
-}
-
-/* Only the figure lives in here now (the label is lifted into the band by the
- * shared combat-row rule above), so this layer's whole job is to put ONE
- * number on the shield's optical centre.
- *
- * GEOMETRY, in DdbShieldShape's own 68 x 80 viewBox units. The safe area is
- * the inner outline: flat top y 8, bottom point y 68.5. It reaches maximum
- * width at y 22.2 (x 9.05 .. 58.95, 49.9 units across) and holds above 90% of
- * that down to y ~42, below which the sides fall away to the point. The AREA
- * CENTROID of that region is y 32.97 — inside the widest band, and the only
- * defensible centre for a single figure on a form whose lower half tapers.
- * (The old label+value stack was biased off the bounding-box centre for the
- * same reason; with the label gone the bias is re-derived for the figure
- * alone, not inherited.)
- *
- * This layer covers the shield box, 66px tall, so plain centring would land
- * the figure at 33 of 66 — viewBox y 40, already into the narrowing. Twelve
- * pixels of bottom padding lift the centre by 6px, to 27 of 66, i.e. viewBox
- * 27 / 0.825 = 32.7 — 0.14px off the centroid. The inline padding holds the
- * figure inside the safe area's own span (49.9 units x 0.825 = 41px), so a
- * three-digit AC clips to the shield rather than crossing the outline. */
-.tidy5e-sheet.application.ddb .ddb-ac-shield__content {
-  position: absolute;
-  inset: var(--ddb-caps-label-band) 0 0 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 var(--ddb-space-5) var(--ddb-space-5);
-  text-align: center;
-}
-
-.tidy5e-sheet.application.ddb .ddb-ac-shield__value {
-  font-family: var(--ddb-font-condensed);
-  font-size: var(--ddb-size-value-lg);
-  font-weight: var(--ddb-weight-value);
-  letter-spacing: var(--ddb-letterspacing-value-lg);
-  line-height: 1;
-  color: var(--ddb-text);
-}
-
-.tidy5e-sheet.application.ddb .ddb-ac-shield__config {
-  position: absolute;
-  top: 0;
-  right: 0;
-}
-
-/* ------------------------------------------------------------------ *
  * Hit points
  * ------------------------------------------------------------------ */
 
@@ -986,18 +863,25 @@
   position: relative;
   box-sizing: border-box;
   display: flex;
-  flex: 0 1 25rem; /* 400px */
+  /* COMPRESSED (user request 2026-10-09, "similar to dndbeyond"): a fixed
+   * 19.5rem (312px) against D&D Beyond's ~300px panel, down from a 21-25rem
+   * flex range. The readout holds CURRENT / MAX / TEMP and, since the same
+   * day, HIT DICE; the width is one token (ddb-tokens.css) so it can be
+   * tuned in one place. */
+  flex: 0 0 var(--ddb-hp-block-width);
+  width: var(--ddb-hp-block-width);
   align-items: center;
   gap: var(--ddb-space-2);
   margin-left: auto;
-  min-width: 21rem;
-  max-width: 25rem;
+  min-width: 0;
+  max-width: none;
   height: 5rem; /* 80px, on the band baseline */
   /* Interior inset on all four sides so the applicator reads as sitting INSIDE
    * the frame rather than on it. The block padding is the load-bearing half:
    * at 4px the 60px applicator stack had 69px of room and the buttons' own
-   * sizing (see below) pushed it to 88px, straight over the 1.5px border. */
-  padding: var(--ddb-space-2) var(--ddb-space-4);
+   * sizing (see below) pushed it to 88px, straight over the 1.5px border.
+   * Inline padding came down with the width (2026-10-09). */
+  padding: var(--ddb-space-2) var(--ddb-space-2);
   /* TRANSPARENT border, ring painted by the pseudo-elements below. The border
    * still reserves its 1.125px in the box model — the panel's outside edge and
    * everything measured against it are unchanged — but it carries no colour of
@@ -1245,14 +1129,17 @@
   box-shadow: var(--ddb-focus-ring);
 }
 
-/* Fixed rem tracks, centred as a group: CURRENT / MAX   TEMP. No `1fr` — with
- * flexible tracks the figures drift apart whenever the panel has spare width. */
+/* Fixed rem tracks, centred as a group: CURRENT / MAX   TEMP   HIT DICE. No
+ * `1fr` — with flexible tracks the figures drift apart whenever the panel
+ * has spare width. 3rem figures (the inputs' own cap) and a 3.5rem hit-dice
+ * track fit the 19.5rem panel's ~240px readout with the applicator beside
+ * it (2026-10-09). */
 .tidy5e-sheet.application.ddb .ddb-hp-block__fields {
   display: grid;
-  grid-template-columns: 3.75rem auto 3.75rem 4rem;
+  grid-template-columns: 3rem auto 3rem 3rem 3.5rem;
   align-items: end;
   justify-content: center;
-  column-gap: var(--ddb-space-2);
+  column-gap: var(--ddb-space-1);
 }
 
 .tidy5e-sheet.application.ddb .ddb-hp-block__field {
@@ -1269,17 +1156,17 @@
  * HIT POINTS fell below it (image review; it predates Wave 8, and the denser
  * levels then clipped the captions). With a fifth track the four figures sit
  * on one row again. The tracks narrow to the inputs' own 3rem cap, so the
- * row (~225px) still fits the readout when compact mode squeezes the panel
- * to its 20rem floor (~240px). */
+ * row (~238px with the hit dice) still fits the 19.5rem panel's readout
+ * (~240px). */
 .tidy5e-sheet.application.ddb
   .ddb-hp-block__fields:has(> .ddb-hp-block__field--tempmax) {
-  grid-template-columns: 3rem auto 3rem 3rem 3rem;
-  column-gap: var(--ddb-space-1);
+  grid-template-columns: 2.5rem auto 2.5rem 2.5rem 2.5rem 3rem;
+  column-gap: var(--ddb-space-half);
 }
 
 /* Temp hit points read as a separate figure, set apart from CURRENT / MAX. */
 .tidy5e-sheet.application.ddb .ddb-hp-block__field--temp {
-  margin-left: var(--ddb-space-3);
+  margin-left: var(--ddb-space-1);
 }
 
 /* Long system labels ("Temporary Hit Points") must clip, never overprint. */
@@ -1387,6 +1274,49 @@
 .tidy5e-sheet.application.ddb .ddb-hp-block__field--temp .ddb-hp-block__value,
 .tidy5e-sheet.application.ddb .ddb-hp-block__field--temp .ddb-hp-block__input {
   color: var(--ddb-positive-text);
+}
+
+/* HIT DICE (user request 2026-10-09): the readout's fourth figure, moved in
+ * from the retired combat row. Set off from TEMP by a hairline divider in
+ * the field rule colour; the figure is a step down from --ddb-size-value-lg
+ * because it holds two numbers and a slash. While the sheet is editable the
+ * figure is a button (the hit-dice config, quadrone hd-row semantics) and
+ * carries the same hairline as the three inputs before it. */
+.tidy5e-sheet.application.ddb .ddb-hp-block__field--hd {
+  margin-left: var(--ddb-space-1);
+  padding-left: var(--ddb-space-1);
+  border-left: var(--ddb-border-width-panel) solid var(--ddb-hp-field-rule);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-block__field--hd .ddb-hp-block__value {
+  max-width: 3.5rem;
+  font-size: 1.25rem;
+  letter-spacing: normal;
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-block .ddb-hp-block__hd-button {
+  height: auto;
+  min-height: 0;
+  margin: 0 auto;
+  padding: 0;
+  border: none;
+  border-bottom: var(--ddb-border-width-panel) solid var(--ddb-hp-field-rule);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  cursor: pointer;
+  transition: color var(--ddb-transition);
+}
+
+.tidy5e-sheet.application.ddb .ddb-hp-block .ddb-hp-block__hd-button:hover {
+  color: var(--ddb-accent);
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-hp-block
+  .ddb-hp-block__hd-button:focus-visible {
+  outline: none;
+  box-shadow: var(--ddb-focus-ring);
 }
 
 /* ------------------------------------------------------------------ *
@@ -1564,36 +1494,6 @@
 .tidy5e-sheet.application.ddb .ddb-stat-box__config:focus-visible {
   outline: none;
   box-shadow: var(--ddb-focus-ring);
-}
-
-/* Hit dice is a second initiative-shaped box in the combat row: same 60 x 48
- * frame with the caps label riding above it. The current/max figure is a step
- * down from --ddb-size-value-lg because it holds two numbers and a slash. */
-.tidy5e-sheet.application.ddb .ddb-quick-info__box--hit-dice {
-  width: 3.75rem; /* 60px */
-  height: 3.875rem; /* 62px = 14px label + 48px frame */
-}
-
-.tidy5e-sheet.application.ddb
-  .ddb-quick-info__box--hit-dice
-  .ddb-box-background {
-  inset: var(--ddb-caps-label-band) 0 0 0;
-  width: auto;
-  height: auto;
-}
-
-.tidy5e-sheet.application.ddb
-  .ddb-quick-info__box--hit-dice
-  .ddb-stat-box__content {
-  inset: var(--ddb-caps-label-band) 0 0 0;
-  padding: 0 var(--ddb-space-half);
-}
-
-.tidy5e-sheet.application.ddb
-  .ddb-quick-info__box--hit-dice
-  .ddb-stat-box__value {
-  font-size: var(--ddb-size-value-md);
-  letter-spacing: normal;
 }
 
 /* Stacked controls in the HP panel's top-right corner (death-save reveal in

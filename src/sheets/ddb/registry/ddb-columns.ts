@@ -17,14 +17,15 @@ import DdbSpellEffectColumn from '../character/parts/columns/DdbSpellEffectColum
  * table shows), exactly like an integration module would. The partitions sit
  * under the `'character-ddb'` partition TYPE key, which `ColumnRuntimeBase`
  * tries before the actor type because `Tidy5eCharacterSheetDdb` answers it
- * from `columnPartitionTypeKey`. Only the Actions and Spells tabs are
- * partitioned, so every other DDB tab (and every quadrone sheet) resolves
+ * from `columnPartitionTypeKey`. Only the Actions, Spells and Inventory tabs
+ * are partitioned, so every other DDB tab (and every quadrone sheet) resolves
  * exactly as before.
  *
  * Column sets follow D&D Beyond's tables:
  *   Actions: NAME | RANGE | HIT / DC | DAMAGE | (uses) | (time)
  *   Spells:  NAME | TIME | RANGE | HIT / DC | EFFECT | (duration) | (uses) |
  *            (components) | (school)
+ *   Inventory: NAME | USES | WEIGHT | QTY | COST, the same for every section
  * Priorities decide what survives a narrow pane (Tidy hides the lowest first
  * once the name column would drop under its 12.5rem floor): at the 580px
  * primary-pane floor the name, HIT / DC and DAMAGE / EFFECT columns and the
@@ -129,6 +130,24 @@ const spellbookPartition = {
 };
 
 /**
+ * Inventory tab, every section (user request 2026-10-09: "I want the columns
+ * to align on the inventory scrollable page"). Quadrone gives each item type
+ * its own column set (weapons carry roll / damage, containers a capacity bar,
+ * loot nothing but price / quantity / weight), so the sections' columns never
+ * lined up. One set for all of them, in D&D Beyond's inventory order (WEIGHT |
+ * QTY | COST) behind Foundry's uses cell: a cell with nothing to show stays
+ * empty and the column stays put. Container contents rendered inline on the
+ * tab share it (same tab id). Attack rolls stay on the Actions tab, as on
+ * D&D Beyond.
+ */
+const inventoryPartition = {
+  uses: { order: 100, priority: 300 },
+  weight: { order: 200, priority: 200 },
+  quantity: { order: 300, priority: 400 },
+  price: { order: 400, priority: 100 },
+};
+
+/**
  * Called once from `main.svelte.ts`, right after `CONFIG.TIDY5E` is built.
  * Adds (never replaces) column specs, then claims the `'character-ddb'`
  * partitions of the `feature`, `inventory` and `spell` domains.
@@ -166,6 +185,9 @@ export function registerDdbColumns() {
   partitions.inventory[DDB_COLUMN_PARTITION_TYPE_KEY] = {
     [CONSTANTS.TAB_ACTOR_ACTIONS]: {
       [DEFAULT_SECTION]: actionsPartition('charges'),
+    },
+    [CONSTANTS.TAB_ACTOR_INVENTORY]: {
+      [DEFAULT_SECTION]: inventoryPartition,
     },
   };
 

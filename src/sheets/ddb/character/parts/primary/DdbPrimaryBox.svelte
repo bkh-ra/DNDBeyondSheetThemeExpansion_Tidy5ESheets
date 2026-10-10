@@ -28,15 +28,7 @@
     routeNameKeydown,
   } from 'src/sheets/ddb/features/detail/detail-routing';
   import { SvelteSet } from 'svelte/reactivity';
-  import DdbConditionsDefensesStrip from './DdbConditionsDefensesStrip.svelte';
   import DdbTabStrip from './DdbTabStrip.svelte';
-
-  interface Props {
-    /** Hide the DEFENSES / CONDITIONS strip when it is hosted elsewhere in the grid. */
-    showConditionsDefenses?: boolean;
-  }
-
-  let { showConditionsDefenses = true }: Props = $props();
 
   let context = $derived(getCharacterSheetQuadroneContext());
 
@@ -54,10 +46,6 @@
     routeNameKeydown(event, host);
   }
 </script>
-
-{#if showConditionsDefenses}
-  <DdbConditionsDefensesStrip />
-{/if}
 
 <div class="ddb-primary-box" data-tidy-sheet-part="ddb-primary-box">
   <DdbTabStrip

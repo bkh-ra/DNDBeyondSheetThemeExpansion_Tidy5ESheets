@@ -137,18 +137,58 @@ export function getDdbInventoryTypeFilters(): DdbItemFilter[] {
   }));
 }
 
+/**
+ * Whether a spell is READY on the sheet, which is what D&D Beyond's level tabs
+ * list (user request 2026-10-09): cantrips; every spell of a method that never
+ * prepares (at-will, innate, ritual-only); prepared and always-prepared
+ * spells; spells cast through an item's activity; and every spell something
+ * other than a class or subclass granted (a feat, a species, a magic item -
+ * dnd5e's `classIdentifier` is empty for those). Unprepared class spells are
+ * what is left, and they stay in the ALL view only.
+ */
+export function isDdbSpellReady(item: Item5e): boolean {
+  if (item.type !== CONSTANTS.ITEM_TYPE_SPELL) {
+    return false;
+  }
+
+  const system: any = item.system ?? {};
+
+  if (!(Number(system.level) > 0) || !system.canPrepare) {
+    return true;
+  }
+
+  const unprepared =
+    CONFIG.DND5E.spellPreparationStates?.unprepared?.value ?? 0;
+
+  if (Number(system.prepared ?? 0) !== unprepared) {
+    return true;
+  }
+
+  if (system.linkedActivity?.item) {
+    return true;
+  }
+
+  return !!system.sourceItem && !system.classIdentifier;
+}
+
 export function getDdbSpellLevelFilterName(level: number) {
   return `${DDB_FILTER_NAMES.SPELL_LEVEL_PREFIX}${level}`;
 }
 
-/** One spell level. The pill reads `-0-` / `1st` / `2nd` ... like D&D Beyond. */
+/**
+ * One spell level. The pill reads `-0-` / `1st` / `2nd` ... like D&D Beyond,
+ * and lists the READY spells of that level only (`isDdbSpellReady`); ALL
+ * keeps the unprepared ones.
+ */
 export function getDdbSpellLevelFilter(level: number): DdbItemFilter {
   const spellLevels = CONFIG.DND5E.spellLevels as Record<number, string>;
 
   return {
     name: getDdbSpellLevelFilterName(level),
     predicate: (item) =>
-      item.type === CONSTANTS.ITEM_TYPE_SPELL && item.system.level === level,
+      item.type === CONSTANTS.ITEM_TYPE_SPELL &&
+      item.system.level === level &&
+      isDdbSpellReady(item),
     text: spellLevels[level] ?? String(level),
     pillLabel:
       level === 0

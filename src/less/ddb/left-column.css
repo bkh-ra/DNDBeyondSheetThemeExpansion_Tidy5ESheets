@@ -808,7 +808,7 @@
  * first content row starts well below it. Vertical padding, the frame and the
  * bottom title stay uniform with the other boxes. */
 .tidy5e-sheet.application.ddb .ddb-skills-box {
-  padding-inline: var(--ddb-skills-pad-inline); /* 6px; 4px in compact mode */
+  padding-inline: var(--ddb-skills-pad-inline); /* 8px, the .ddb-box gutter; 6px in compact mode */
 }
 
 /* THE shared grid template: the header labels and every skill row are laid out

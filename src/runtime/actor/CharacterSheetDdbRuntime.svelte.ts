@@ -2,11 +2,11 @@ import type { CharacterSheetQuadroneContext } from 'src/types/types';
 import { ActorSheetQuadroneRuntime } from '../ActorSheetQuadroneRuntime.svelte';
 import { CONSTANTS } from 'src/constants';
 import { TidyFlags } from 'src/foundry/TidyFlags';
-import ActorEffectsTab from 'src/sheets/quadrone/actor/tabs/ActorEffectsTab.svelte';
 import ActorJournalTab from 'src/sheets/quadrone/actor/tabs/ActorJournalTab.svelte';
 import CharacterAttributesTab from 'src/sheets/quadrone/actor/tabs/CharacterAttributesTab.svelte';
 import CharacterBiographyTab from 'src/sheets/quadrone/actor/tabs/CharacterBiographyTab.svelte';
 import DdbFeaturesTab from 'src/sheets/ddb/character/tabs/DdbFeaturesTab.svelte';
+import DdbEffectsTab from 'src/sheets/ddb/character/tabs/DdbEffectsTab.svelte';
 import CharacterBastionTab from 'src/sheets/quadrone/actor/tabs/CharacterBastionTab.svelte';
 import DdbActionsTab from 'src/sheets/ddb/character/tabs/DdbActionsTab.svelte';
 import DdbSpellsTab from 'src/sheets/ddb/character/tabs/DdbSpellsTab.svelte';
@@ -121,7 +121,7 @@ export const CharacterSheetDdbRuntime =
       {
         title: 'DND5E.Effects',
         content: {
-          component: ActorEffectsTab,
+          component: DdbEffectsTab,
           type: 'svelte',
         },
         id: CONSTANTS.TAB_EFFECTS,
@@ -155,10 +155,12 @@ export const CharacterSheetDdbRuntime =
       CONSTANTS.TAB_ACTOR_SPELLBOOK,
       CONSTANTS.TAB_ACTOR_INVENTORY,
       CONSTANTS.TAB_CHARACTER_FEATURES,
+      // Effects right after Features & Traits (user request 2026-10-09): it
+      // now heads with the DEFENSES / CONDITIONS panel (DdbEffectsTab).
+      CONSTANTS.TAB_EFFECTS,
       CONSTANTS.TAB_ACTOR_BIOGRAPHY,
       CONSTANTS.TAB_CHARACTER_JOURNAL,
       DDB_EXTRAS.TAB_ID,
-      CONSTANTS.TAB_EFFECTS,
       CONSTANTS.TAB_CHARACTER_BASTION,
       // Quadrone's Character tab (TAB_CHARACTER_ATTRIBUTES) stays REGISTERED
       // above but is not a default tab (user decision 2026-10-05): the DDB

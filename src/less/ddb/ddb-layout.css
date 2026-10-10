@@ -257,32 +257,11 @@
   overflow: hidden;
 }
 
-/* Initiative + AC + Defenses/Conditions row atop the primary column */
-.tidy5e-sheet.application.ddb .ddb-combat-strip-row {
-  display: flex;
-  align-items: stretch;
-  gap: 6px;
-  flex: 0 0 auto;
-}
-
-.tidy5e-sheet.application.ddb .ddb-combat-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex: 0 0 auto;
-  /* INITIATIVE / AC / HIT DICE shrink with the density (1 / 0.95 / 0.9):
-   * a uniform zoom keeps the three caption bands on one line. */
-  zoom: var(--ddb-combat-row-scale);
-}
-
-/* The defenses/conditions box hugs its content (DDB parity — live-eval
- * defect #8: stretching it full-width left ~60% dead panel). It may grow to
- * a cap, but never to fill the row. */
-.tidy5e-sheet.application.ddb .ddb-combat-strip-row .ddb-conditions-defenses {
-  flex: 0 1 auto;
-  width: fit-content;
-  max-width: 100%;
-}
+/* Nothing sits above the primary box any more (2026-10-09): the combat row
+ * (INITIATIVE / AC / HIT DICE) and the DEFENSES / CONDITIONS panel that shared
+ * a strip row here moved into the band's 2 x 2 stat grid, the health panel
+ * and the Effects tab's heading strip respectively, so the primary box is as
+ * tall as the stat columns beside it. */
 
 .tidy5e-sheet.application.ddb .ddb-col-primary .ddb-primary-box {
   flex: 1;
