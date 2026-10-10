@@ -3,13 +3,13 @@
   CharacterSheetDdbRuntime in place of the raw quadrone ActorInventoryTab.
 
   Composition, D&D Beyond's Inventory tab built from Tidy's parts:
-    1. DdbFilterPills   one row: the VIEW pills
-                          EQUIPMENT | <one per container the actor owns> | PARTY
-                        then, on the Equipment view only, the tab's pinned
-                        filters ATTUNED | ATTUNABLE | EQUIPPED (DDB_FILTER_PINS,
-                        ddb-item-filters.ts). EQUIPMENT doubles as ALL: it is
-                        filled while nothing filters the list, and clicking it
-                        on the Equipment view clears the tab's filters.
+    1. DdbFilterPills   one row, exactly like the Actions tab: ALL, then one
+                        pill per section type (WEAPONS | EQUIPMENT | CONSUMABLES
+                        | TOOLS | CONTAINERS | LOOT; DDB_INVENTORY_PINS,
+                        ddb-item-filters.ts). The wave-6 view pills (Equipment /
+                        containers / Party) and the attunement pills left the
+                        row on 2026-10-09 (user request); the container and
+                        party views below stay in the tree, unreached.
     2. the selected view
          Equipment  ActorInventoryTab, quadrone's tab reused untouched (search /
                     filter / sort bar, sheet pins, encumbrance, item tables,
@@ -210,84 +210,9 @@
   });
 </script>
 
-{#snippet viewPill(
-  key: string,
-  label: string,
-  selected: boolean,
-  filled: boolean,
-  attributes: Record<string, string>,
-  onclick: () => void,
-  tooltip?: string,
-)}
-  <button
-    type="button"
-    class={[
-      'button',
-      'button-toggle',
-      'ddb-filter-pill',
-      'ddb-inventory-view-pill',
-      { include: filled, current: selected },
-    ]}
-    data-ddb-inventory-view={key}
-    data-ddb-view-selected={selected}
-    aria-pressed={selected}
-    data-tooltip={tooltip}
-    {onclick}
-    {...attributes}
-  >
-    {label}
-  </button>
-{/snippet}
-
-{#snippet viewPills()}
-  <div
-    class="ddb-inventory-views"
-    role="group"
-    aria-label={localize('DND5E.Inventory')}
-    data-tidy-sheet-part="ddb-inventory-views"
-  >
-    {@render viewPill(
-      VIEW_EQUIPMENT,
-      localize('TIDY5E.DdbLayout.Inventory.Equipment'),
-      effectiveView === VIEW_EQUIPMENT,
-      effectiveView === VIEW_EQUIPMENT && unfiltered,
-      {},
-      onEquipmentClick,
-    )}
-    {#each containers as container (container.id)}
-      {const selected = $derived(selectedContainer?.id === container.id)}
-      {@render viewPill(
-        'container',
-        container.name,
-        selected,
-        selected,
-        { 'data-ddb-container-id': container.id },
-        () => selectView(`${CONTAINER_VIEW_PREFIX}${container.id}`),
-      )}
-    {/each}
-    {#if party}
-      {@render viewPill(
-        VIEW_PARTY,
-        localize('TIDY5E.DdbLayout.Inventory.Party'),
-        effectiveView === VIEW_PARTY,
-        effectiveView === VIEW_PARTY,
-        { 'data-ddb-party-id': party.id },
-        () => selectView(VIEW_PARTY),
-        party.name,
-      )}
-    {/if}
-  </div>
-{/snippet}
-
 <DdbEncumbranceStrip />
 
-<DdbFilterPills
-  {tabId}
-  leading={viewPills}
-  showAll={false}
-  showFilters={effectiveView === VIEW_EQUIPMENT}
-  dedupeTooltips={true}
-/>
+<DdbFilterPills {tabId} />
 
 {#if effectiveView === VIEW_PARTY && party}
   <DdbInventoryPartyView
