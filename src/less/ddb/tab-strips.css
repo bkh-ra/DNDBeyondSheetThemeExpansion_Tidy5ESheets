@@ -41,6 +41,14 @@
   /* Compacted 2026-10-09 (user: "too much empty space"): 3px over, 2px under. */
   padding-block: 3px var(--ddb-space-half);
   background: var(--ddb-panel-bg-solid);
+  /* `.ddb-tab-strip` is ALSO the primary box's tab-bar class (primary-box.css
+   * "--- tab strip ---": overflow-x auto / overflow-y hidden, 12px inline
+   * padding, a bottom hairline). The padding and the hairline suit the strips
+   * and stay; the overflow clipped the Effects strip's condition picker at the
+   * slot's bottom edge (user report 2026-10-10), so the slot is visible again
+   * and the popover (z-index 10 inside this sticky z-index 4 slot) rides over
+   * the list. */
+  overflow: visible;
 }
 
 /* One card height for every strip, so the pills sit at the same line on each
@@ -162,4 +170,124 @@
 .tidy5e-sheet.application.ddb .ddb-primary-box-content .ddb-class-card .ddb-subclass-name.empty {
   font-style: italic;
   color: var(--ddb-text-muted);
+}
+/* ------------------------------------------------------------------ */
+/* 4. Effects strip: DEFENSES / CONDITIONS as a strip card              */
+/* ------------------------------------------------------------------ */
+
+/* User request 2026-10-10 ("the conditions panel in the effects tab should
+ * match the other ... top bar"): inside the Effects tab the DEFENSES /
+ * CONDITIONS panel (DdbConditionsDefensesStrip, hosted by DdbEffectsTab)
+ * wears the strip-card chrome of the other tabs - the
+ * :is(.ddb-spellcasting-card, .ddb-tab-strip-card) rules of actions-spells.css
+ * section 5, restated here because the panel keeps its own class - instead of
+ * its full-bleed panel ring, and packs into the shared card height: a label
+ * row and a chip row per group, with the exhaustion track beside the
+ * condition chips rather than under them. Every selector carries the strip
+ * class, so these outrank primary-box.css whichever file imports later. */
+.tidy5e-sheet.application.ddb
+  .ddb-primary-box-content
+  .ddb-effects-strip
+  .ddb-conditions-defenses {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0;
+  width: auto;
+  max-width: none;
+  min-height: var(--ddb-tab-strip-card-height);
+  align-self: stretch;
+  margin: 0;
+  padding: 0;
+  border: var(--ddb-border-width-panel) solid var(--ddb-list-border);
+  border-radius: var(--ddb-radius-control);
+  background: var(--ddb-table-row-alt-bg);
+  background-clip: padding-box;
+  box-shadow: none;
+}
+
+/* The panel ring (primary-box.css ::before) belongs to the standalone panel. */
+.tidy5e-sheet.application.ddb
+  .ddb-primary-box-content
+  .ddb-effects-strip
+  .ddb-conditions-defenses::before,
+.tidy5e-sheet.application.ddb
+  .ddb-primary-box-content
+  .ddb-effects-strip
+  .ddb-conditions-defenses::after {
+  content: none;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-primary-box-content
+  .ddb-effects-strip
+  .ddb-conditions-defenses
+  .ddb-cd-group {
+  padding: var(--ddb-space-half) var(--ddb-space-3);
+  gap: var(--ddb-space-half);
+  justify-content: center;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-primary-box-content
+  .ddb-effects-strip
+  .ddb-conditions-defenses
+  .ddb-cd-group.ddb-defenses {
+  flex: 0 1 auto;
+}
+
+/* CONDITIONS takes the spare width. Its interior is a two-row grid: the
+ * header across the top, the chips (or "None") beside the exhaustion track.
+ * The picker popover is absolutely positioned, so it stays out of the grid. */
+.tidy5e-sheet.application.ddb
+  .ddb-primary-box-content
+  .ddb-effects-strip
+  .ddb-conditions-defenses
+  .ddb-cd-group.ddb-conditions {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'header header'
+    'chips track';
+  column-gap: var(--ddb-space-3);
+  row-gap: var(--ddb-space-half);
+  align-items: center;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-primary-box-content
+  .ddb-effects-strip
+  .ddb-cd-group.ddb-conditions
+  > .ddb-cd-header {
+  grid-area: header;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-primary-box-content
+  .ddb-effects-strip
+  .ddb-cd-group.ddb-conditions
+  > :is(.ddb-condition-list, .ddb-cd-empty) {
+  grid-area: chips;
+  max-width: none;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-primary-box-content
+  .ddb-effects-strip
+  .ddb-cd-group.ddb-conditions
+  > .ddb-exhaustion-track {
+  grid-area: track;
+  margin-top: 0;
+  flex-wrap: nowrap;
+  justify-self: end;
+}
+
+/* Group labels in the card-title voice of the other strips. */
+.tidy5e-sheet.application.ddb
+  .ddb-primary-box-content
+  .ddb-effects-strip
+  .ddb-cd-label {
+  font-size: var(--ddb-size-label-md);
+  color: var(--ddb-heading-box);
 }

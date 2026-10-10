@@ -88,6 +88,19 @@ export const CharacterSheetDdbRuntime =
         iconClass: 'fa-solid fa-cards-blank',
         tabOptionsBuilder: buildCharacterFeaturesTabOptions,
       },
+      // Registered right after Features & Traits as well as defaulted there
+      // (user request 2026-10-09 / 2026-10-10), so Tab Configuration lists it
+      // in the same place.
+      {
+        title: 'DND5E.Effects',
+        content: {
+          component: DdbEffectsTab,
+          type: 'svelte',
+        },
+        id: CONSTANTS.TAB_EFFECTS,
+        layout: CONSTANTS.SHEET_LAYOUT_DDB,
+        iconClass: 'fa-solid fa-bolt',
+      },
       {
         title: 'DND5E.Background',
         content: {
@@ -117,16 +130,6 @@ export const CharacterSheetDdbRuntime =
         id: DDB_EXTRAS.TAB_ID,
         layout: CONSTANTS.SHEET_LAYOUT_DDB,
         iconClass: 'fa-solid fa-paw',
-      },
-      {
-        title: 'DND5E.Effects',
-        content: {
-          component: DdbEffectsTab,
-          type: 'svelte',
-        },
-        id: CONSTANTS.TAB_EFFECTS,
-        layout: CONSTANTS.SHEET_LAYOUT_DDB,
-        iconClass: 'fa-solid fa-bolt',
       },
       {
         title: 'DND5E.Bastion.Label',
