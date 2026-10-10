@@ -12,7 +12,7 @@
 // When a Gamemaster turns it off, players still see their spells here but get
 // no Add or Remove; Gamemasters are never locked.
 //
-// DOM contract (DialogV2, classes tidy5e-sheet quadrone ddb ddb-manage-spells-dialog):
+// DOM contract (DialogV2, class ddb-manage-spells-dialog; Foundry's own dialog look):
 //   .ddb-manage-spells[data-class-identifier][data-locked]
 //     .ddb-ms-summary
 //     .ddb-ms-group[data-level] > h3 + ul > li.ddb-ms-row[data-item-id]
@@ -133,7 +133,7 @@ function renderBody(actor: any, info: SpellcastingClassContext, locked: boolean)
             `<span class="ddb-ms-name">${escapeHtml(spell.name)}</span>` +
             `<span class="ddb-ms-meta">${escapeHtml(meta)}</span>` +
             (canEdit
-              ? `<button type="button" class="ddb-ms-remove" data-ddb-spell-remove="${escapeHtml(spell.id)}" data-tooltip="${escapeHtml(localize('TIDY5E.DdbLayout.ManageSpells.Remove'))}" aria-label="${escapeHtml(localize('TIDY5E.DdbLayout.ManageSpells.Remove'))}"><i class="fa-solid fa-trash"></i></button>`
+              ? `<button type="button" class="icon fa-solid fa-trash ddb-ms-remove" data-ddb-spell-remove="${escapeHtml(spell.id)}" data-tooltip="${escapeHtml(localize('TIDY5E.DdbLayout.ManageSpells.Remove'))}" aria-label="${escapeHtml(localize('TIDY5E.DdbLayout.ManageSpells.Remove'))}"></button>`
               : '') +
             `</li>`
           );
@@ -145,9 +145,9 @@ function renderBody(actor: any, info: SpellcastingClassContext, locked: boolean)
 
   return (
     `<div class="ddb-manage-spells" data-class-identifier="${escapeHtml(info.classIdentifier)}" data-locked="${locked}">` +
-    `<p class="ddb-ms-summary">${escapeHtml(summary.join(' · '))}</p>` +
-    (locked ? `<p class="ddb-ms-locked"><i class="fa-solid fa-lock"></i> ${escapeHtml(localize('TIDY5E.DdbLayout.ManageSpells.Locked'))}</p>` : '') +
-    (spells.length ? `<div class="ddb-ms-list">${groupHtml}</div>` : `<p class="ddb-ms-empty">${escapeHtml(localize('TIDY5E.DdbLayout.ManageSpells.Empty'))}</p>`) +
+    `<p class="ddb-ms-summary hint">${escapeHtml(summary.join(' · '))}</p>` +
+    (locked ? `<p class="ddb-ms-locked notification warning"><i class="fa-solid fa-lock"></i> ${escapeHtml(localize('TIDY5E.DdbLayout.ManageSpells.Locked'))}</p>` : '') +
+    (spells.length ? `<div class="ddb-ms-list">${groupHtml}</div>` : `<p class="ddb-ms-empty hint">${escapeHtml(localize('TIDY5E.DdbLayout.ManageSpells.Empty'))}</p>`) +
     `</div>`
   );
 }
@@ -330,7 +330,9 @@ export async function openManageSpells(
         icon: 'fa-solid fa-book-sparkles',
       },
       position: { width: 480 },
-      classes: ['tidy5e-sheet', 'quadrone', 'ddb', 'ddb-manage-spells-dialog'],
+      // A plain Foundry dialog (Carolingian UI), NOT a sheet fragment: no sheet
+      // classes, so Tidy's window and token styles stay out of it.
+      classes: ['ddb-manage-spells-dialog'],
       content: renderBody(actor, info, locked),
       buttons,
       rejectClose: false,
