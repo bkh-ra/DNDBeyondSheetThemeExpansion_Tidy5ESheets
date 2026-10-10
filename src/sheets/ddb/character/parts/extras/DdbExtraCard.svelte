@@ -103,6 +103,7 @@
   data-uuid={extra.canOpen ? extra.uuid : undefined}
   data-ddb-extra-group={extra.group}
   data-ddb-extra-access={extra.access}
+  data-ddb-extra-stub={extra.stub ? 'true' : undefined}
   data-ddb-extra-editable={extra.editable}
   data-ddb-extra-missing={extra.missing}
   data-tidy-sheet-part="ddb-extra-card"
