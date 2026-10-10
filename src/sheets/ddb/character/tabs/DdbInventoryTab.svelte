@@ -58,6 +58,10 @@
   import DdbInventoryContainerView from './DdbInventoryContainerView.svelte';
   import DdbInventoryPartyView from './DdbInventoryPartyView.svelte';
   import DdbOtherPossessions from './DdbOtherPossessions.svelte';
+  import {
+    getTabRowActionCount,
+    shareTabRowActionWidth,
+  } from './tab-row-actions.svelte';
 
   const VIEW_EQUIPMENT = 'equipment';
   const VIEW_PARTY = 'party';
@@ -70,6 +74,25 @@
   );
 
   let context = $derived(getCharacterSheetQuadroneContext());
+
+  /**
+   * One row-actions width for every inventory section (user report
+   * 2026-10-10: "the equipment columns are still misaligned"). The Equipment
+   * group's rows carry one more control (equip / attune) than the other
+   * groups, so its actions column was wider and every column left of it sat
+   * ~35px further left - the drift the Actions and Spells tabs already cure
+   * through tab-row-actions.svelte.ts. Container contents rendered inline on
+   * the tab are inventory tables too and share the same width.
+   */
+  let rowActionCount = $derived(
+    getTabRowActionCount(
+      context.inventory,
+      context.itemContext,
+      context.unlocked,
+    ),
+  );
+
+  shareTabRowActionWidth(() => rowActionCount);
 
   const localize = FoundryAdapter.localize;
 

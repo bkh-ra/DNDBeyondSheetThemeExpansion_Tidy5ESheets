@@ -128,24 +128,9 @@
 }
 
 /* EFFECTS TAB HEADING STRIP (user request 2026-10-09): the panel is the
- * Effects tab's pinned strip (DdbEffectsTab, tab-strips.css section 0) and
- * spans the scroller; the CONDITIONS group takes the spare width so its chips
- * wrap there, DEFENSES keeps its natural width. The fit-content rules above
- * still serve the panel wherever else it is hosted. */
-.tidy5e-sheet.application.ddb .ddb-effects-strip .ddb-conditions-defenses {
-  display: flex;
-  width: auto;
-  max-width: none;
-  align-self: stretch;
-  margin: 0;
-}
-
-.tidy5e-sheet.application.ddb
-  .ddb-effects-strip
-  .ddb-conditions-defenses
-  .ddb-cd-group.ddb-conditions {
-  flex: 1 1 auto;
-}
+ * Effects tab's pinned strip (DdbEffectsTab); its strip-card chrome and
+ * compact two-row layout live in tab-strips.css section 4. The fit-content
+ * rules above still serve the panel wherever else it is hosted. */
 
 .tidy5e-sheet.application.ddb .ddb-conditions-defenses .ddb-cd-group {
   flex: 0 1 auto;
