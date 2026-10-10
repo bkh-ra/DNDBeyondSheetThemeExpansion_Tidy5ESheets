@@ -1,15 +1,18 @@
 <!--
-  DDB-FORK: Generic notched stat box for the quick-info band
-  (PROFICIENCY / BONUS, WALKING / SPEED, INITIATIVE, ...).
+  DDB-FORK: Generic rounded stat box for the quick-info band (PROF. BONUS,
+  INITIATIVE, SPEED, ARMOR CLASS; the inspiration box draws the same frame).
 
   DDB stacks three pieces of text inside the frame: a small heading above the
-  value, the big value itself, and a small label beneath it — see the
-  ct-proficiency-bonus-box / ct-speed-box structure in design/GROUPINGS.md.
+  value, the big value itself, and a small label beneath it. The band's half
+  boxes (`.ddb-stat-box--half`, 2026-10-09) reorder that in CSS to label over
+  value; the markup is the same.
 
   When `onclick` is provided (or the caller passes a `data-action`), the inner
   stack renders as a button so the box is rollable; otherwise it is inert.
   Extra attributes are spread onto the interactive element, which is how the
-  band wires the initiative box to the sheet's `roll` action.
+  band wires the initiative box to the sheet's `roll` action. `attribution`
+  puts dnd5e's property-attribution tooltip on the whole box (the armor class
+  box carries `attributes.ac`, as quadrone's `.ac-container` does).
 -->
 <script lang="ts">
   import type { ClassValue, HTMLButtonAttributes } from 'svelte/elements';
@@ -28,16 +31,14 @@
     label?: string;
     /** Tooltip for the whole box. Localization keys are resolved by Foundry. */
     tooltip?: string;
+    /** dnd5e attribution path for the whole box (`data-attribution`). */
+    attribution?: string;
+    /** Caption of the attribution tooltip (a localization key). */
+    attributionCaption?: string;
     /** Intrinsic frame width, in px. */
     width?: number;
     /** Intrinsic frame height, in px. */
     height?: number;
-    /**
-     * Frame silhouette. `octagon` is the band treatment (label inside the
-     * frame); `hex` is the squat, raked-end shape the combat row uses for the
-     * boxes whose label rides above the frame. See DdbStatBoxShape.
-     */
-    variant?: 'octagon' | 'hex';
     /** Extra content rendered inside the frame (e.g. a config button). */
     children?: Snippet;
   } & HTMLButtonAttributes;
@@ -49,12 +50,10 @@
     unit,
     label,
     tooltip,
-    /* 80 matches the widened HEROIC INSPIRATION octagon so the band trio reads
-     * as one equal set (round-4 eval finding: 70/70/80 looked mismatched). The
-     * combat-row hexes pass their own explicit 60x48. */
+    attribution,
+    attributionCaption,
     width = 80,
     height = 80,
-    variant = 'octagon',
     children,
     ...rest
   }: Props = $props();
@@ -62,8 +61,14 @@
   let interactive = $derived(!!rest.onclick || !!rest['data-action']);
 </script>
 
-<section class={['ddb-stat-box', cssClass]} data-tooltip={tooltip}>
-  <DdbStatBoxShape {width} {height} {variant} />
+<section
+  class={['ddb-stat-box', cssClass]}
+  data-tooltip={tooltip}
+  data-attribution={attribution}
+  data-attribution-caption={attributionCaption}
+  data-tooltip-direction={attribution ? 'DOWN' : undefined}
+>
+  <DdbStatBoxShape {width} {height} />
   {#if interactive}
     <button type="button" class="ddb-stat-box__content" {...rest}>
       {#if heading}

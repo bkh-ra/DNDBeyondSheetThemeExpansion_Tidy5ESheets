@@ -1,17 +1,14 @@
 <!--
-  DDB-FORK: Frame for a quick-info ability box, drawn from scratch as four
-  stacked paths that read as one card:
+  DDB-FORK: Frame for a quick-info ability box, drawn from scratch as three
+  stacked paths that read as one card (the corner chamfers that used to be a
+  fourth went on 2026-10-09 - user: "no angled edges anymore, just rounded"):
 
     1. `frame`   - the rounded-rect card body, 5.5 .. 75.5 x 4.5 .. 79.5 of the
                    81 x 95 footprint,
-    2. `corner`  - ONE short 45-degree chamfer across each corner of the card,
-                   both ends landing on the card's own straight runs. Four
-                   separate 10-unit strokes that touch nothing and cross
-                   nothing,
-    3. `well`    - the inner rounded rect the big modifier sits in, drawn at
+    2. `well`    - the inner rounded rect the big modifier sits in, drawn at
                    the card's own strength so the card + well pair matches the
                    double line every other box in the band carries,
-    4. `badge`   - an OVAL (34 x 21, so wider than tall) centred on the card's
+    3. `badge`   - an OVAL (34 x 21, so wider than tall) centred on the card's
                    bottom edge. Painted last with an opaque fill so it occludes
                    the card's bottom edge and the two read as a single
                    silhouette.
@@ -68,19 +65,6 @@
        Z"
   />
 
-  <!-- Corner chamfers. Each runs between two points that already lie on the
-       card's straight runs (top edge x 10.5 .. 70.5, sides y 9.5 .. 74.5), so
-       the ends meet the frame cleanly and the stroke never leaves the card.
-       Leftmost/rightmost ink is x 5.5 / 75.5 — the card edge itself, 5.5 units
-       clear of the footprint. -->
-  <path
-    class="ddb-box-background__path ddb-ability-box-shape__corner"
-    vector-effect="non-scaling-stroke"
-    d="M 5.5 14.5 L 15.5 4.5
-       M 65.5 4.5 L 75.5 14.5
-       M 75.5 69.5 L 65.5 79.5
-       M 15.5 79.5 L 5.5 69.5"
-  />
 
   <path
     class="ddb-box-background__path ddb-ability-box-shape__well"

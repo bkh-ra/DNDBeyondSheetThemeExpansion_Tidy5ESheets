@@ -59,12 +59,10 @@
   import { dragAutoScroll } from '../features/drag-scroll/drag-auto-scroll';
   import DdbHeaderBanner from './parts/header/DdbHeaderBanner.svelte';
   import DdbQuickInfoBand from './parts/quickinfo/DdbQuickInfoBand.svelte';
-  import DdbCombatRow from './parts/quickinfo/DdbCombatRow.svelte';
   import DdbSavingThrowsBox from './parts/leftcol/DdbSavingThrowsBox.svelte';
   import DdbSkillsBox from './parts/leftcol/DdbSkillsBox.svelte';
   import DdbSensesBox from './parts/leftcol/DdbSensesBox.svelte';
   import DdbProficienciesBox from './parts/leftcol/DdbProficienciesBox.svelte';
-  import DdbConditionsDefensesStrip from './parts/primary/DdbConditionsDefensesStrip.svelte';
   import DdbPrimaryBox from './parts/primary/DdbPrimaryBox.svelte';
   import DdbSidebar from './parts/sidebar/DdbSidebar.svelte';
   import { getCharacterSheetQuadroneContext } from 'src/sheets/sheet-context.svelte';
@@ -671,11 +669,12 @@
       </aside>
 
       <main class="ddb-col ddb-col-primary">
-        <div class="ddb-combat-strip-row">
-          <DdbCombatRow />
-          <DdbConditionsDefensesStrip />
-        </div>
-        <DdbPrimaryBox showConditionsDefenses={false} />
+        <!-- Nothing above the primary box any more (2026-10-09): INITIATIVE
+             and ARMOR CLASS moved into the band's 2 x 2 stat grid, hit dice
+             into the health panel, and DEFENSES / CONDITIONS into the Effects
+             tab's heading strip (DdbEffectsTab), so the scroller is as tall
+             as the stat columns beside it. -->
+        <DdbPrimaryBox />
       </main>
 
       <aside class="ddb-col ddb-col-sidebar">

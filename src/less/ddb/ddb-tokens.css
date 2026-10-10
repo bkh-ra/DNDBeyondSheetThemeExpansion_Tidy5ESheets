@@ -145,7 +145,9 @@
   --ddb-skills-track-prof: 24px;
   --ddb-skills-track-mod: 28px;
   --ddb-skills-track-bonus: 36px;
-  --ddb-skills-pad-inline: var(--ddb-space-2);
+  /* The skills box gutter equals the .ddb-box gutter (--ddb-space-3) since
+   * 2026-10-09 (user: "match the gutters on the top skill bar"). */
+  --ddb-skills-pad-inline: var(--ddb-space-3);
 
   /* ---- light theme (DDB default) ---- */
   /* DDB renders the header strip dark in BOTH themes (see captures) */
@@ -260,7 +262,7 @@
   --ddb-column-gap: 4px;
   --ddb-skills-track-mod: 26px;
   --ddb-skills-track-bonus: 34px;
-  --ddb-skills-pad-inline: var(--ddb-space-1);
+  --ddb-skills-pad-inline: var(--ddb-space-2);
 }
 
 /* ---- vertical density (ddb-next Wave 8; theme-invariant) ----
@@ -296,9 +298,9 @@
 
   /* Sheet body (ddb-layout.css): padding above the band / below the columns
    * and the band-to-columns gap; gap between boxes in a column (`.ddb-col`). */
-  --ddb-body-pad-top: round(calc(6px - 2px * var(--ddb-density-fit)), 1px);
+  --ddb-body-pad-top: round(calc(4px - 2px * var(--ddb-density-fit)), 1px);
   --ddb-body-pad-bottom: round(calc(8px - 4px * var(--ddb-density-fit)), 1px);
-  --ddb-body-gap: round(calc(6px - 2px * var(--ddb-density-fit)), 1px);
+  --ddb-body-gap: round(calc(4px - 2px * var(--ddb-density-fit)), 1px);
   --ddb-stat-gap: round(calc(6px - 2px * var(--ddb-density-fit)), 1px);
   /* Stat-box frame (left-column.css `.ddb-box`): block padding, the gap
    * between body blocks, and the bottom title band (gap above it, its top
@@ -341,12 +343,16 @@
    * by 1px (below). The type scale stays six steps; these alias into it. */
   --ddb-stat-size-body: var(--ddb-size-body);
   --ddb-stat-size-label-md: var(--ddb-size-label-md);
-  /* Quick-info band (quick-info.css): block padding, and the uniform scale of
-   * the band row (1 -> 84/95). */
-  --ddb-quick-info-pad: round(calc(6px - 4px * var(--ddb-density-fit)), 1px);
+  /* Quick-info band (quick-info.css): block padding (tightened 2026-10-09 with
+   * --ddb-body-pad-top / --ddb-body-gap: 6px above and below the band at
+   * normal density, 2px in the dense fit), and the uniform scale of the band
+   * row (1 -> 84/95). */
+  --ddb-quick-info-pad: round(calc(2px - 2px * var(--ddb-density-fit)), 1px);
   --ddb-ability-box-scale: calc(1 - 11 / 95 * var(--ddb-density-fit));
-  /* INITIATIVE / ARMOR CLASS / HIT DICE atop the primary column (1 -> 0.9). */
-  --ddb-combat-row-scale: calc(1 - 0.1 * var(--ddb-density-fit));
+  /* Health panel width and the 2 x 2 stat grid's half-box height
+   * (quick-info.css, 2026-10-09). */
+  --ddb-hp-block-width: 19.5rem;
+  --ddb-half-box-height: 2.375rem; /* (80px - 4px gap) / 2 */
 }
 
 /* SKILLS COLUMN FIT. The global fit is sized to the TALLER stat column (the
