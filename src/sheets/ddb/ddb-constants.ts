@@ -52,6 +52,16 @@ export const DDB_LANG = {
     'Inventory (no container)',
   ],
   DETAIL_PARENT_ITEM: ['TIDY5E.DdbLayout.Detail.ParentItem', 'Item'],
+  DETAIL_EFFECT_SOURCE: ['TIDY5E.DdbLayout.Detail.EffectSource', 'Source'],
+  DETAIL_EFFECT_STATUS: ['TIDY5E.DdbLayout.Detail.EffectStatus', 'Status'],
+  DETAIL_EFFECT_ACTIVE: ['TIDY5E.DdbLayout.Detail.EffectActive', 'Active'],
+  DETAIL_EFFECT_DISABLED: ['TIDY5E.DdbLayout.Detail.EffectDisabled', 'Disabled'],
+  DETAIL_EFFECT_SUPPRESSED: [
+    'TIDY5E.DdbLayout.Detail.EffectSuppressed',
+    'Suppressed',
+  ],
+  DETAIL_EFFECT_ENABLE: ['TIDY5E.DdbLayout.Detail.EffectEnable', 'Enable'],
+  DETAIL_EFFECT_DISABLE: ['TIDY5E.DdbLayout.Detail.EffectDisable', 'Disable'],
   DETAIL_RULES: ['TIDY5E.DdbLayout.Detail.Rules', 'Rules'],
   DETAIL_RULES_UNAVAILABLE: [
     'TIDY5E.DdbLayout.Detail.RulesUnavailable',

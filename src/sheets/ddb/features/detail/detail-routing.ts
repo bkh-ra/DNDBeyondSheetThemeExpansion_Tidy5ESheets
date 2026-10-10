@@ -20,7 +20,10 @@ import {
  *      plain click / Enter  -> detail pane
  *      Shift (+click/Enter) -> left alone: Tidy's inline summary
  *      Ctrl / Meta          -> the full item sheet
- *    Activity rows (`[data-activity-id]`) resolve to the activity detail.
+ *    Activity rows (`[data-activity-id]`) resolve to the activity detail;
+ *    effect rows (`[data-effect-id]`: the Effects tab, and the inline effect
+ *    lists of item summaries) resolve to the effect detail (2026-10-10 - they
+ *    used to keep Tidy's inline summary, which ignored the preference).
  *
  *  - Detail TRIGGERS (`[data-ddb-detail="<kind>:<ref>"]`), claimed by one
  *    capture listener on the sheet root.
@@ -58,7 +61,38 @@ const EDITABLE_SELECTOR =
 
 export type ResolvedRowDocuments =
   | { kind: 'item'; document: any; item: any }
-  | { kind: 'activity'; document: any; item: any };
+  | { kind: 'activity'; document: any; item: any }
+  | { kind: 'effect'; document: any; item: any | null };
+
+/**
+ * The ActiveEffect an effect row stands for, if `actor` or one of its items
+ * owns it. `data-parent-id` is the actor's own id for its effects, else the
+ * carrying item's id (TidyEffectTableRow).
+ */
+function resolveRowEffect(row: HTMLElement, actor: any): any | null {
+  const effectId = row.dataset.effectId;
+
+  if (!effectId || !actor) {
+    return null;
+  }
+
+  const parentId = row.dataset.parentId;
+  const parent =
+    !parentId || parentId === actor.id ? actor : actor.items?.get(parentId);
+
+  let effect = parent?.effects?.get?.(effectId) ?? actor.effects?.get?.(effectId);
+
+  if (!effect) {
+    for (const candidate of actor.allApplicableEffects?.() ?? []) {
+      if (candidate?.id === effectId) {
+        effect = candidate;
+        break;
+      }
+    }
+  }
+
+  return effect ?? null;
+}
 
 /**
  * Resolve the item (and activity, for activity rows) a row element stands for.
@@ -68,6 +102,20 @@ export function resolveRowDocuments(
   row: HTMLElement,
   actor: any,
 ): ResolvedRowDocuments | null {
+  if (row.matches('[data-effect-id]')) {
+    const effect = resolveRowEffect(row, actor);
+    return effect
+      ? {
+          kind: 'effect',
+          document: effect,
+          item:
+            effect.parent?.documentName === CONSTANTS.DOCUMENT_NAME_ITEM
+              ? effect.parent
+              : null,
+        }
+      : null;
+  }
+
   const itemId =
     row.dataset.itemId ??
     row.closest<HTMLElement>('[data-item-id]')?.dataset.itemId;
@@ -125,8 +173,7 @@ function findRoutableName(
 
   const row = nameEl.closest<HTMLElement>(ROW_SELECTOR);
 
-  // Effects keep their own inline summary.
-  if (!row || row.matches('[data-effect-id]')) {
+  if (!row) {
     return null;
   }
 
@@ -150,7 +197,11 @@ function routeName(
   event.stopPropagation();
 
   if (openSheet) {
-    openFullSheet(host, resolved.item);
+    // Ctrl / Meta on an effect opens the effect's own config.
+    openFullSheet(
+      host,
+      resolved.kind === 'effect' ? resolved.document : resolved.item,
+    );
   } else {
     host.ddbDetail.select({
       kind: resolved.kind,
@@ -306,6 +357,17 @@ export async function resolveDocumentLinkSelection(
     doc.actor === actor
   ) {
     return { kind: 'item', uuid: doc.uuid };
+  }
+
+  if (doc?.documentName === 'ActiveEffect') {
+    const owner =
+      doc.parent?.documentName === CONSTANTS.DOCUMENT_NAME_ITEM
+        ? doc.parent.actor
+        : doc.parent;
+
+    if (owner === actor) {
+      return { kind: 'effect', uuid: doc.uuid };
+    }
   }
 
   return null;
