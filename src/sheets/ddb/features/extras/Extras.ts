@@ -45,6 +45,8 @@ export interface DdbExtraRef {
   group: DdbExtraGroupKey;
   /** What brought it here (the summoning item, the profile's item). */
   source?: string;
+  /** A display name known without resolving anything (a summon profile's). */
+  name?: string;
 }
 
 export interface DdbExtraSpeed {
@@ -88,6 +90,11 @@ export interface DdbExtra {
   inFlag: boolean;
   /** A summoned creature the user may delete: Dismiss. */
   dismissable: boolean;
+  /**
+   * The document was NOT loaded: the card shows the name and image from a
+   * compendium index entry or the summon profile; Open loads it.
+   */
+  stub: boolean;
 }
 
 export interface DdbExtraGroup {
@@ -166,8 +173,8 @@ function summonSourceName(doc: any): string {
 /** `profiles[].uuid` of every summon activity on the character's items. */
 export function findSummonProfiles(
   actor: Actor5e,
-): { uuid: string; source: string }[] {
-  const profiles: { uuid: string; source: string }[] = [];
+): { uuid: string; source: string; name: string }[] {
+  const profiles: { uuid: string; source: string; name: string }[] = [];
 
   for (const item of actor.items ?? []) {
     const activities: any[] =
@@ -176,13 +183,93 @@ export function findSummonProfiles(
     for (const activity of activities) {
       for (const profile of activity?.profiles ?? []) {
         if (typeof profile?.uuid === 'string' && profile.uuid) {
-          profiles.push({ uuid: profile.uuid, source: item.name ?? '' });
+          profiles.push({
+            uuid: profile.uuid,
+            source: item.name ?? '',
+            name: typeof profile.name === 'string' ? profile.name : '',
+          });
         }
       }
     }
   }
 
   return profiles;
+}
+
+/** A card's stand-in for a document that is not loaded (see `resolveExtraActorForDisplay`). */
+export function makeExtraStub(
+  uuid: string,
+  name: string,
+  img: string,
+  type: string,
+  pack: string,
+): any {
+  return {
+    _ddbStub: true,
+    uuid,
+    name,
+    img,
+    type,
+    pack,
+    documentName: 'Actor',
+    isToken: false,
+  };
+}
+
+/**
+ * The actor behind a UUID for DISPLAY, never loading a document that is not
+ * already in memory: a world actor by id, a token's actor from a loaded
+ * scene, or a compendium entry as a stub built from the pack INDEX. Anything
+ * else (a foreign reference, an unknown pack) yields null and the caller
+ * falls back to the name it already knows. Nothing here can turn a render
+ * into a world write: Plutonium imports a 5etools creature the moment its
+ * reference is resolved, which happened on every sheet open for the Linked
+ * summon profiles (user report 2026-10-09). Only Open (`openExtra`) loads.
+ */
+export function resolveExtraActorForDisplay(uuid: string): any | null {
+  if (typeof uuid !== 'string' || !uuid) {
+    return null;
+  }
+
+  const parts = uuid.split('.');
+
+  try {
+    if (parts[0] === 'Actor' && parts.length === 2) {
+      return game.actors?.get(parts[1]) ?? null;
+    }
+
+    if (parts[0] === 'Scene') {
+      const doc: any = fromUuidSync(uuid);
+      if (doc?.documentName === 'Token') {
+        return doc.actor ?? null;
+      }
+      return doc?.documentName === 'Actor' ? doc : null;
+    }
+
+    if (parts[0] === 'Compendium' && parts.length === 5 && parts[3] === 'Actor') {
+      const packId = `${parts[1]}.${parts[2]}`;
+      const id = parts[4];
+      const pack: any = game.packs?.get(packId);
+      if (!pack) {
+        return null;
+      }
+
+      // Already loaded (someone opened it): use it, it costs nothing.
+      const loaded = pack.contents?.find?.((doc: any) => doc?.id === id);
+      if (loaded) {
+        return loaded;
+      }
+
+      const entry = pack.index?.get?.(id);
+      return entry
+        ? makeExtraStub(uuid, entry.name ?? '', entry.img ?? '', entry.type ?? '', packId)
+        : null;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
 }
 
 /* ------------------------------------------------------------------ */
@@ -197,13 +284,18 @@ export function collectExtraRefs(actor: Actor5e): DdbExtraRef[] {
   const refs: DdbExtraRef[] = [];
   const seen = new Set<string>([actor.uuid]);
 
-  const push = (uuid: string, group: DdbExtraGroupKey, source?: string) => {
+  const push = (
+    uuid: string,
+    group: DdbExtraGroupKey,
+    source?: string,
+    name?: string,
+  ) => {
     if (!uuid || seen.has(uuid)) {
       return;
     }
 
     seen.add(uuid);
-    refs.push({ uuid, group, source });
+    refs.push({ uuid, group, source, name });
   };
 
   for (const creature of findSummonedCreatures(actor)) {
@@ -215,7 +307,7 @@ export function collectExtraRefs(actor: Actor5e): DdbExtraRef[] {
   }
 
   for (const profile of findSummonProfiles(actor)) {
-    push(profile.uuid, 'linked', profile.source);
+    push(profile.uuid, 'linked', profile.source, profile.name);
   }
 
   return refs;
@@ -340,9 +432,21 @@ export async function resolveExtra(
   ref: DdbExtraRef,
   flagged: Set<string>,
 ): Promise<DdbExtra> {
-  const doc: any = await resolveExtraActor(ref.uuid);
-  const access: DdbExtraAccess = doc ? extraAccess(doc) : 'none';
-  const compendium = !!doc?.pack;
+  // Display only: never a document load (see resolveExtraActorForDisplay).
+  // A summon profile whose reference cannot be read locally still gets a
+  // card, by the name the profile carries.
+  const doc: any =
+    resolveExtraActorForDisplay(ref.uuid) ??
+    (ref.name
+      ? makeExtraStub(ref.uuid, ref.name, DDB_EXTRA_FALLBACK_IMG, '', '')
+      : null);
+  const stub = !!doc?._ddbStub;
+  const access: DdbExtraAccess = doc
+    ? stub
+      ? 'observer'
+      : extraAccess(doc)
+    : 'none';
+  const compendium = stub || !!doc?.pack;
   const token = !!doc?.isToken;
   const canView = access === 'owner' || access === 'observer';
   const canSeeName = canView || access === 'limited';
@@ -372,6 +476,7 @@ export async function resolveExtra(
     editable: access === 'owner' && !compendium && ref.group !== 'linked',
     inFlag: flagged.has(ref.uuid),
     dismissable: false,
+    stub,
   };
 
   if (ref.source && canSeeName) {

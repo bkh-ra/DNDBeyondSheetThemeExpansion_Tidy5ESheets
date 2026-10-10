@@ -57,6 +57,7 @@
   "TIDY5E.DdbLayout.Inventory.Transfer": "Transfer currency",
   "TIDY5E.DdbLayout.Inventory.WeightCarried": "Weight Carried",
   "TIDY5E.DdbLayout.Inventory.Capacity": "Capacity",
+  "TIDY5E.DdbLayout.Inventory.TypeCategory": "Item type",
   "TIDY5E.DdbLayout.Inventory.PartyEmpty": "The party has no items.",
   "TIDY5E.DdbLayout.Inventory.PartyReadOnly": "You can view but not edit the party's inventory.",
   "TIDY5E.DdbLayout.Inventory.EditOtherPossessions": "Edit Other Possessions",

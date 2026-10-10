@@ -50,8 +50,18 @@ export function isExtraCandidate(doc: any): boolean {
 }
 
 /** Open the extra's sheet next to the character sheet. */
-export function openExtra(sheet: any, extra: DdbExtra) {
-  const doc: any = extra.document;
+export async function openExtra(sheet: any, extra: DdbExtra) {
+  let doc: any = extra.document;
+
+  // A stub card never loaded its document; Open is the user's own request,
+  // so loading (and whatever an importing module does with that) is theirs.
+  if (doc?._ddbStub) {
+    try {
+      doc = await fromUuid(extra.uuid);
+    } catch {
+      doc = null;
+    }
+  }
 
   if (!doc?.sheet || !extra.canOpen) {
     return;

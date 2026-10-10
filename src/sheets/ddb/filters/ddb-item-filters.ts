@@ -110,6 +110,33 @@ export function getDdbAttunableFilter(): DdbItemFilter {
   };
 }
 
+/**
+ * The Inventory pills (user request 2026-10-09): ALL, then one pill per
+ * section type in Tidy's section order, filtering like the Actions tab's
+ * pills do. Quadrone's equipped / attunement filters stay in the filter menu.
+ */
+export const DDB_INVENTORY_TYPES: readonly string[] = [
+  'weapon',
+  'equipment',
+  'consumable',
+  'tool',
+  'container',
+  'loot',
+];
+
+export function getDdbInventoryTypeFilterName(type: string) {
+  return `ddb-type-${type}`;
+}
+
+export function getDdbInventoryTypeFilters(): DdbItemFilter[] {
+  return DDB_INVENTORY_TYPES.map((type) => ({
+    name: getDdbInventoryTypeFilterName(type),
+    predicate: (item: Item5e) => item.type === type,
+    text: `TYPES.Item.${type}Pl`,
+    pillLabel: `TYPES.Item.${type}Pl`,
+  }));
+}
+
 export function getDdbSpellLevelFilterName(level: number) {
   return `${DDB_FILTER_NAMES.SPELL_LEVEL_PREFIX}${level}`;
 }
@@ -204,6 +231,7 @@ function patchCategory(
 const ACTIVATION_CATEGORY = 'DND5E.ItemActivationCost';
 const MISC_CATEGORY = 'TIDY5E.ItemFilters.Category.Miscellaneous';
 const SPELL_LEVEL_CATEGORY = 'DND5E.SpellLevel';
+const INVENTORY_TYPE_CATEGORY = 'TIDY5E.DdbLayout.Inventory.TypeCategory';
 
 /**
  * The DDB sheet's `ItemFilterService` provider: quadrone's filters for the
@@ -251,6 +279,7 @@ export function getDdbDocumentFilters(document: any): FilterTabsToCategories {
     },
     [CONSTANTS.TAB_ACTOR_INVENTORY]: {
       ...inventory,
+      [INVENTORY_TYPE_CATEGORY]: () => getDdbInventoryTypeFilters(),
       [MISC_CATEGORY]: patchCategory(
         inventory[MISC_CATEGORY],
         () => [
@@ -293,11 +322,9 @@ export const DDB_SPELLBOOK_PINS: readonly string[] = [
  * there; in the DDB layout the pill row replaces the action bar's pinned
  * group.)
  */
-export const DDB_INVENTORY_PINS: readonly string[] = [
-  DDB_FILTER_NAMES.ATTUNED,
-  DDB_FILTER_NAMES.ATTUNABLE,
-  defaultItemFilters.equipped.name,
-];
+export const DDB_INVENTORY_PINS: readonly string[] = DDB_INVENTORY_TYPES.map(
+  getDdbInventoryTypeFilterName,
+);
 
 /**
  * `context.filterPins` of the DDB sheet, by actor type. A getter, so pins
