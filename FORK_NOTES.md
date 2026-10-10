@@ -117,6 +117,7 @@ live in `design/audit/`.
 
 ### Releases
 
+- **13.10.5-ddb.11** (2026-10-09): the Manage Spells dialog (the sheet's spells by level with Remove, "Add spells…" with duplicates skipped, GM lockdown setting `ddbPlayersCanManageSpells`); Move-to section labels fixed; gated on the sandbox.
 - **13.10.5-ddb.10** (2026-10-09, hotfix): ddb.9 threw at startup (a module-scope `FoundryAdapter.localize` read in the new move module ran inside the settings import cycle), so the DDB sheet never registered and characters fell back to the default dnd5e sheet; the read is lazy now.
 - **13.10.5-ddb.9** (2026-10-09): edge auto-scroll while dragging inside the lists, and "Move to…" in the item context menu (sections shown on the tab, default or new section; containers for physical items).
 - **13.10.5-ddb.8** (2026-10-09, hotfix): the Extras tab never imports or creates actors; compendium creatures are linked read-only by UUID and a creature already linked through a world copy is not added again (user report: statblocks kept being added to the campaign).
