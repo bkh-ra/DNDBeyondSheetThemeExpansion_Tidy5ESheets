@@ -120,12 +120,45 @@
  * row's layout width grows by the inverse factor so the HP panel still ends on
  * the band's right edge. The 10px captions render at ~8.8px at dense, the one
  * place the band's type shrinks. */
+/* TWO CELLS (user request 2026-10-10: "have the health panel match the width
+ * of the details panel ... have the [boxes] equally fill up the space as the
+ * window is stretched"). The row is a grid whose second track mirrors the
+ * sidebar column: --ddb-sidebar-col-width is the column's measured width
+ * (DdbCharacterSheet publishes it on the sheet root), divided by the row's
+ * zoom so the cell lands on the column's real edge, and floored at the
+ * health panel's own width so a collapsed rail (or the overlay mode's
+ * rail-wide column) never squeezes the panel. The first track takes the rest
+ * and its boxes spread evenly (`.ddb-quick-info__main`). */
 .tidy5e-sheet.application.ddb .ddb-quick-info__row {
+  --ddb-band-side-width: max(
+    var(--ddb-hp-block-width),
+    calc(var(--ddb-sidebar-col-width, 0px) / var(--ddb-ability-box-scale))
+  );
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--ddb-band-side-width);
+  align-items: start;
+  column-gap: calc(var(--ddb-column-gap) / var(--ddb-ability-box-scale));
+  zoom: var(--ddb-ability-box-scale);
+}
+
+/* A LEFT sidebar sits under the main cell, not under the panel: the panel
+ * keeps its floor width on the right. */
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-sidebar-left .ddb-quick-info__row {
+  --ddb-band-side-width: var(--ddb-hp-block-width);
+}
+
+/* The main cell: six ability cards, the 2 x 2 stat grid and inspiration,
+ * first and last flush with the cell's edges and the six gaps between them
+ * equal, however wide the window is. The abilities section stays in the DOM
+ * for its hooks but lays out as its cards (display: contents), so the cards
+ * take part in the spread like the two boxes after them. */
+.tidy5e-sheet.application.ddb .ddb-quick-info__main {
   display: flex;
   flex-wrap: nowrap;
   align-items: flex-start;
+  justify-content: space-between;
   gap: var(--ddb-space-1);
-  zoom: var(--ddb-ability-box-scale);
+  min-width: 0;
 }
 
 
@@ -147,23 +180,22 @@
  * the first (six ability cards + three stat boxes: 47rem), centred under it,
  * so the band reads as one block. The body scrolls in this mode. */
 .tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-quick-info__row {
-  flex-wrap: wrap;
-  justify-content: center;
+  grid-template-columns: minmax(0, 1fr);
   row-gap: var(--ddb-space-2);
 }
 
+.tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-quick-info__main {
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 .tidy5e-sheet.application.ddb .ddb-sheet.ddb-mode-stacked .ddb-hp-block {
-  flex: 1 1 100%;
-  width: auto;
-  max-width: 47rem;
-  margin-inline: auto;
+  width: min(100%, 47rem);
+  justify-self: center;
 }
 
 .tidy5e-sheet.application.ddb .ddb-quick-info__abilities {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: flex-start;
-  gap: var(--ddb-space-half);
+  display: contents; /* its cards spread with the main cell (2026-10-10) */
 }
 
 /* Shared text roles for every DDB box. Deliberately NOT scoped under
@@ -868,12 +900,13 @@
    * flex range. The readout holds CURRENT / MAX / TEMP and, since the same
    * day, HIT DICE; the width is one token (ddb-tokens.css) so it can be
    * tuned in one place. */
-  flex: 0 0 var(--ddb-hp-block-width);
-  width: var(--ddb-hp-block-width);
+  /* 2026-10-10: the panel fills the band's second cell, which mirrors the
+   * sidebar column (see .ddb-quick-info__row); the token is now its FLOOR. */
+  width: 100%;
   align-items: center;
   gap: var(--ddb-space-2);
-  margin-left: auto;
-  min-width: 0;
+  margin-left: 0;
+  min-width: var(--ddb-hp-block-width);
   max-width: none;
   height: 5rem; /* 80px, on the band baseline */
   /* Interior inset on all four sides so the applicator reads as sitting INSIDE

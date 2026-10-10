@@ -534,6 +534,19 @@
   // Body resize = window resize (either axis). Throttled by the manager.
   const onBodyResize = () => scheduleLayout();
 
+  // The band mirrors the sidebar column (quick-info.css): the health panel
+  // spans it (user request 2026-10-10). The column is an `auto` grid track
+  // sized by the pane (dragged width, rail when collapsed, transient expand),
+  // so its rendered width is measured and published on the sheet root.
+  const onSidebarResize = (entry: ResizeObserverEntry) => {
+    const width =
+      entry.borderBoxSize?.[0]?.inlineSize ?? entry.contentRect.width;
+    sheetElement?.style.setProperty(
+      '--ddb-sidebar-col-width',
+      `${Math.round(width)}px`,
+    );
+  };
+
   // Content of the two stat columns: rows added or removed (edit mode tool
   // rows, the collapsed SKILLS list), text changes, class toggles. The panel
   // frames' SVG redraws are skipped; they follow the box size, not content.
@@ -677,7 +690,10 @@
         <DdbPrimaryBox />
       </main>
 
-      <aside class="ddb-col ddb-col-sidebar">
+      <aside
+        class="ddb-col ddb-col-sidebar"
+        {@attach observeResize(onSidebarResize)}
+      >
         <DdbSidebar />
       </aside>
     </div>
