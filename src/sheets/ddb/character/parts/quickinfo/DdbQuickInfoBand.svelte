@@ -51,16 +51,8 @@
   let acLabel = $derived(localize('DND5E.ArmorClass'));
 </script>
 
-<!--
-  Two cells (user request 2026-10-10): the MAIN cell spans the stat columns
-  and the primary box and spreads its eight boxes evenly across whatever
-  width the window gives it; the health panel takes the second cell, which
-  mirrors the sidebar column's width (quick-info.css, --ddb-sidebar-col-width
-  published by DdbCharacterSheet), so the two line up with the columns below.
--->
 <div class="ddb-quick-info" data-tidy-sheet-part="ddb-quick-info-band">
   <div class="ddb-quick-info__row ddb-quick-info__row--primary">
-    <div class="ddb-quick-info__main" data-tidy-sheet-part="ddb-quick-info-main">
     <section class="ddb-quick-info__abilities">
       {#each context.abilities as ability (ability.key)}
         <DdbAbilityBox {ability} />
@@ -165,12 +157,10 @@
     </div>
 
     <DdbInspirationBox />
-    </div>
 
     <!--
-      Health panel, as wide as the sidebar column (never narrower than its
-      19.5rem floor). It swaps its own interior between the HP figures and the
-      death-save pips, so the band never changes height.
+      Fixed-width health panel. It swaps its own interior between the HP
+      figures and the death-save pips, so the band never changes size.
     -->
     <DdbHpBlock />
   </div>
