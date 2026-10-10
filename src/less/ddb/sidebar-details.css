@@ -907,3 +907,11 @@
 .tidy5e-sheet.application.ddb .ddb-detail-pane .pill.pill-switch > .field-toggle {
   flex: 0 0 auto;
 }
+/* Effect detail (2026-10-10): a disabled or suppressed effect dims its image,
+ * as the Effects tab's inactive section does. */
+.tidy5e-sheet.application.ddb
+  .ddb-detail-pane
+  .ddb-effect-detail:is(.disabled, .suppressed)
+  .ddb-detail-img {
+  opacity: 0.55;
+}

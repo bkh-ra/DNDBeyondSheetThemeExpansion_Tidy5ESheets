@@ -18,6 +18,7 @@ import { DDB_CONSTANTS } from 'src/sheets/ddb/ddb-constants';
 export type DdbDetailKind =
   | 'item'
   | 'activity'
+  | 'effect'
   | 'skill'
   | 'tool'
   | 'ability'
@@ -27,6 +28,7 @@ export type DdbDetailKind =
 export const DDB_DETAIL_KINDS: readonly DdbDetailKind[] = [
   'item',
   'activity',
+  'effect',
   'skill',
   'tool',
   'ability',
@@ -35,11 +37,15 @@ export const DDB_DETAIL_KINDS: readonly DdbDetailKind[] = [
 ];
 
 /** Kinds addressed by document uuid; the rest are addressed by config key. */
-const UUID_KINDS: ReadonlySet<DdbDetailKind> = new Set(['item', 'activity']);
+const UUID_KINDS: ReadonlySet<DdbDetailKind> = new Set([
+  'item',
+  'activity',
+  'effect',
+]);
 
 export type DdbDetailSelection = {
   kind: DdbDetailKind;
-  /** Document uuid, for `item` and `activity`. */
+  /** Document uuid, for `item`, `activity` and `effect`. */
   uuid?: string;
   /** Config key (`acr`, `dex`, `thief`, `blinded`), for every other kind. */
   key?: string;

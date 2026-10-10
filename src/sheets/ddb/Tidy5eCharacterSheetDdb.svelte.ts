@@ -379,6 +379,17 @@ export class Tidy5eCharacterSheetDdb extends Tidy5eCharacterSheetQuadrone {
       }),
     });
 
+    // Likewise for effects (the actor's own and its items'), 2026-10-10.
+    this._hookSubscriptions.push({
+      name: 'deleteActiveEffect',
+      id: Hooks.on('deleteActiveEffect', (effect: any) => {
+        const parent = effect?.parent;
+        if (parent === this.actor || parent?.parent === this.actor) {
+          this.ddbDetail.forgetUuid(effect.uuid);
+        }
+      }),
+    });
+
     return element;
   }
 

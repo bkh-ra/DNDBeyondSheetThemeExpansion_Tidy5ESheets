@@ -7,7 +7,8 @@
 
   Resolution is re-run on every sheet render (it reads `context`), so a
   document that disappeared drops out of the pane on its own; the sheet also
-  forgets deleted items through its `deleteItem` hook. Updates to the selected
+  forgets deleted items and effects through its `deleteItem` /
+  `deleteActiveEffect` hooks. Updates to the selected
   item (or an activity's item) bump `revision`, which the views use to refresh
   what dnd5e prepares outside the sheet context (chat data, labels).
 
@@ -34,6 +35,7 @@
   import DdbAbilityDetail from './DdbAbilityDetail.svelte';
   import DdbActivityDetail from './DdbActivityDetail.svelte';
   import DdbConditionDetail from './DdbConditionDetail.svelte';
+  import DdbEffectDetail from './DdbEffectDetail.svelte';
   import DdbItemDetail from './DdbItemDetail.svelte';
   import DdbSkillDetail from './DdbSkillDetail.svelte';
 
@@ -42,6 +44,7 @@
     | { kind: 'missing' }
     | { kind: 'item'; item: any }
     | { kind: 'activity'; activity: any }
+    | { kind: 'effect'; effect: any }
     | { kind: 'skill' | 'tool'; key: string }
     | { kind: 'ability' | 'save'; key: string }
     | { kind: 'condition'; key: string };
@@ -89,6 +92,12 @@
           ? { kind: 'activity', activity }
           : { kind: 'missing' };
       }
+      case 'effect': {
+        const effect = resolveUuid(current.uuid);
+        return effect?.documentName === 'ActiveEffect'
+          ? { kind: 'effect', effect }
+          : { kind: 'missing' };
+      }
       default:
         return current.key
           ? ({ kind: current.kind, key: current.key } as ResolvedDetail)
@@ -118,7 +127,16 @@
       ? resolved.item.uuid
       : resolved.kind === 'activity'
         ? resolved.activity.item?.uuid
-        : undefined,
+        : resolved.kind === 'effect' &&
+            resolved.effect.parent?.documentName ===
+              CONSTANTS.DOCUMENT_NAME_ITEM
+          ? resolved.effect.parent.uuid
+          : undefined,
+  );
+
+  /** The effect whose own updates (enable / disable, edits) refresh the pane. */
+  let watchedEffectUuid = $derived(
+    resolved.kind === 'effect' ? resolved.effect.uuid : undefined,
   );
 
   let revision = $state(0);
@@ -138,6 +156,24 @@
 
     return () => {
       Hooks.off('updateItem', hookId);
+    };
+  });
+
+  $effect(() => {
+    const uuid = watchedEffectUuid;
+
+    if (!uuid) {
+      return;
+    }
+
+    const hookId = Hooks.on('updateActiveEffect', (effect: any) => {
+      if (effect?.uuid === uuid) {
+        revision++;
+      }
+    });
+
+    return () => {
+      Hooks.off('updateActiveEffect', hookId);
     };
   });
 
@@ -193,6 +229,10 @@
   {:else if resolved.kind === 'activity'}
     {#key resolved.activity.uuid}
       <DdbActivityDetail activity={resolved.activity} {revision} />
+    {/key}
+  {:else if resolved.kind === 'effect'}
+    {#key resolved.effect.uuid}
+      <DdbEffectDetail effect={resolved.effect} {revision} />
     {/key}
   {:else if resolved.kind === 'skill' || resolved.kind === 'tool'}
     <DdbSkillDetail kind={resolved.kind} key={resolved.key} />
