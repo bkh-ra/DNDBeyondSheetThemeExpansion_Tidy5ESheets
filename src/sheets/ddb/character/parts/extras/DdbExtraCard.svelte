@@ -52,9 +52,12 @@
     onOpen: (extra: DdbExtra) => void;
     onRemove: (extra: DdbExtra) => void;
     onDismiss: (extra: DdbExtra) => void;
+    /** Place the companion's token on the current scene (companions only). */
+    onPlace: (extra: DdbExtra) => void;
   }
 
-  let { extra, sheetEditable, onOpen, onRemove, onDismiss }: Props = $props();
+  let { extra, sheetEditable, onOpen, onRemove, onDismiss, onPlace }: Props =
+    $props();
 
   let hpId = $props.id();
 
@@ -212,6 +215,17 @@
   </div>
 
   <div class="ddb-extra-actions">
+    {#if extra.placeable}
+      <button
+        type="button"
+        class="ddb-extra-action ddb-extra-place"
+        data-tooltip={ddbLocalize(DDB_EXTRAS_LANG.PLACE)}
+        aria-label={ddbLocalize(DDB_EXTRAS_LANG.PLACE)}
+        onclick={() => onPlace(extra)}
+      >
+        <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+      </button>
+    {/if}
     {#if extra.canOpen}
       <button
         type="button"

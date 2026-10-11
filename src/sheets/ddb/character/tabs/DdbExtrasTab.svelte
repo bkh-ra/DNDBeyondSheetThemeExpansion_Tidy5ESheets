@@ -68,6 +68,7 @@
     linkDroppedActor,
     manageExtras,
     openExtra,
+    placeExtra,
     removeExtra,
   } from '../../features/extras/extras-actions';
   import DdbExtraCard from '../parts/extras/DdbExtraCard.svelte';
@@ -270,6 +271,14 @@
     }
   }
 
+  async function onPlace(extra: DdbExtra) {
+    try {
+      await placeExtra(actor, extra);
+    } catch (e) {
+      error('Unable to place an extra on the scene.', true, e);
+    }
+  }
+
   /* -------------------------------------------------------------- */
   /*  Drop                                                           */
   /* -------------------------------------------------------------- */
@@ -407,6 +416,7 @@
             {onOpen}
             {onRemove}
             {onDismiss}
+            {onPlace}
           />
         {/each}
       </div>

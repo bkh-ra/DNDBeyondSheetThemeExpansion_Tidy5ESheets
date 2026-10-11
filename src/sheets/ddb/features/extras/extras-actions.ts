@@ -147,6 +147,168 @@ export async function dismissExtra(
  * compendium entry already linked through a world copy of it), the character
  * itself and non-creature actors are skipped.
  */
+/**
+ * Place a companion's token on the current scene (user request 2026-10-11):
+ * beside the character's own token when it has one there, else at the centre
+ * of the current view, on the first grid spot no token overlaps. Companions
+ * only - linked summon profiles stay read-only, and a compendium entry would
+ * need an import first, which this tab never does on its own. A companion
+ * that is already on the scene is panned to and selected instead of being
+ * placed twice. Returns true when a token was created.
+ */
+export async function placeExtra(
+  actor: Actor5e,
+  extra: DdbExtra,
+): Promise<boolean> {
+  const companion: any = extra.document;
+  const cv: any = (globalThis as any).canvas;
+  const scene: any = cv?.scene;
+
+  if (!extra.placeable || !companion) {
+    return false;
+  }
+
+  if (!cv?.ready || !scene) {
+    ui.notifications?.warn(
+      ddbLocalize(DDB_EXTRAS_LANG.PLACE_NO_SCENE, { name: extra.name }),
+    );
+    return false;
+  }
+
+  const existing: any[] = companion.getActiveTokens?.(false, true) ?? [];
+
+  if (existing.length) {
+    await focusToken(cv, existing[0]);
+    ui.notifications?.info(
+      ddbLocalize(DDB_EXTRAS_LANG.PLACE_ALREADY, { name: extra.name }),
+    );
+    return false;
+  }
+
+  if (!game.user?.can?.('TOKEN_CREATE')) {
+    ui.notifications?.warn(ddbLocalize(DDB_EXTRAS_LANG.PLACE_NO_PERMISSION));
+    return false;
+  }
+
+  try {
+    const prototype: any = await companion.getTokenDocument(
+      {},
+      { parent: scene },
+    );
+    const data: any = prototype.toObject();
+    const size: number = scene.grid?.size ?? cv.grid?.size ?? 100;
+    const width = Math.max(1, Number(data.width) || 1);
+    const height = Math.max(1, Number(data.height) || 1);
+    const origin: any = actor.getActiveTokens?.(false, true)?.[0] ?? null;
+    const spot = findFreeSpot(scene, cv, origin, width, height, size);
+
+    data.x = spot.x;
+    data.y = spot.y;
+    delete data._id;
+
+    const [created] = await scene.createEmbeddedDocuments('Token', [data]);
+
+    if (created) {
+      await focusToken(cv, created);
+      ui.notifications?.info(
+        ddbLocalize(DDB_EXTRAS_LANG.PLACED, {
+          name: extra.name,
+          scene: scene.name ?? '',
+        }),
+      );
+    }
+
+    return !!created;
+  } catch (e) {
+    error('Unable to place a companion on the scene.', true, e);
+    return false;
+  }
+}
+
+/** Pan to a token's centre and select it (a courtesy: never fails the placement). */
+async function focusToken(cv: any, tokenDoc: any) {
+  try {
+    const size: number = cv.grid?.size ?? 100;
+    const x = tokenDoc.x + ((Number(tokenDoc.width) || 1) * size) / 2;
+    const y = tokenDoc.y + ((Number(tokenDoc.height) || 1) * size) / 2;
+    await cv.animatePan({ x, y, duration: 250 });
+    tokenDoc.object?.control?.({ releaseOthers: true });
+  } catch {
+    // Panning and selection are optional.
+  }
+}
+
+/**
+ * The first spot no token overlaps: the eight neighbours of the origin token
+ * one and then two squares out (the right-hand neighbour when all are taken);
+ * without an origin, the view centre snapped to the grid, nudged right once
+ * if something already sits there.
+ */
+function findFreeSpot(
+  scene: any,
+  cv: any,
+  origin: any | null,
+  width: number,
+  height: number,
+  size: number,
+): { x: number; y: number } {
+  const w = width * size;
+  const h = height * size;
+  const tokens: any[] = Array.from(scene.tokens ?? []);
+  const overlaps = (x: number, y: number) =>
+    tokens.some((t) => {
+      const tw = (Number(t.width) || 1) * size;
+      const th = (Number(t.height) || 1) * size;
+      return x < t.x + tw && x + w > t.x && y < t.y + th && y + h > t.y;
+    });
+
+  if (origin) {
+    const ow = (Number(origin.width) || 1) * size;
+    const oh = (Number(origin.height) || 1) * size;
+    const candidates: [number, number][] = [];
+
+    for (const gap of [0, size]) {
+      candidates.push(
+        [origin.x + ow + gap, origin.y],
+        [origin.x - w - gap, origin.y],
+        [origin.x, origin.y + oh + gap],
+        [origin.x, origin.y - h - gap],
+        [origin.x + ow + gap, origin.y + oh + gap],
+        [origin.x - w - gap, origin.y + oh + gap],
+        [origin.x + ow + gap, origin.y - h - gap],
+        [origin.x - w - gap, origin.y - h - gap],
+      );
+    }
+
+    const [x, y] = candidates.find(([cx, cy]) => !overlaps(cx, cy)) ?? candidates[0];
+    return { x, y };
+  }
+
+  const pivot = cv.stage?.pivot ?? { x: 0, y: 0 };
+  const centre = snapTopLeft(cv, size, pivot.x - w / 2, pivot.y - h / 2);
+  return overlaps(centre.x, centre.y)
+    ? snapTopLeft(cv, size, centre.x + w, centre.y)
+    : centre;
+}
+
+function snapTopLeft(
+  cv: any,
+  size: number,
+  x: number,
+  y: number,
+): { x: number; y: number } {
+  try {
+    const mode = (globalThis as any).CONST?.GRID_SNAPPING_MODES?.TOP_LEFT_VERTEX;
+    const point = cv.grid?.getSnappedPoint?.({ x, y }, { mode });
+    if (point && Number.isFinite(point.x) && Number.isFinite(point.y)) {
+      return { x: point.x, y: point.y };
+    }
+  } catch {
+    // Fall through to the arithmetic snap.
+  }
+  return { x: Math.round(x / size) * size, y: Math.round(y / size) * size };
+}
+
 export async function linkExtras(
   actor: Actor5e,
   docs: any[],
