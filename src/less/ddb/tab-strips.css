@@ -93,6 +93,20 @@
   flex: 1 1 auto;
   min-width: 8rem;
   max-width: 26rem;
+  /* Card height parity (sandbox gate 2026-10-11: this card measured 52.8px
+   * against the 48px of the other strips, w9.strips.uniformAndPinned): a
+   * 20px meter under a 1.2 line-height title keeps the header column inside
+   * the shared 3rem card height. */
+  height: 1.25rem;
+  min-height: 0;
+}
+
+.tidy5e-sheet.application.ddb
+  .ddb-primary-box-content
+  .ddb-encumbrance-strip
+  > .ddb-tab-strip-card-header
+  > .ddb-tab-strip-title {
+  line-height: 1.2;
 }
 
 /* The size value is a word ("Medium"), the others are numbers: keep the word

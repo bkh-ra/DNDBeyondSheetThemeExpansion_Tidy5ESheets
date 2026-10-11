@@ -1500,7 +1500,12 @@
  * play mode; hit-point + death-save config in edit mode). */
 .tidy5e-sheet.application.ddb .ddb-hp-block__controls {
   position: absolute;
-  top: var(--ddb-space-1);
+  /* Bottom-right since the 2026-10-11 gate review: at the top-right the
+   * stack sat over the end of the HIT DICE caption (the fourth figure moved
+   * in on 2026-10-10); the title row below has free space beside the centred
+   * HIT POINTS label. */
+  top: auto;
+  bottom: var(--ddb-space-half);
   right: var(--ddb-space-1);
   z-index: 1;
   display: flex;
