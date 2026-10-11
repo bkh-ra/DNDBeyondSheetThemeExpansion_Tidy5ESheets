@@ -95,6 +95,12 @@ export interface DdbExtra {
    * compendium index entry or the summon profile; Open loads it.
    */
   stub: boolean;
+  /**
+   * Place (user request 2026-10-11): a companion the user owns, held in the
+   * world (not a compendium entry or a stub) and not itself a token, can be
+   * put on the current scene from its card. Linked profiles never are.
+   */
+  placeable: boolean;
 }
 
 export interface DdbExtraGroup {
@@ -477,6 +483,7 @@ export async function resolveExtra(
     inFlag: flagged.has(ref.uuid),
     dismissable: false,
     stub,
+    placeable: false,
   };
 
   if (ref.source && canSeeName) {
@@ -518,6 +525,15 @@ export async function resolveExtra(
       extra.dismissable = false;
     }
   }
+
+  extra.placeable =
+    ref.group === 'companions' &&
+    !!doc &&
+    !stub &&
+    !compendium &&
+    !token &&
+    access === 'owner' &&
+    doc.documentName === 'Actor';
 
   return extra;
 }

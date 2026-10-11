@@ -35,6 +35,20 @@ export const DDB_EXTRAS_LANG = {
   OPEN: ['TIDY5E.DdbLayout.Extras.Open', 'Open sheet'],
   REMOVE: ['TIDY5E.DdbLayout.Extras.Remove', 'Remove'],
   DISMISS: ['TIDY5E.DdbLayout.Extras.Dismiss', 'Dismiss'],
+  PLACE: ['TIDY5E.DdbLayout.Extras.Place', 'Place on scene'],
+  PLACE_NO_SCENE: [
+    'TIDY5E.DdbLayout.Extras.PlaceNoScene',
+    'No active scene to place {name} on.',
+  ],
+  PLACE_NO_PERMISSION: [
+    'TIDY5E.DdbLayout.Extras.PlaceNoPermission',
+    'You cannot create tokens on this scene.',
+  ],
+  PLACE_ALREADY: [
+    'TIDY5E.DdbLayout.Extras.PlaceAlready',
+    '{name} is already on this scene.',
+  ],
+  PLACED: ['TIDY5E.DdbLayout.Extras.Placed', '{name} placed on {scene}.'],
   REMOVE_CONFIRM: [
     'TIDY5E.DdbLayout.Extras.RemoveConfirm',
     "Remove {name} from this character's extras? The actor itself is not deleted.",
